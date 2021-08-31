@@ -2,7 +2,7 @@
 const padding = 20;
 const container_width = 600;
 const container_height = 650;
-const svg_width = container_width*3 + padding*4;
+const svg_width = container_width*3 + padding*3;
 const svg_height = container_height + padding*3;
 
 const div = d3
@@ -20,36 +20,18 @@ let duration = 750,
 var svg = d3.select('#svg_chart').append('svg')
   .attr('width', svg_width)
   .attr('height', svg_height)
-  .style("background", "#F1EFEE");
+  .style("background", "#FCF4DC"); //#F1EFEE
 
 
 // draw first container 
 var container_1 = svg.append('rect')
-  .attr('fill', '#FCF4DC')
+  .attr('fill', 'none')
   .attr('stroke', 'black')
   .attr('x', padding)
   .attr('y', padding*2)
   .attr('width', container_width)
   .attr('height', container_height)
   .attr('class', 'container_1');
-
-// draw second container 
-// var container_2 = svg.append('rect')
-// .attr('fill', '#FCF4DC')
-// .attr('stroke', 'black')
-// .attr('x', container_width + padding*2)
-// .attr('y', padding*2)
-// .attr('width', container_width)
-// .attr('height', container_height);
-
-// draw third container 
-// var container_3 = svg.append('rect')
-//   .attr('fill', '#FCF4DC')
-//   .attr('stroke', 'black')
-//   .attr('x', container_width*2 + padding*3)
-//   .attr('y', padding*2)
-//   .attr('width', container_width)
-//   .attr('height', container_height);
 
 // the group of matrix title
 var name_group = svg.append("g")
@@ -60,46 +42,11 @@ name_group.append("text")
   .attr("class", "container_name")
   .attr("x", container_width/2 + padding)
   .text("Context Tree");
-// add title of second container 
-// name_group.append("text")
-//   .attr("class", "container_name")
-//   .attr("x", container_width*3/2 + padding*2)
-//   .text("Graph View");
-// // add title of third container 
-// name_group.append("text")
-//   .attr("class", "container_name")
-//   .attr("x", container_width*5/2 + padding*3)
-//   .text("Performance Profile");
 
 // first container canvas
 var container_1_plot = svg.append('g')
   .attr('class', 'container_1_plot')
   .attr('transform', `translate(${padding*3/2}, ${padding*3})`);
-
-// second container canvas
-// var container_2_plot = svg.append('g')
-//   .attr('class', 'container_2_plot')
-//   .attr('transform', `translate(${padding*5/2 + container_width}, ${padding*3/2})`);
-
-// // third container canvas
-// var container_3_plot = svg.append('g')
-//   .attr('class', 'container_1_plot')
-//   .attr('transform', `translate(${padding*7/2 + container_width*2}, ${padding*3/2})`);
-
-// drop down options
-// var options = ["top_5", "bottle_5", "top_vs_bottle"];
-
-// var dorp_down = d3.select("#drop_down")
-//   .selectAll("options")
-//   .data(options)
-//   .enter()
-//   .append("option")
-//   .attr("value", function(d) {return d;})
-//   .property("selected", function(d){return d === options[0]})
-//   .text(function(d)
-//   {
-//     return d[0].toUpperCase() + d.slice(1, d.length).split("_").join(" ");
-//   });
 
 
 // 1. draw tree structure of the tree
@@ -116,15 +63,15 @@ d3.json("data/parallel-io.json").then(function(treeData){
 
   var procs_num = Object.keys(treeData[0]).length;
   d3.select("#selec_pro").attr("max", procs_num-1);
-  // draw_line_xAxis(Math.ceil(procs_num/5)*5);
 
   // Assign parent, children, height, depth
   root = d3.hierarchy(treeData[0][0]["children"], function(d) { return d.children; });
-  // console.log(root);
-  root.x0 = (container_height - 2*padding) / 2;
-  root.y0 = (container_width - padding) / 2;
+  root.x2 = (container_height - 2*padding) / 2;
+  root.y2 = (container_width - padding) / 2;
 
-  root.children.forEach(collapse);
+  root.children.forEach(collapse); // only show first two levels 
+
+  draw_treemap(root); // draw zoomable treemap
 
   // recursively find out all the tags
   var tags = [];
@@ -144,8 +91,8 @@ d3.json("data/parallel-io.json").then(function(treeData){
   ite_data = treeData[0];
   draw_line_figure();
 
-  d3.select("#selec_ite").on("input", graph_display);
-  d3.select("#selec_pro").on("input", graph_display);
+  d3.select("#selec_ite").on("input", graph_display); // select timestep input box
+  d3.select("#selec_pro").on("input", graph_display); // select process input box
   function graph_display()
   {
     // Obtained value from input box
@@ -154,11 +101,12 @@ d3.json("data/parallel-io.json").then(function(treeData){
 
     // draw tree
     root = d3.hierarchy(treeData[ite][proc]["children"], function(d) { return d.children; });
-    root.x0 = (container_height - 2*padding) / 2;
-    root.y0 = (container_width - padding) / 2;
+    root.x2 = (container_height - 2*padding) / 2;
+    root.y2 = (container_width - padding) / 2;
     root.children.forEach(collapse);
 
     draw_tree(root, tags);
+    draw_treemap(root); // draw zoomable treemap
 
     // redraw figure
     ite_data = treeData[ite];
@@ -167,7 +115,7 @@ d3.json("data/parallel-io.json").then(function(treeData){
 
 });
 
-
+// collapse tree levels
 function collapse(d) {
   if(d.children) {
     d._children = d.children
@@ -176,6 +124,7 @@ function collapse(d) {
   }
 }
 
+// find all tags
 function findtags(d, tags) {
   if(d._children) {
     d._children.forEach(function(d){ 
@@ -185,8 +134,10 @@ function findtags(d, tags) {
   }
 } 
 
-var color = d3.scaleOrdinal(d3.schemeAccent);
+// generate random color scheme
+var color = d3.scaleOrdinal(d3.schemeAccent); 
 
+// draw legends of tags
 function draw_legends(tags)
 {
   container_1_plot.append("rect")
@@ -230,6 +181,7 @@ function draw_legends(tags)
 }
 
 
+// draw trees
 let nodes;
 function draw_tree(source, tags=[])
 {
@@ -253,7 +205,7 @@ function draw_tree(source, tags=[])
   var nodeEnter = node.enter().append("g")
       .attr('class', 'node')
       .attr("transform", function(d) {
-        return "translate(" + source.x0 + "," + source.y0 + ")"; })
+        return "translate(" + source.x2 + "," + source.y2 + ")"; })
       .on('mouseover', function(d) { 
         div
           .transition()
@@ -325,7 +277,7 @@ function draw_tree(source, tags=[])
   var linkEnter = link.enter().insert("path", "g")
         .attr("class", "link")
         .attr("d", function(d) {
-          var o = {y: source.y0, x: source.x0}
+          var o = {y: source.y2, x: source.x2}
           return diagonal(o, o)
         });
 
@@ -347,8 +299,8 @@ function draw_tree(source, tags=[])
         .remove();
 
   nodes.forEach(function(d, i){
-    d.x0 = d.x;
-    d.y0 = d.y;
+    d.x2 = d.x;
+    d.y2 = d.y;
   });
 
   // click node
@@ -365,7 +317,9 @@ function draw_tree(source, tags=[])
       d._children = null;
     }
 
-    draw_tree(d, tags);
+    draw_tree(d, tags); // refresh tree 
+
+    draw_treemap(root); // refresh treemap 
   }
 }
 
@@ -380,28 +334,164 @@ function diagonal(s, d)
   return path
 }
 
+
+var container_2 = svg.append('rect')
+.attr('fill', 'none')
+.attr('stroke', 'black')
+.attr('x', container_width + padding*2)
+.attr('y',  padding*2)
+.attr('width', container_width + padding)
+.attr('height', container_height);
+
+// canvans for ploting treemap
+var container_2_plot = svg.append('g')
+  .attr('class', 'container_2_plot')
+  .attr('transform', `translate(${padding*2 + container_width}, ${padding*2})`);
+
+
+function draw_treemap(source)
+{
+  // initial treemap
+  var init_treemap = d3.treemap().tile(d3.treemapResquarify)
+    .size([(container_width + padding), container_width])
+    .round(true)
+    .paddingInner(2);
+
+  // add value for each node
+  var mydata = source
+    .eachBefore(function(d) { d.data.id = (d.parent ? d.parent.data.id + "." : "") + d.data.name; })
+    .eachBefore(function(d) { d.data.value = (d.children ? 0: d.data.time); })
+    .sum(function(d) { return d.value ? d.value : 0 });
+
+  init_treemap(mydata); // generate a treemap 
+
+  // generate gradient color scheme
+  var max_leaf_value = d3.max(mydata.leaves(), function(d){ return d.value; });
+  var myColor = d3.scaleLinear().range(["#FFFDE4", "#69b3a2"]).domain([1, max_leaf_value])
+
+  var var_div = d3
+    .select('body')
+    .append('div')
+    .attr('class', 'tooltip2')
+    .style('opacity', 0);
+
+  // draw rects
+  var cell = container_2_plot.selectAll('g')
+    .data(mydata.leaves());
+
+  // rect enter
+  var cellEnter = cell.enter().append("g")
+    .on('mouseover', function(d) { 
+      var_div
+        .transition()
+        .duration(200)
+        .style('opacity', 0.9)
+      var_div
+        .html(d.data.id + '<br/>' + "(" + d.data.time + ")")
+        .style('width', d.data.id.length*7 + 'px')
+        .style('left', d3.event.pageX + 'px')
+        .style('top', d3.event.pageY - 10 + 'px'); })
+    .on('mouseout', function(d) {
+      var_div
+        .transition()
+        .duration(500)
+        .style('opacity', 0); });
+
+  cellEnter.append("rect")
+    .attr("id", function(d) { return d.data.id; })
+
+  cellEnter.append("text")
+    .attr("x", "0.5em")
+    .attr("y", "1em")
+    .style("text-anchor", "start");
+
+  // Make the tree zoomable and collapsible
+  var cellUpdate = cellEnter.merge(cell);
+
+  // Transition to the proper position for the rect
+  cellUpdate.transition()
+    .duration(duration)
+    .attr("transform", function(d) {return "translate(" + d.x0 + "," + d.y0 + ")"; })
+    .style('fill-opacity', 1);
+
+  cellUpdate.select('rect')
+    .attr("width", function(d) { return d.x1 - d.x0; })
+    .attr("height", function(d) { return d.y1 - d.y0; })
+    .attr('stroke', '#5D6D7E')
+    .attr("fill", function(d) { return myColor(d.value); })
+  
+   cellUpdate.select('text')
+    .text(function(d) {
+      if ( (d.x1 - d.x0) * (d.y1 - d.y0) < 400 ) { return " "; }
+      else { return (d.data.name + " (" + d.data.time + ")"); } })
+    .call(wraptext);
+
+  // Remove any exiting rects
+  var cellExit = cell.exit().transition()
+        .duration(duration)
+        .attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; })
+        .style('fill-opacity', 0)
+        .remove();
+
+  cellExit.select('text')
+    .style('fill-opacity', 0);
+
+}
+
+// wrap texts based on the width
+function wraptext(text, width=0, flag=0) {
+  text.each(function (d) {
+    var text = d3.select(this),
+        words = text.text().split(/\s+/).reverse(),
+        word,
+        line = [],
+        lineNumber = 0,
+        lineHeight = 1.1, // ems
+        x = text.attr("x"),
+        y = text.attr("y"),
+        dy = 0, 
+        tspan = text.text(null).append("tspan");
+    if (flag == 0) { width = (d.x1 - d.x0); }
+    while (word = words.pop()) {
+        line.push(word);
+        tspan.text(line.join(" "));
+        if (tspan.node().getComputedTextLength() > width) {
+            line.pop();
+            tspan.text(line.join(" "));
+            line = [word];
+            tspan = text.append("tspan")
+                        .attr("x", x)
+                        .attr("y", y)
+                        .attr("dy", ++lineNumber * lineHeight + dy + "em")
+                        .text(word);
+        }
+      }
+    });
+}
+
+
+
 // 2. Related figures
 
 // draw second container (for line chart)
-var container_2 = svg.append('rect')
-.attr('fill', '#FCF4DC')
-.attr('stroke', 'black')
-.attr('x', container_width + padding*2)
-.attr('y', padding*2)
-.attr('width', container_width)
-.attr('height', (container_height/2 - padding/2));
+// var container_3 = svg.append('rect')
+// .attr('fill', '#FCF4DC')
+// .attr('stroke', 'black')
+// .attr('x', container_width*2 + padding*4)
+// .attr('y', padding*2)
+// .attr('width', container_width)
+// .attr('height', (container_height/2 - padding/2));
 
-var container_2_plot = svg.append('g')
-  .attr('class', 'container_2_plot')
-  .attr('transform', `translate(${padding*5/2 + container_width}, ${padding*3/2})`);
+var container_3_plot = svg.append('g')
+  .attr('class', 'container_3_plot')
+  .attr('transform', `translate(${padding*7/2 + 2*container_width}, ${padding*3/2})`);
 
 // x scale (change values based on the real data)
-
 var xScale = d3.scaleLinear()
 .domain([0, 100])
 .range([0, (container_width - padding*4)]);
 
-  // y scale (change values based on the real data)
+// y scale (change values based on the real data)
 var yScale = d3.scaleLinear()
   .domain([0, 100])
   .range([(container_height/2 - 3*padding), 0]);
@@ -411,24 +501,24 @@ var line = d3.line()
     .y(function(d) { return yScale(d.time); }) // set the y values for the line generator 
     .curve(d3.curveMonotoneX); // apply smoothing to the line
 
-var xAxis = container_2_plot.append('g')
+var xAxis = container_3_plot.append('g')
   .call(d3.axisBottom(xScale))
   .attr("class", "axis")
   .attr("transform", "translate(" + padding*2 + ", " + (container_height/2 - 2*padding) + ")");
 
 // draw y axis
-var yAxis = container_2_plot.append('g')
+var yAxis = container_3_plot.append('g')
   .call(d3.axisLeft(yScale))
   .attr("class", "axis")
   .attr("transform", "translate(" + padding*2 + ", " + padding + ")"); 
 
 // labels
-container_2_plot.append('text')
+container_3_plot.append('text')
   .attr("class", "labels")
   .attr("transform", "translate(" + container_width/2 + ", " + (container_height/2 - 0.5*padding) + ")")
   .text("Total number of processes");
 
-container_2_plot.append('text')
+container_3_plot.append('text')
   .attr("class", "labels")
   .attr("x", -container_height/4)
   .attr("y", padding/2)
@@ -436,16 +526,17 @@ container_2_plot.append('text')
   .text("Time Taken (ms)");
 
 // write current phase
-var phase = container_2_plot.append('text')
+var phase = container_3_plot.append('text')
   .attr("font-size", "15px")
   .attr("text-anchor", "middle")
   .attr("x", container_width-5*padding)
   .attr("y", padding*2);
 
+
 // draw line chart
 function draw_line_figure()
 {
-  console.log(ite_data[0]["children"]);
+  // console.log(ite_data[0]["children"]);
 
   // get time data for all the processes
   var times = [];
@@ -471,7 +562,7 @@ function draw_line_figure()
   yAxis.transition().duration(duration).call(d3.axisLeft(yScale));
 
   // draw line graph
-  var links = container_2_plot.selectAll('.link')
+  var links = container_3_plot.selectAll('.link')
      .data([times], function(d){ return d.id; });
 
   // Enter any new links at the parent's previous position.
@@ -493,7 +584,7 @@ function draw_line_figure()
     .remove();
 
   // add dots for line graph
-  var node = container_2_plot.selectAll(".dot")
+  var node = container_3_plot.selectAll(".dot")
     .data(times, function(d){ return d.time; });
 
   // enter nodes
@@ -532,7 +623,7 @@ function draw_line_figure()
     .remove();
 
 
-  var hor_lines = container_2_plot.selectAll('.hor_line')
+  var hor_lines = container_3_plot.selectAll('.hor_line')
      .data([max_time, min_time]);
 
   // Enter any new links at the parent's previous position.
@@ -557,12 +648,12 @@ function draw_line_figure()
     .attr('y2', function(d) {return yScale(d); })
     .remove();
 
-  var texts = container_2_plot.selectAll('.timeLable')
+  var texts = container_3_plot.selectAll('.timeLable')
     .data([max_time, min_time]);
 
   var textsEnter = texts.enter().append("text")
     .attr("class", "timeLable")
-    .attr("transform", "translate(" + (container_width - 3*padding) + ", " + padding + ")");
+    .attr("transform", "translate(" + (container_width - 4*padding) + ", " + padding + ")");
 
   textsEnter.merge(texts)
     .transition()
@@ -572,155 +663,6 @@ function draw_line_figure()
 
 }
 
-
-
-
-var container_3 = svg.append('rect')
-.attr('fill', '#FCF4DC')
-.attr('stroke', 'black')
-.attr('x', container_width + padding*2)
-.attr('y', container_height/2 + padding*2.5)
-.attr('width', container_width)
-.attr('height', (container_height/2 - padding/2));
-
-var container_3_plot = svg.append('g')
-  .attr('class', 'container_3_plot')
-  .attr('transform', `translate(${padding*5/2 + container_width}, ${container_height/2 + padding*5/2})`);
-
-//x scale (change values based on the real data)
-var xScale = d3.scaleLinear()
-  .domain([0, 100])
-  .range([0, (container_width - padding*2.5)]);
-
-// y scale (change values based on the real data)
-var yScale = d3.scaleLinear()
-  .domain([0, 100])
-  .range([(container_height/2 - 2.5*padding), 0]);
-
-container_3_plot.append('g')
-  .call(d3.axisBottom(xScale))
-  .attr("class", "axis")
-  .attr("transform", "translate(" + padding + ", " + (container_height/2 - 1.5*padding) + ")");
-
-// draw y axis
-container_3_plot.append('g')
-  .call(d3.axisLeft(yScale))
-  .attr("class", "axis")
-  .attr("transform", "translate(" + padding + ", " + padding + ")");
-
-
-  // .on("input", graph_display);
-
-// function graph_display()
-// {
-//   // Obtained value from input box
-//   var ite_input = d3.select("#selec_ite");
-//   ite_input.setAttribute("max",10);
-//   // ite_input.max = 10;
-//   // var end_pro = d3.select("#end_pro").property("value");
-//   // console.log(ite_input.property("max"));
-//   // console.log(end_pro);
-// }
-
-
-// 2. TO DO: drop down event
-// d3.select("#drop_down").on("change", function(d) 
-// {
-//   var value = d3.select("#drop_down").property("value");
-//   console.log(value);
-// });
-
-
-
-// function graph_display()
-// {
-//   // Obtained value from input box
-//   var start_pro = d3.select("#start_pro").property("value");
-//   var end_pro = d3.select("#end_pro").property("value");
-//   console.log(start_pro);
-//   console.log(end_pro);
-// }
-
-// 3. TO DO: draw graph (also need to consider the drop down value)
-
-// x scale (change values based on the real data)
-// var x_scale = d3.scaleLinear()
-//   .domain([0, 100])
-//   .range([0, (container_width - padding*2)]);
-// // y scale (change values based on the real data)
-// var y_scale = d3.scaleLinear()
-//   .domain([0, 100])
-//   .range([(container_height - padding*2), 0]);
-// // x tick values (change values based on the real data)
-// var x_axis = d3.axisBottom(x_scale)
-//   .tickFormat(function(d) {return +d});
-// // y tick values (change values based on the real data)
-// var y_axis = d3.axisLeft(y_scale)
-//   .tickFormat(function(d) {return +d});
-// draw x axis
-// container_2_plot.append('g')
-//   .call(x_axis)
-//   .attr("class", "axis")
-//   .attr("transform", "translate(" + padding + ", " + (container_height - padding*2) + ")");
-// // draw y axis
-// container_2_plot.append('g')
-//   .call(y_axis)
-//   .attr("class", "axis")
-//   .attr("transform", "translate(" + padding + ", 0)");
-// // x axis label
-// container_2_plot.append("text")
-//   .attr("class", "axis_label")
-//   .attr("x", container_width/2)
-//   .attr("y", container_height - padding)
-//   .attr("text-anchor", "middle")
-//   .text("Time(s)");
-// // y axis label
-// container_2_plot.append("text")
-//   .attr("class", "axis_label")
-//   .attr("x", -(container_width/2))
-//   .attr("y", 0)
-//   .attr("text-anchor", "middle")
-//   .attr("transform", "rotate(-90)")
-//   .text("Process Rank");
-
-// legend 
-// var legend_group = container_2_plot.append("g")
-//   .attr("transform", "translate(" + (container_width - padding*3) + ", " + padding + ")");
-
-// var legend_options = ["a", "b", "c"];  //Please change this based on the real data
-// var legendColor = d3.scaleOrdinal(["blue", "red", "green"]);
-
-// legend_options.forEach(function(item, index)
-// {
-//   var legends = legend_group.append("g")
-//     .attr("transform", "translate(0, " + (index * 20) + ")");
-
-//   legends.append("text")
-//   .text(item)
-//   .attr("x", 20)
-//   .attr("y", 10)
-//   .attr("text-anchor", "start")
-//   .style("text-transform", "capitalize")
-//   .style("font-size", "15px")
-
-//   legends.append("rect")
-//   .attr("width", 15)
-//   .attr("height", 15)
-//   .attr("fill", legendColor(item));
-// });
-
-// Draw bar chat
-function draw_bars(data)
-{
- // Data can be passed with parameter
-}
-
-
-
-// 4. TO DO: Add profermance profile (This part you can design freely)
-
-
-// All the code here is just for reference. You can change it freely. 
 
 
 

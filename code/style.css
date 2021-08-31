@@ -59,6 +59,18 @@ div.tooltip {
   pointer-events: none;
 }
 
+div.tooltip2 {
+  color: white;
+  position: absolute;
+  text-align: center;
+  height: 28px;
+  padding: 2px;
+  font: 12px sans-serif;
+  background: rgba(0,0,0,.8);
+  border: 2px solid black;
+  pointer-events: none;
+}
+
 .labels{
   font-size: 12px;
   text-anchor: middle;
