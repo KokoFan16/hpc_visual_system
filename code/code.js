@@ -89,11 +89,11 @@ d3.json("data/parallel-io.json").then(function(treeData){
 
   // draw line chart
   ite_data = treeData[0];
-  draw_line_figure();
+  draw_line_figure(ite_data[0]["children"].id);
 
-  d3.select("#selec_ite").on("input", graph_display); // select timestep input box
-  d3.select("#selec_pro").on("input", graph_display); // select process input box
-  function graph_display()
+  d3.select("#selec_ite").on("input", graph_display_1); // select timestep input box
+  d3.select("#selec_pro").on("input", graph_display_2); // select process input box
+  function graph_display_1()
   {
     // Obtained value from input box
     var ite = d3.select("#selec_ite").property("value");
@@ -110,7 +110,23 @@ d3.json("data/parallel-io.json").then(function(treeData){
 
     // redraw figure
     ite_data = treeData[ite];
-    draw_line_figure();
+    draw_line_figure(ite_data[0]["children"].id);
+  }
+
+  function graph_display_2()
+  {
+    // Obtained value from input box
+    var ite = d3.select("#selec_ite").property("value");
+    var proc = d3.select("#selec_pro").property("value");
+
+    // draw tree
+    root = d3.hierarchy(treeData[ite][proc]["children"], function(d) { return d.children; });
+    root.x2 = (container_height - 2*padding) / 2;
+    root.y2 = (container_width - padding) / 2;
+    root.children.forEach(collapse);
+
+    draw_tree(root, tags);
+    draw_treemap(root); // draw zoomable treemap
   }
 
 });
@@ -303,6 +319,8 @@ function draw_tree(source, tags=[])
     d.y2 = d.y;
   });
 
+  // var unit_value = Math.ceil(root.data.time)/10;
+
   // click node
   function click(d) 
   {
@@ -353,8 +371,11 @@ var colorbar_plot = svg.append('g')
 
 // add color bar
 var symbolGenerator = d3.symbol().type(d3.symbolTriangle).size(64); // pointer
-var legendlen = (container_width -padding)/10;
-var colorbartext = ["0% to 10%", "10% to 20%", "20% to 30%", "30% to 40%", "40% to 50%", "50% to 60%", "60% to 70%", "70% to 80%", "80% to 90%", "90% to 100%"];
+var legendlen = (container_width -padding)/20;
+var colorbartext = ["0% to 5%", "5% to 10%", "10% to 15%", "15% to 20%", "20% to 25%", 
+"25% to 30%", "30% to 35%", "35% to 40%", "40% to 45%", "45% to 50%", "50% to 55%",
+"55% to 60%", "60% to 65%", "65% to 70%", "70% to 75%", "75% to 80%", "80% to 85%",
+"85% to 90%", "90% to 95%", "95% to 100%"];
 
 colorbar_plot.append("g")
   .attr("transform","rotate(180)")
@@ -397,8 +418,10 @@ function draw_treemap(source)
   init_treemap(mydata); // generate a treemap 
 
   // generate gradient color scheme
-  var max_leaf_value = Math.ceil(d3.max(mydata.leaves(), function(d){ return d.value; })); 
-  var myColor = d3.scaleLinear().range(["white", "#b5c6e0"]).domain([1, max_leaf_value]) // "#ebf4f5", "#69b3a2"  
+  // console.log(mydata);
+  var max_leaf_value = Math.ceil(mydata.data.time);
+  // Math.ceil(d3.max(mydata.leaves(), function(d){ return d.value; })); 
+  var myColor = d3.scaleLinear().range(["white", "#103783"]).domain([1, max_leaf_value]) // "#ebf4f5", "#69b3a2"  
 
   var var_div = d3
     .select('body')
@@ -408,8 +431,8 @@ function draw_treemap(source)
 
   //Legend Rectangels
   var color_values = [];
-  var unit_value = max_leaf_value/10;
-  for (var k = 0; k < 10; k++) { color_values.push(myColor(unit_value*(k+1)));}
+  var unit_value = max_leaf_value/20;
+  for (var k = 0; k < 20; k++) { color_values.push(myColor(unit_value*(k+1)));}
 
   // draw rects
   var cell = container_2_plot.selectAll('g')
@@ -423,15 +446,15 @@ function draw_treemap(source)
       d3.select(".trianglepointer")
         .transition(200)
         .delay(100)
-        .attr("transform","translate(" + (-padding-legendlen/2-(Math.floor(d.value/unit_value)*legendlen)) + ", " + (-padding-5) + ")");
-      d3.select(".LegText").select("text").text(colorbartext[Math.floor(d.value/unit_value)])
+        .attr("transform","translate(" + (-padding-legendlen/2-(Math.floor(d.data.time/unit_value)*legendlen)) + ", " + (-padding-5) + ")");
+      d3.select(".LegText").select("text").text(colorbartext[Math.floor(d.data.time/unit_value)])
       var_div
         .transition()
         .duration(200)
         .style('opacity', 0.9)
       var_div
         .html(d.data.id + '<br/>' + "(" + d.data.time + ")")
-        .style('width', d.data.id.length*7 + 'px')
+        .style('width', Math.max(d.data.id.length, d.data.time.length)*7 + 'px')
         .style('left', d3.event.pageX + 'px')
         .style('top', d3.event.pageY - 10 + 'px'); })
     .on('mouseout', function(d) {
@@ -440,7 +463,8 @@ function draw_treemap(source)
       var_div
         .transition()
         .duration(500)
-        .style('opacity', 0); });
+        .style('opacity', 0); })
+    .on('click', update_linechart);;
 
   cellEnter.append("rect")
     .attr("id", function(d) { return d.data.id; })
@@ -463,7 +487,7 @@ function draw_treemap(source)
     .attr("width", function(d) { return d.x1 - d.x0; })
     .attr("height", function(d) { return d.y1 - d.y0; })
     .attr('stroke', '#5D6D7E')
-    .attr("fill", function(d) { return myColor(d.value); })
+    .attr("fill", function(d) { return myColor(d.data.time); })
   
    cellUpdate.select('text')
     .text(function(d) {
@@ -503,6 +527,9 @@ function draw_treemap(source)
     .transition()
     .duration(duration)
     .remove();
+
+
+  function update_linechart(d){ draw_line_figure(d.data.id); }
 }
 
 // wrap texts based on the width
@@ -571,7 +598,7 @@ var line = d3.line()
 var xAxis = container_3_plot.append('g')
   .call(d3.axisBottom(xScale))
   .attr("class", "axis")
-  .attr("transform", "translate(" + padding*2 + ", " + (container_height/2 - 2*padding) + ")");
+  .attr("transform", "translate(" + padding*2 + ", " + (container_height/2 - padding*2+2) + ")");
 
 // draw y axis
 var yAxis = container_3_plot.append('g')
@@ -596,29 +623,44 @@ container_3_plot.append('text')
 var phase = container_3_plot.append('text')
   .attr("font-size", "15px")
   .attr("text-anchor", "middle")
-  .attr("x", container_width-5*padding)
+  .attr("x", container_width/2)
   .attr("y", padding*2);
 
 
 // draw line chart
-function draw_line_figure()
+function draw_line_figure(nodeid)
 {
-  // console.log(ite_data[0]["children"]);
+  // console.log(nodeid);
 
   // get time data for all the processes
+  var paths = nodeid.split(".");
   var times = [];
-  var name = ite_data[0]["children"].name;
 
-  Object.keys(ite_data).forEach(function(d, i){ 
-    var time = ite_data[d]["children"].time;
-    times.push({"id": i, "time": time}); })
+  var c = 1;
+  Object.keys(ite_data).forEach(function(d, i){c = 1; getData(ite_data[d]["children"], i); });
+
+  function getData(data, i){ 
+    if (c < paths.length)
+    {
+      var len = data.children.length;
+      var nodeindex = 0;
+      for (var k = 0; k < len; k++){
+        if (data.children[k].name == paths[c]) { nodeindex = k; break; }
+      }
+      c++; 
+      getData(data.children[nodeindex], i);
+    } 
+    else { times.push({"id": i, "time": data.time}); } 
+  }
+
+  // console.log(times);
 
   //update x axis Math.ceil(times.length/5)*5]
   xScale.domain([0, times.length]).range([0, (container_width - padding*4)]);
   xAxis.transition().duration(duration).call(d3.axisBottom(xScale));
 
   // update current phase
-  phase.text("Current Phase: " + name);
+  phase.text("Current Phase: " + nodeid);
 
   //update y axis
   var min_time = d3.min(times, function(d){ return d.time; });
@@ -635,7 +677,7 @@ function draw_line_figure()
   // Enter any new links at the parent's previous position.
   var linkEnter = links.enter().append("path")
       .attr("class", "link")
-      .attr("transform", "translate(" + padding*2 + ", " + padding*1.5 + ")");
+      .attr("transform", "translate(" + padding*2 + ", " + (padding*1.5-6) + ")");
 
   var linkUpdate = linkEnter.merge(links);
 
@@ -660,7 +702,7 @@ function draw_line_figure()
     .attr("cx", function(d) { return xScale(d.id); })
     .attr("cy", function(d) { return yScale(d.time); })
     .attr("r", 3)
-    .attr("transform", "translate(" + padding*2 + ", " + padding*1.5 + ")")
+    .attr("transform", "translate(" + padding*2 + ", " + (padding*1.5-6) + ")")
     .style('fill-opacity', 0)
     .on('mouseover', function(d) { 
       div
@@ -696,7 +738,7 @@ function draw_line_figure()
   // Enter any new links at the parent's previous position.
   var lineEnter = hor_lines.enter().append("line")
       .attr("class", "hor_line")
-      .attr("transform", "translate(" + padding*2 + ", " + padding*1.5 + ")");
+      .attr("transform", "translate(" + padding*2 + ", " + (padding*1.5-6) + ")");
 
   var lineUpdate = lineEnter.merge(hor_lines);
 
