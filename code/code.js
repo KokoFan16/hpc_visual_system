@@ -334,20 +334,51 @@ function diagonal(s, d)
   return path
 }
 
-
-var container_2 = svg.append('rect')
-.attr('fill', 'none')
-.attr('stroke', 'black')
-.attr('x', container_width + padding*2)
-.attr('y',  padding*2)
-.attr('width', container_width + padding)
-.attr('height', container_height);
+// var container_2 = svg.append('rect')
+// .attr('fill', 'none')
+// .attr('stroke', 'black')
+// .attr('x', container_width + padding*2)
+// .attr('y',  padding*2)
+// .attr('width', container_width + padding)
+// .attr('height', container_height);
 
 // canvans for ploting treemap
 var container_2_plot = svg.append('g')
   .attr('class', 'container_2_plot')
   .attr('transform', `translate(${padding*2 + container_width}, ${padding*2})`);
 
+var colorbar_plot = svg.append('g')
+  .attr('class', 'colorbar_plot')
+  .attr('transform', `translate(${padding*2 + container_width}, ${container_width + padding*3/2})`);
+
+// add color bar
+var symbolGenerator = d3.symbol().type(d3.symbolTriangle).size(64); // pointer
+var legendlen = (container_width -padding)/10;
+var colorbartext = ["0% to 10%", "10% to 20%", "20% to 30%", "30% to 40%", "40% to 50%", "50% to 60%", "60% to 70%", "70% to 80%", "80% to 90%", "90% to 100%"];
+
+colorbar_plot.append("g")
+  .attr("transform","rotate(180)")
+  .append("g")
+  .attr("class","trianglepointer")
+  .attr("transform","translate(" + (-padding - legendlen/2) + ", " + (-padding-5) + ")")
+  .append("path")
+  .attr("d",symbolGenerator());
+
+colorbar_plot.append("rect")
+  .attr("transform","translate(" + padding + ", " + (padding+14) + ")")
+  .attr("width", (container_width -padding)+"px")
+  .attr("height", "12px")
+  .attr("fill", "none")
+  .attr('stroke', '#5D6D7E');
+
+colorbar_plot.append("g")
+.attr("class","LegText")
+  .attr("transform","translate(" + container_width/2 + ", " + (padding*3+5) + ")")
+  .append("text")
+  .attr("x",legendlen/2)
+  .attr('font-weight', 'normal')
+  .style("text-anchor", "middle")
+  .text(colorbartext[0])
 
 function draw_treemap(source)
 {
@@ -355,7 +386,7 @@ function draw_treemap(source)
   var init_treemap = d3.treemap().tile(d3.treemapResquarify)
     .size([(container_width + padding), container_width])
     .round(true)
-    .paddingInner(2);
+    .paddingInner(4);
 
   // add value for each node
   var mydata = source
@@ -366,14 +397,19 @@ function draw_treemap(source)
   init_treemap(mydata); // generate a treemap 
 
   // generate gradient color scheme
-  var max_leaf_value = d3.max(mydata.leaves(), function(d){ return d.value; });
-  var myColor = d3.scaleLinear().range(["#FFFDE4", "#69b3a2"]).domain([1, max_leaf_value])
+  var max_leaf_value = Math.ceil(d3.max(mydata.leaves(), function(d){ return d.value; })); 
+  var myColor = d3.scaleLinear().range(["white", "#b5c6e0"]).domain([1, max_leaf_value]) // "#ebf4f5", "#69b3a2"  
 
   var var_div = d3
     .select('body')
     .append('div')
     .attr('class', 'tooltip2')
     .style('opacity', 0);
+
+  //Legend Rectangels
+  var color_values = [];
+  var unit_value = max_leaf_value/10;
+  for (var k = 0; k < 10; k++) { color_values.push(myColor(unit_value*(k+1)));}
 
   // draw rects
   var cell = container_2_plot.selectAll('g')
@@ -382,6 +418,13 @@ function draw_treemap(source)
   // rect enter
   var cellEnter = cell.enter().append("g")
     .on('mouseover', function(d) { 
+      d3.select(this)
+        .style("stroke-width","4px")
+      d3.select(".trianglepointer")
+        .transition(200)
+        .delay(100)
+        .attr("transform","translate(" + (-padding-legendlen/2-(Math.floor(d.value/unit_value)*legendlen)) + ", " + (-padding-5) + ")");
+      d3.select(".LegText").select("text").text(colorbartext[Math.floor(d.value/unit_value)])
       var_div
         .transition()
         .duration(200)
@@ -392,6 +435,8 @@ function draw_treemap(source)
         .style('left', d3.event.pageX + 'px')
         .style('top', d3.event.pageY - 10 + 'px'); })
     .on('mouseout', function(d) {
+      d3.select(this)
+        .style("stroke-width","2px")
       var_div
         .transition()
         .duration(500)
@@ -422,7 +467,7 @@ function draw_treemap(source)
   
    cellUpdate.select('text')
     .text(function(d) {
-      if ( (d.x1 - d.x0) * (d.y1 - d.y0) < 400 ) { return " "; }
+      if ( (d.x1 - d.x0) * (d.y1 - d.y0) < 3000 ) { return " "; }
       else { return (d.data.name + " (" + d.data.time + ")"); } })
     .call(wraptext);
 
@@ -436,6 +481,28 @@ function draw_treemap(source)
   cellExit.select('text')
     .style('fill-opacity', 0);
 
+  // add colorbar 
+  var colorbar = colorbar_plot.selectAll(".LegRect")
+    .data(color_values);
+
+  // colorbar enter
+  var colorbarEnter = colorbar.enter().append("rect")
+    .attr("transform","translate(" + padding + ", " + (padding +15) + ")")
+    .attr("class","LegRect");
+
+  var colorbarUpdate = colorbarEnter.merge(colorbar);
+
+  colorbarUpdate.transition()
+    .duration(duration)
+    .attr("width", legendlen+"px")
+    .attr("height", "10px")
+    .attr("fill",function(d){ return d; })
+    .attr("x",function(d,i){ return i*legendlen; })
+
+  colorbar.exit()
+    .transition()
+    .duration(duration)
+    .remove();
 }
 
 // wrap texts based on the width
