@@ -14,7 +14,9 @@ const div = d3
 let duration = 750,
     i = 0,
     root,
-    ite_data;
+    ite_data,
+    ite_num,
+    procs_num;
 
 // draw svg canvas
 var svg = d3.select('#svg_chart').append('svg')
@@ -58,10 +60,10 @@ var treemap = d3.tree().size([container_width - padding, container_height - 3*pa
 d3.json("data/parallel-io.json").then(function(treeData){
 
   // find number of iterations
-  var ite_num = Object.keys(treeData).length;
+  ite_num = Object.keys(treeData).length;
   d3.select("#selec_ite").attr("max", ite_num-1);
 
-  var procs_num = Object.keys(treeData[0]).length;
+  procs_num = Object.keys(treeData[0]).length;
   d3.select("#selec_pro").attr("max", procs_num-1);
 
   // Assign parent, children, height, depth
@@ -91,6 +93,9 @@ d3.json("data/parallel-io.json").then(function(treeData){
   ite_data = treeData[0];
   draw_line_figure(ite_data[0]["children"].id);
 
+  draw_timesteps(treeData);
+  d3.select(".bar_0").attr("fill", "steelblue");
+
   d3.select("#selec_ite").on("input", graph_display_1); // select timestep input box
   d3.select("#selec_pro").on("input", graph_display_2); // select process input box
   function graph_display_1()
@@ -111,7 +116,14 @@ d3.json("data/parallel-io.json").then(function(treeData){
     // redraw figure
     ite_data = treeData[ite];
     draw_line_figure(ite_data[0]["children"].id);
+
+    // var barclass = "bar"+   
+    for (var b = 0; b < ite_num; b++){
+      var color = (b == ite)? "steelblue" : "#ccc";
+      d3.select(".bar_"+b).attr("fill", color);
+    }
   }
+   
 
   function graph_display_2()
   {
@@ -630,8 +642,6 @@ var phase = container_3_plot.append('text')
 // draw line chart
 function draw_line_figure(nodeid)
 {
-  // console.log(nodeid);
-
   // get time data for all the processes
   var paths = nodeid.split(".");
   var times = [];
@@ -652,8 +662,6 @@ function draw_line_figure(nodeid)
     } 
     else { times.push({"id": i, "time": data.time}); } 
   }
-
-  // console.log(times);
 
   //update x axis Math.ceil(times.length/5)*5]
   xScale.domain([0, times.length]).range([0, (container_width - padding*4)]);
@@ -769,7 +777,115 @@ function draw_line_figure(nodeid)
     .duration(duration)
     .attr("y", function(d) { return yScale(d); })
     .text(function(d, i) { return (i == 0) ? ("Max: " + d) : ("Min: " + d); });
+}
 
+
+// draw second container (for line chart)
+// var container_4 = svg.append('rect')
+//   .attr('fill', 'none')
+//   .attr('stroke', 'black')
+//   .attr('x', container_width*2 + padding*3)
+//   .attr('y', container_height/2 + padding*2)
+//   .attr('width', container_width)
+//   .attr('height', (container_height/2 - padding/2));
+
+var container_4_plot = svg.append('g')
+  .attr('class', 'container_4_plot')
+  .attr('transform', `translate(${padding*7/2 + 2*container_width}, ${container_height/2+padding*3/2})`);
+
+// x scale (change values based on the real data)
+var xScale2 = d3.scaleBand()
+  .domain([0, 30])
+  .range([0, (container_width - padding*4)])
+  .padding(0.1);;
+
+// y scale (change values based on the real data)
+var yScale2 = d3.scaleLinear()
+  .domain([0, 100])
+  .range([(container_height/2 - 3*padding), 0]);
+
+var xAxis2 = container_4_plot.append('g')
+  .call(d3.axisBottom(xScale2))
+  .attr("class", "axis")
+  .attr("transform", "translate(" + padding*2 + ", " + (container_height/2 - padding*2) + ")");
+
+// draw y axis
+var yAxis2 = container_4_plot.append('g')
+  .call(d3.axisLeft(yScale2))
+  .attr("class", "axis")
+  .attr("transform", "translate(" + padding*2 + ", " + padding + ")"); 
+
+// labels
+container_4_plot.append('text')
+  .attr("class", "labels")
+  .attr("transform", "translate(" + container_width/2 + ", " + (container_height/2 - 0.5*padding) + ")")
+  .text("Total number of timesteps");
+
+container_4_plot.append('text')
+  .attr("class", "labels")
+  .attr("x", -container_height/4)
+  .attr("y", padding/2)
+  .attr("transform", "rotate(-90)")
+  .text("Time Taken (ms)");
+
+function draw_timesteps(source)
+{
+  var timesteps = [];
+  for (var t = 0; t < ite_num; t++){
+    var max_time = 0;
+    for (var p = 0; p < procs_num; p++){
+      if (source[t][p].children.time > max_time) {
+        max_time = source[t][p].children.time;}
+    }
+    timesteps.push(max_time);
+  }
+
+  // update x axis 
+  xScale2.domain(timesteps.map(function(d, i){ return i; })).range([0, (container_width - padding*4)]);
+  xAxis2.transition().duration(duration).call(d3.axisBottom(xScale2));
+
+  // console.log(timesteps)
+  var max_time_step = d3.max(timesteps);
+  yScale2.domain([0, Math.ceil(max_time_step)])
+    .range([(container_height/2 - 3*padding), 0]);
+  yAxis2.transition().duration(duration).call(d3.axisLeft(yScale2));
+
+  container_4_plot.selectAll("rect")
+    .data(timesteps)
+    .enter().append("rect")
+    .attr("class", function(d, i){ return "bar_" + i; })
+    .attr("fill", "#ccc") // "#ebf4f5", "#69b3a2" 
+    .transition()
+    .duration(duration)
+    .style('fill-opacity', 1)
+    .attr("transform", "translate(" + padding*2 + ", " + padding + ")")
+    .attr("x", function(d, i) {return xScale2(i); })
+    .attr("y", function(d) { return yScale2(d); })
+    .attr("width", xScale2.bandwidth())
+    .attr("height", function(d) {return container_height/2 - padding*3 - yScale2(d); });
+
+  var median = timesteps.sort(d3.ascending)[Math.floor(ite_num/2)];
+  // console.log(median, timesteps.indexOf(median));
+
+  var hor_lines = container_4_plot.selectAll('.hor_line')
+    .data([max_time_step, median])
+    .enter().append("line")
+    .attr("class", "hor_line")
+    .attr("transform", "translate(" + padding*2 + ", " + (padding) + ")")
+    .transition()
+    .duration(duration)
+    .attr('y1', function(d) {return yScale2(d); })
+    .attr("x2", container_width - 4*padding)
+    .attr('y2', function(d) {return yScale2(d); });
+
+  var texts = container_4_plot.selectAll('.timeLable')
+    .data([max_time_step, median])
+    .enter().append("text")
+    .attr("class", "timeLable")
+    .attr("transform", "translate(" + (container_width - 4*padding) + ", " + (padding-4) + ")")
+    .attr("y", function(d) { return yScale2(d); })
+    .text(function(d, i) { var curindex = timesteps.indexOf(d); 
+      return (i == 0)? ("Max: "+d+" ("+curindex+")"): ("Median: "+d+" ("+curindex+")"); });
 }
 
 
