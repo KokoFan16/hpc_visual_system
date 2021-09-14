@@ -44,7 +44,6 @@ int main(int argc, char **argv)
         exit(-1);
     }
 
-    
     // MPI Initial
     if (MPI_Init(&argc, &argv) != MPI_SUCCESS)
         printf("ERROR: MPI_Init error\n");
@@ -53,12 +52,10 @@ int main(int argc, char **argv)
     if (MPI_Comm_rank(MPI_COMM_WORLD, &rank) != MPI_SUCCESS)
         printf("ERROR: MPI_Comm_rank error\n");
 
-//
 
     for (int t = 0; t < 2; t++)
     {
 
-//    set_message("");
     set_timestep(t, 2);
     set_rank(rank, process_count);
     set_namespath("");
@@ -141,114 +138,127 @@ int main(int argc, char **argv)
 		// Iterations Begin
 		for (int k = 0; k <= maxGeneration; k++)
 		{
-//			Events e(rank, "iteLoop_"+std::to_string(k), "COMP");
-
 			int change_flag = 0;
 
-			// If the process_count is larger than 1, send first row and last row to prev and next process
-			if(process_count != 1)
 			{
-				// Sync each process
-				MPI_Barrier(MPI_COMM_WORLD);
+				Events e("exchange", "COMM", 1, k);
 
-				// Blocking point-to-point communication
-				MPI_Sendrecv(&my_board[N+2], N+2, MPI_INT, prev, 0, &my_board[my_count+(N+2)], N+2, MPI_INT, next, 0, MPI_COMM_WORLD, &stats[0]);
-				MPI_Sendrecv(&my_board[my_count], N+2, MPI_INT, next, 1, my_board, N+2, MPI_INT, prev, 1, MPI_COMM_WORLD, &stats[1]);
-			}
-			else
-			{
-				// if there is only one process, just copy the ghost cell
-				for (int i = 0; i < N+2; i++)
+				// If the process_count is larger than 1, send first row and last row to prev and next process
+				if(process_count != 1)
 				{
-					my_board[i] = my_board[N*(N+2)+i];
-					my_board[(N+1)*(N+2)+i] = my_board[N+2+i];
+					// Sync each process
+					MPI_Barrier(MPI_COMM_WORLD);
+
+					// Blocking point-to-point communication
+					MPI_Sendrecv(&my_board[N+2], N+2, MPI_INT, prev, 0, &my_board[my_count+(N+2)], N+2, MPI_INT, next, 0, MPI_COMM_WORLD, &stats[0]);
+					MPI_Sendrecv(&my_board[my_count], N+2, MPI_INT, next, 1, my_board, N+2, MPI_INT, prev, 1, MPI_COMM_WORLD, &stats[1]);
 				}
-			}
-
-			// Print current board
-			#ifdef DEBUG_PRINT
-			for(int r = 0; r < process_count; r++)
-			{
-				if(rank == r)
+				else
 				{
-					printf("\nRank: %d, Generation: %d\n", rank, k);
-					printMyBoard(my_board, my_N, N);
-				}
-			}
-			#endif
-
-			for (int i = 1; i < my_N+1; i++)
-			{
-				for (int j = 1; j < N+1; j++)
-				{
-					// Calculate number of alive neighbors
-					int alives = my_board[(i-1)*(N+2)+(j-1)] + my_board[(i-1)*(N+2)+(j)]
-					+ my_board[(i-1)*(N+2)+(j+1)] + my_board[i*(N+2)+(j-1)]
-					+ my_board[i*(N+2)+(j+1)] + my_board[(i+1)*(N+2)+(j-1)]
-					+ my_board[(i+1)*(N+2)+(j)] + my_board[(i+1)*(N+2)+(j+1)];
-
-					// Print alives per process
-					#ifdef DEBUG_PRINT
-					for(int r = 0; r < process_count; r++)
+					// if there is only one process, just copy the ghost cell
+					for (int i = 0; i < N+2; i++)
 					{
-						if(rank == r)
+						my_board[i] = my_board[N*(N+2)+i];
+						my_board[(N+1)*(N+2)+i] = my_board[N+2+i];
+					}
+				}
+
+				// Print current board
+				#ifdef DEBUG_PRINT
+				for(int r = 0; r < process_count; r++)
+				{
+					if(rank == r)
+					{
+						printf("\nRank: %d, Generation: %d\n", rank, k);
+						printMyBoard(my_board, my_N, N);
+					}
+				}
+				#endif
+
+			}
+
+
+			{
+				Events e("BoardChange", "COMP", 1, k);
+
+				for (int i = 1; i < my_N+1; i++)
+				{
+					for (int j = 1; j < N+1; j++)
+					{
+						// Calculate number of alive neighbors
+						int alives = my_board[(i-1)*(N+2)+(j-1)] + my_board[(i-1)*(N+2)+(j)]
+						+ my_board[(i-1)*(N+2)+(j+1)] + my_board[i*(N+2)+(j-1)]
+						+ my_board[i*(N+2)+(j+1)] + my_board[(i+1)*(N+2)+(j-1)]
+						+ my_board[(i+1)*(N+2)+(j)] + my_board[(i+1)*(N+2)+(j+1)];
+
+						// Print alives per process
+						#ifdef DEBUG_PRINT
+						for(int r = 0; r < process_count; r++)
 						{
-							printf("r:%d,n:%d ", rank, alives);
+							if(rank == r)
+							{
+								printf("r:%d,n:%d ", rank, alives);
+							}
+						}
+						#endif
+
+						// Change status of cell based on the current status and the number of alives
+						if (my_board[i*(N+2)+j] == 1 && (alives < 2 || alives > 3))
+						{
+							my_next[i*(N+2)+j] = 0;
+							change_flag = 1;
+						}
+						else if (my_board[i*(N+2)+j] == 0 && alives == 3)
+						{
+							my_next[i*(N+2)+j] = 1;
+							change_flag = 1;
+
+						}
+						else
+						{
+							my_next[i*(N+2)+j] = my_board[i*(N+2)+j];
 						}
 					}
+					#ifdef DEBUG_PRINT
+					printf("\n");
 					#endif
-
-					// Change status of cell based on the current status and the number of alives
-					if (my_board[i*(N+2)+j] == 1 && (alives < 2 || alives > 3))
-					{
-						my_next[i*(N+2)+j] = 0;
-						change_flag = 1;
-					}
-					else if (my_board[i*(N+2)+j] == 0 && alives == 3)
-					{
-						my_next[i*(N+2)+j] = 1;
-						change_flag = 1;
-
-					}
-					else
-					{
-						my_next[i*(N+2)+j] = my_board[i*(N+2)+j];
-					}
 				}
-				#ifdef DEBUG_PRINT
-				printf("\n");
-				#endif
 			}
-			// Copy ghost cell
-			copyGhostCell(my_next, my_N, N);
 
-			// Sync each process and rank 0 gets the max change value
-			int change_result;
-			MPI_Barrier(MPI_COMM_WORLD);
-			MPI_Reduce(&change_flag, &change_result, 1, MPI_INT, MPI_MAX, 0, MPI_COMM_WORLD);
-
-			// Print change result
-			#ifdef DEBUG_PRINT
-			if(rank == 0)
-				printf("rank: %d, generation:%d, change_flag: %d\n", rank, k, change_result);
-			#endif
-
-			// If change result is 0, all the processes exit and print the taken time.
-			if(rank == 0)
 			{
-				if (change_result == 0)
-				{
-					double end = MPI_Wtime() - starttime;
-					printf("There is no any change between two generations!\n");
-					printf("Time Taken: %f\n", end);
-					MPI_Abort(MPI_COMM_WORLD, -1);
-				}
-			}
+				Events e("statusCheck", "COMP", 1, k);
 
-			// Change pointers per process
-			int *tmp = my_board;
-			my_board = my_next;
-			my_next = tmp;
+				// Copy ghost cell
+				copyGhostCell(my_next, my_N, N);
+
+				// Sync each process and rank 0 gets the max change value
+				int change_result;
+				MPI_Barrier(MPI_COMM_WORLD);
+				MPI_Reduce(&change_flag, &change_result, 1, MPI_INT, MPI_MAX, 0, MPI_COMM_WORLD);
+
+				// Print change result
+				#ifdef DEBUG_PRINT
+				if(rank == 0)
+					printf("rank: %d, generation:%d, change_flag: %d\n", rank, k, change_result);
+				#endif
+
+				// If change result is 0, all the processes exit and print the taken time.
+				if(rank == 0)
+				{
+					if (change_result == 0)
+					{
+						double end = MPI_Wtime() - starttime;
+						printf("There is no any change between two generations!\n");
+						printf("Time Taken: %f\n", end);
+						MPI_Abort(MPI_COMM_WORLD, -1);
+					}
+				}
+
+				// Change pointers per process
+				int *tmp = my_board;
+				my_board = my_next;
+				my_next = tmp;
+			}
 		}
     }
     
@@ -279,7 +289,7 @@ int main(int argc, char **argv)
 
     }
 
-    write_output("lifeGame_8");
+    write_output("lifeGame_8_loop_100");
 
     MPI_Finalize();
     return 0;

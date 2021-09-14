@@ -42,20 +42,26 @@ private:
 	double elapsed_time = 0;
 	std::string name;
 	std::string tags;
+	bool is_loop = 0;
+	int loop_ite = 0;
 
 public:
-	Events(std::string name, std::string tags);
+	Events(std::string name, std::string tags, bool loop=0, int ite=0);
 	~Events();
 };
 
-Events::Events(std::string n, std::string t)
+Events::Events(std::string n, std::string t, bool loop, int ite)
 {
 	name = n;
 	tags = t;
+	is_loop = loop;
+	loop_ite = ite;
 	auto start = std::chrono::system_clock::now();
 	start_time = start; // get start time
 	if (namespath == "") { namespath += name; } // set name-path as key
 	else { namespath += "-" + name; }
+
+//	output[namespath] += "";
 }
 
 Events::~Events()
@@ -68,11 +74,13 @@ Events::~Events()
 	std::size_t found = namespath.rfind(delimiter);
 
 	// set value (time and tag) of each function across all the time-steps
-	if (curTs == 0){
-		output[namespath] += tags + "+" + std::to_string(elapsed_time); }
+	if (curTs == 0 && output[namespath] == ""){
+		output[namespath] += tags + "-" + std::to_string(is_loop) + ";" + std::to_string(elapsed_time);
+	}
 	else {
-		output[namespath] += "-" + std::to_string(elapsed_time); }
-
+		if (loop_ite == 0){ output[namespath] += "-" + std::to_string(elapsed_time); }
+		else { output[namespath] += "+" + std::to_string(elapsed_time); }
+	}
 	namespath = namespath.substr(0, found); // back to last level
 }
 
@@ -86,12 +94,12 @@ void gather_info()
 	// merging all the times across all the time-steps for each process
 	for (p1 = output.begin(); p1 != output.end(); p1++)  {
 		events.push_back(p1->first);
-		std::size_t found = p1->second.rfind("+");
+		std::size_t found = p1->second.rfind(";");
 		std::string times = p1->second.substr(found+1, p1->second.length()-found-1);
 		message += times + ' ';
 	}
 	message.pop_back();
-	message += ','; // add comma at the end of each message
+	message += ','; // add comma sat the end of each message
 	strLen = message.length();
 
 	int max_strLen = 0; // maximum length of messages
@@ -137,26 +145,33 @@ void write_output(std::string filename)
 	{
 		std::string filePath = "../code/" + filename + ".csv"; // create file path
 		csvfile csv(filePath); // open CSV file
+
 		// set CSV file Hearer
-		csv << "name" << "parent" << "tag" << "time" << endrow;
+		csv << "id" << "parent" << "tag" << "is_loop" << "time" << endrow;
 
 		std::map<std::string, std::string> ::iterator p1;
 		std::size_t found;
 		// set CSV file content
 		for (p1 = output.begin(); p1 != output.end(); p1++)  {
 			std::size_t found = p1->first.rfind("-");
-			std::string parent, tag, times;
+			std::string parent, value, times, tag, loop;
 			// get parent
 			if (found != std::string::npos) { parent = p1->first.substr(0, found); }
 			else { parent = "null"; }
 
 			// get tag and times
-			found = p1->second.find('+');
-			tag = p1->second.substr(0, found);
+			found = p1->second.find(';');
+			value = p1->second.substr(0, found);
 			times = p1->second.substr(found+1, p1->second.length()-found-1);
 
+			found = value.find('-');
+			tag = value.substr(0, found);
+			loop = value.substr(found+1, 1);
+
+//			std::cout << p1->first << ", " << tag << ", " << loop << ", " << times << std::endl;
+
 			// set CSV file content
-			csv << p1->first << parent << tag << times << endrow;
+			csv << p1->first << parent << tag << loop << times << endrow;
 		}
 	}
 }
