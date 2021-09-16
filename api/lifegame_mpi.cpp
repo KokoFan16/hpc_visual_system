@@ -60,14 +60,14 @@ int main(int argc, char **argv)
     set_rank(rank, process_count);
     set_namespath("");
 
-	Events e("main", "None");
+	Events e("main", "null");
 
     int *board, *counts, *offset, *my_board, *my_next;
     int N, maxGeneration, my_count, my_N;
 
     // Get arguments
     {
-    	Events e("Pre", "None");
+    	Events e("Pre", "null");
 
 		N = atoi(argv[1]);
 		maxGeneration = atoi(argv[2]);
@@ -91,7 +91,7 @@ int main(int argc, char **argv)
 
 		// Calculate the counts and offset of data per process
 		{
-			Events e("calCounts", "None");
+			Events e("calCounts", "COMP");
 			counts = (int*)malloc(sizeof(int)*process_count);
 			offset = (int*)malloc(sizeof(int)*process_count);
 
@@ -125,7 +125,7 @@ int main(int argc, char **argv)
     double starttime = MPI_Wtime();
     
     {
-    	Events e("lifeChange", "COMP");
+    	Events e("lifeChange", "null");
 
 		// Set prev and next process of a process
 		int prev = rank - 1;

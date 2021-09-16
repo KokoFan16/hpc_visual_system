@@ -147,7 +147,7 @@ void write_output(std::string filename)
 		csvfile csv(filePath); // open CSV file
 
 		// set CSV file Hearer
-		csv << "id" << "parent" << "tag" << "is_loop" << "time" << endrow;
+		csv << "id" << "parent" << "tag" << "is_loop" << "times" << endrow;
 
 		std::map<std::string, std::string> ::iterator p1;
 		std::size_t found;
