@@ -76,6 +76,12 @@ div.tooltip2 {
   text-anchor: middle;
 }
 
+.xlabel{
+  font-size: 12px;
+  text-anchor: middle;
+}
+
+
 .hor_line{
   stroke: #ccc;
   stroke-width: 1px;
@@ -86,6 +92,7 @@ div.tooltip2 {
   font-size: 12px;
   text-anchor: middle;
 }
+
 
 /*.bar {
   fill: steelblue;

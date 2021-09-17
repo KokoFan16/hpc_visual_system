@@ -13,8 +13,10 @@ const div = d3
 
 let duration = 750,
     i = 0,
+    show_loop = 0,
     root,
     breakdown_times,
+    tags,
     ts_num,
     procs_num;
 
@@ -113,8 +115,11 @@ fetch("fileName.txt") // open file to get filename
     treeData_update(); 
 
     // recursively find out all the tags
-    var tags = [];
+    tags = [];
     root.children.forEach(function(d){ findtags(d, tags); })
+
+    // draw showLoops button
+    drawLoopsButt();
 
     // draw tag legends
     draw_legends(tags);
@@ -126,12 +131,15 @@ fetch("fileName.txt") // open file to get filename
     draw_treemap(root);
 
     // draw line chart
-    draw_line_figure(ts, "main");
+    draw_processes(ts, "main");
 
     // draw bar charts for all the timesteps
-    draw_timesteps(breakdown_times["main"]);
+    draw_ts_or_ite("main");
     // hightlight first bar
-    d3.select(".bar_0").attr("fill", "steelblue");
+    // d3.select(".bar_0").attr("fill", "steelblue");
+
+    // draw_ts_or_ite(breakdown_times["main"]);
+
 
     d3.select("#selec_ite").on("input", graph_display_1); // select timestep input box
     d3.select("#selec_pro").on("input", graph_display_2); // select process input box
@@ -147,13 +155,13 @@ fetch("fileName.txt") // open file to get filename
       draw_treemap(root); // draw zoomable treemap
 
       // redraw figure
-      draw_line_figure(ts, "main");
+      draw_processes(ts, "main");
 
-      // hightlight the bar with current ts value   
-      for (var b = 0; b < ts_num; b++){
-        var color = (b == ts)? "steelblue" : "#ccc";
-        d3.select(".bar_"+b).attr("fill", color);
-      }
+      // // hightlight the bar with current ts value   
+      // for (var b = 0; b < ts_num; b++){
+      //   var color = (b == ts)? "steelblue" : "#ccc";
+      //   d3.select(".bar_"+b).attr("fill", color);
+      // }
     }
 
     function graph_display_2()
@@ -189,16 +197,94 @@ fetch("fileName.txt") // open file to get filename
       root.x2 = (container_height - 2*padding) / 2;
       root.y2 = (container_width - padding) / 2;
 
+      // calculate whether the node has loop
+      root.eachAfter(function(d){
+          var sum = Number(d.data.data.is_loop),
+              children = d.children,
+              c = children && children.length;
+          while (--c >= 0) { sum += children[c].has_loop; }
+          d.has_loop = sum; })
+
       // only show first two levels 
       root.children.forEach(collapse); 
+
     }
 
   }))
 
 
+function drawLoopsButt()
+{
+  var loops_container = container_1_plot.append('g')
+  .attr("transform", "translate(" + (container_width-6*padding-10) + ", " + padding*0.8 + ")")
+
+  loops_container.append("rect")
+    .attr('class', 'showLoops')
+    .attr("width", 100)
+    .attr("height", 30)
+    .style("stroke", "grey")
+    .style("stroke-width", 2)
+    .style("fill", "#FFFFFF")
+    .style('fill-opacity', 0.5)
+    .on('mouseover', function(d) {
+      d3.select(this)
+      .style('fill-opacity', 1.0)
+      .style("stroke-width","4px"); 
+    })
+    .on('mouseout', function(d) {
+      d3.select(this)
+      .style('fill-opacity', 0.5)
+      .style("stroke-width","2px"); 
+    })
+    .on('click', showloops);
+
+  loops_container.append("text")
+    .attr('class', 'showLoopsText')
+    .attr("transform", "translate(" + (50) + ", " + (20) + ")")
+    .text("Show Loops")
+    .attr('text-anchor', 'middle')
+    .style('fill-opacity', 0.8)
+
+  function showloops()
+  {
+    if (show_loop == 0) { 
+      show_loop = 1; 
+      d3.select('.showLoops').style("fill", "#AED6F1");
+
+      d3.select('.showLoopsText').text("Back");
+
+      root.children.forEach(findAllLoops); 
+    }
+    else { 
+      show_loop = 0;
+      d3.select('.showLoops').style("fill", "#FFFFFF");
+
+      d3.select('.showLoopsText').text("Show Loops");
+
+      root.children.forEach(collapse);
+     }
+
+     draw_tree(root, tags, draw_treemap);
+     draw_treemap(root);
+     draw_ts_or_ite("main");
+
+  }
+
+  function findAllLoops(d)
+  {
+    if (d.has_loop){
+      if (d._children){
+        d.children = d._children;
+        d.children.forEach(findAllLoops)
+        d._children = null;
+      }
+    }
+    else { collapse(d); }
+  }
+}
+
+
 // 1. draw tree structure of the tree
-
-
 
 // // Read Json file
 // console.time('readJson');
@@ -292,10 +378,18 @@ fetch("fileName.txt") // open file to get filename
 
 // collapse tree levels
 function collapse(d) {
-  if(d.children) {
+  if (d.children) {
     d._children = d.children
     d._children.forEach(collapse)
     d.children = null
+  }
+}
+
+function uncollapse(d) {
+  if (d._children) {
+    d.children = d._children
+    d.children.forEach(uncollapse)
+    d._children = null
   }
 }
 
@@ -322,7 +416,15 @@ function draw_legends(tags)
     .attr("height", tags.length*22)
     .style("stroke", "grey")
     .style("stroke-width", 2)
-    .style("fill", "none"); 
+    .style("fill", "none")
+    .on('mouseover', function(d) {
+      d3.select(this)
+      .style("stroke-width","4px"); })
+    .on('mouseout', function(d) {
+      d3.select(this)
+      .style("stroke-width","2px"); })
+    .on('click', showTags);
+
 
   container_1_plot.append("text")
     .text("Tags")
@@ -352,14 +454,32 @@ function draw_legends(tags)
     legends.append("rect")
       .attr("width", 15)
       .attr("height", 15)
-      .attr("fill", color(index));
+      .attr("fill", color(index))
+      .on('mouseover', function(d) {
+        d3.select(this)
+          .style("stroke", "grey")
+          .style("stroke-width","2px"); })
+      .on('mouseout', function(d) {
+        d3.select(this)
+          .style("stroke", "none") });
   });
+
+  function showTags(){
+    // root.children.forEach(uncollapse); 
+    // // uncollapse(root);
+    // console.log(root);
+    // draw_tree(root, tags);
+
+    // draw_treemap(root);
+  }
 }
+
+
 
 
 // draw trees
 let nodes;
-function draw_tree(source, tags=[])
+function draw_tree(source, tags, loop=0)
 {
   // draw the links between the nodes
   var tree = treemap(root);
@@ -396,7 +516,11 @@ function draw_tree(source, tags=[])
           .transition()
           .duration(500)
           .style('opacity', 0); })
-      .on('click', click);
+      .on('click', function(d) {
+          if (show_loop == 0) { return click(d); }
+          else {
+            if (d.data.data.is_loop == "1") { return click(d); } }
+        });
 
   nodeEnter.append("circle")
     .attr('class', 'node')
@@ -404,6 +528,7 @@ function draw_tree(source, tags=[])
 
   //Add text and tooltips for node and links
   nodeEnter.append("text")
+    .attr('class', 'nodename')
     .attr("dx", ".1em")
     .attr("y", "1.5em")
     .style("text-anchor", "middle")
@@ -423,11 +548,24 @@ function draw_tree(source, tags=[])
   nodeUpdate.select('circle.node')
     .attr('r', 10)
     .style("fill", function(d) {
-      // return d._children ? "lightsteelblue" : "#fff";
       if (!tags.includes(d.data.data.tag)) { return d._children ? "lightsteelblue" : "#fff"; }
       else {var index = tags.indexOf(d.data.data.tag); return color(index);}
     })
+    .style('fill-opacity', function(d) {
+      if (show_loop == 1 ) { return (d.data.data.is_loop == "1") ? 1: 0.1; }
+      else { return 1; }
+    }) 
+    .style('stroke-opacity', function(d){
+      if (show_loop == 1) { return (d.data.data.is_loop == "1") ? 1: 0.1; }
+      else { return 1; }
+    })
     .attr('cursor', 'pointer');
+
+  nodeUpdate.select('.nodename')
+    .style('fill-opacity', function(d){
+      if (show_loop == 1) { return (d.data.data.is_loop == "1") ? 1: 0.1; }
+      else { return 1; }
+    });
 
   // Remove any exiting nodes
   var nodeExit = node.exit().transition()
@@ -454,12 +592,17 @@ function draw_tree(source, tags=[])
           return diagonal(o, o)
         });
 
-  var linkUpdate = linkEnter.merge(link);
+  var linkUpdate = linkEnter.merge(link)
+      .style('stroke-opacity', function(d){
+        if (show_loop == 1) { return (d.data.data.is_loop == "1") ? 1: 0.2; }
+        else { return 1; }
+      });
 
   // Transition back to the parent element position
   linkUpdate.transition()
     .duration(duration)
     .attr('d', function(d){ return diagonal(d, d.parent) });
+
 
   // Remove any exiting links
   var linkExit = link.exit().transition()
@@ -478,20 +621,22 @@ function draw_tree(source, tags=[])
   // click node
   function click(d) 
   {
-    if (d.children) 
-    {
-      d._children = d.children;
-      d.children = null;
-    } 
-    else 
-    {
-      d.children = d._children;
-      d._children = null;
+    if (d.children || d._children) {
+      if (d.children) {
+        d._children = d.children;
+        d.children = null;
+      } 
+      else {
+        d.children = d._children;
+        d._children = null;
+      }
+
+      draw_tree(d, tags); // refresh tree 
+      draw_treemap(root); // refresh treemap 
     }
-
-    draw_tree(d, tags); // refresh tree 
-
-    draw_treemap(root); // refresh treemap 
+    else {
+      if (show_loop == 1) { console.log(d.data.id) }
+    }
   }
 }
 
@@ -684,7 +829,7 @@ function draw_treemap(source)
     .remove();
 
 
-  function update_linechart(d){ draw_line_figure(ts, d.data.id); }
+  function update_linechart(d){ draw_processes(ts, d.data.id); }
 }
 
 // wrap texts based on the width
@@ -791,34 +936,13 @@ container_3_plot.append('rect')
 .attr('height', 20);
 
 
-// draw line chart
-function draw_line_figure(ts, nodeid)
+function draw_processes(ts, nodeid)
 {
   // get time data for all the processes
-  // var paths = nodeid.split("-");
   var times = [];
 
   breakdown_times[nodeid].forEach(function(d, i) { 
     times.push({"id": i, "time": (parseFloat(d[ts])*time_metics).toFixed(3)}); });
-
-  // console.log(times);
-
-//   var c = 1;
-//   Object.keys(ite_data).forEach(function(d, i){c = 1; getData(ite_data[d]["children"], i); });
-
-//   function getData(data, i){ 
-//     if (c < paths.length)
-//     {
-//       var len = data.children.length;
-//       var nodeindex = 0;
-//       for (var k = 0; k < len; k++){
-//         if (data.children[k].name == paths[c]) { nodeindex = k; break; }
-//       }
-//       c++; 
-//       getData(data.children[nodeindex], i);
-//     } 
-//     else { times.push({"id": i, "time": data.time}); } 
-//   }
 
   //update x axis Math.ceil(times.length/5)*5]
   xScale.domain([0, times.length-1]).range([0, (container_width - padding*4)]);
@@ -827,17 +951,24 @@ function draw_line_figure(ts, nodeid)
   // update current phase
   phase.text("Current Phase: " + nodeid);
 
-  //update y axis
-  var min_time = d3.min(times, function(d){ return d.time; });
-  var max_time = d3.max(times, function(d){ return d.time; });
+  draw_line_figure(times, container_3_plot, xScale, yScale, yAxis, line)
+}
 
-  yScale.domain([min_time*0.95, max_time*1.05])
+
+// draw line chart
+function draw_line_figure(source, container, xs, ys, y, l)
+{
+  // update y axis
+  var min_time = d3.min(source, function(d){ return d.time; });
+  var max_time = d3.max(source, function(d){ return d.time; });
+
+  ys.domain([min_time*0.95, max_time*1.05])
     .range([(container_height/2 - 3*padding), 0]);
-  yAxis.transition().duration(duration).call(d3.axisLeft(yScale));
+  y.transition().duration(duration).call(d3.axisLeft(ys));
 
   // draw line graph
-  var links = container_3_plot.selectAll('.link')
-     .data([times], function(d){ return d.id; });
+  var links = container.selectAll('.link')
+     .data([source], function(d){ return d.id; });
 
   // Enter any new links at the parent's previous position.
   var linkEnter = links.enter().append("path")
@@ -849,23 +980,23 @@ function draw_line_figure(ts, nodeid)
   // Transition back to the parent element position
   linkUpdate.transition()
     .duration(duration)
-    .attr('d', line);
+    .attr('d', l);
 
   // Remove any exiting paths
   var linkExit = links.exit().transition()
     .duration(duration)
-    .attr('d', line)
+    .attr('d', l)
     .remove();
 
   // add dots for line graph
-  var node = container_3_plot.selectAll(".dot")
-    .data(times, function(d){ return d.time; });
+  var node = container.selectAll(".dot")
+    .data(source, function(d){ return d.time; });
 
   // enter nodes
   var nodeEnter = node.enter().append("circle") // Uses the enter().append() method
     .attr("class", "dot") // Assign a class for styling
-    .attr("cx", function(d) { return xScale(d.id); })
-    .attr("cy", function(d) { return yScale(d.time); })
+    .attr("cx", function(d) { return xs(d.id); })
+    .attr("cy", function(d) { return ys(d.time); })
     .attr("r", 3)
     .attr("transform", "translate(" + padding*2 + ", " + (padding*1.5-6) + ")")
     .style('fill-opacity', 0)
@@ -897,7 +1028,7 @@ function draw_line_figure(ts, nodeid)
     .remove();
 
 
-  var hor_lines = container_3_plot.selectAll('.hor_line')
+  var hor_lines = container.selectAll('.hor_line')
      .data([max_time, min_time]);
 
   // Enter any new links at the parent's previous position.
@@ -910,19 +1041,19 @@ function draw_line_figure(ts, nodeid)
   // Transition back to the parent element position
   lineUpdate.transition()
     .duration(duration)
-    .attr('y1', function(d) {return yScale(d); })
+    .attr('y1', function(d) {return ys(d); })
     .attr("x2", container_width - 4*padding)
-    .attr('y2', function(d) {return yScale(d); });
+    .attr('y2', function(d) {return ys(d); });
 
   // Remove any exiting paths
   hor_lines.exit().transition()
     .duration(duration)
-    .attr('y1', function(d) {return yScale(d); })
+    .attr('y1', function(d) {return ys(d); })
     .attr("x2", container_width - 4*padding)
-    .attr('y2', function(d) {return yScale(d); })
+    .attr('y2', function(d) {return ys(d); })
     .remove();
 
-  var texts = container_3_plot.selectAll('.timeLable')
+  var texts = container.selectAll('.timeLable')
     .data([max_time, min_time]);
 
   var textsEnter = texts.enter().append("text")
@@ -932,29 +1063,23 @@ function draw_line_figure(ts, nodeid)
   textsEnter.merge(texts)
     .transition()
     .duration(duration)
-    .attr("y", function(d) { return yScale(d); })
+    .attr("y", function(d) { return ys(d); })
     .text(function(d, i) { return (i == 0) ? ("Max: " + d) : ("Min: " + d); });
 }
 
-
-// // draw second container (for line chart)
-// // var container_4 = svg.append('rect')
-// //   .attr('fill', 'none')
-// //   .attr('stroke', 'black')
-// //   .attr('x', container_width*2 + padding*3)
-// //   .attr('y', container_height/2 + padding*2)
-// //   .attr('width', container_width)
-// //   .attr('height', (container_height/2 - padding/2));
 
 var container_4_plot = svg.append('g')
   .attr('class', 'container_4_plot')
   .attr('transform', `translate(${padding*7/2 + 2*container_width}, ${container_height/2+padding*3/2})`);
 
 // x scale (change values based on the real data)
-var xScale2 = d3.scaleBand()
-  .domain([0, 30])
-  .range([0, (container_width - padding*4)])
-  .padding(0.1);;
+// var xScale2 = d3.scaleBand()
+//   .domain([0, 30])
+//   .range([0, (container_width - padding*4)])
+//   .padding(0.1);;
+var xScale2 = d3.scaleLinear()
+  .domain([0, 100])
+  .range([0, (container_width - padding*4)]);
 
 // y scale (change values based on the real data)
 var yScale2 = d3.scaleLinear()
@@ -972,9 +1097,15 @@ var yAxis2 = container_4_plot.append('g')
   .attr("class", "axis")
   .attr("transform", "translate(" + padding*2 + ", " + padding + ")"); 
 
+
+var line2 = d3.line()
+    .x(function(d) { return xScale2(d.id); }) // set the x values for the line generator
+    .y(function(d) { return yScale2(d.time); }) // set the y values for the line generator 
+    .curve(d3.curveMonotoneX); // apply smoothing to the line
+
 // labels
 container_4_plot.append('text')
-  .attr("class", "labels")
+  .attr("class", "xlabel")
   .attr("transform", "translate(" + container_width/2 + ", " + (container_height/2 - 0.5*padding) + ")")
   .text("Total number of timesteps");
 
@@ -984,6 +1115,55 @@ container_4_plot.append('text')
   .attr("y", padding/2)
   .attr("transform", "rotate(-90)")
   .text("Time Taken (ms)");
+
+
+function draw_ts_or_ite(nodeid)
+{
+    // get time data for all the timesteps
+    if (show_loop == 0)
+    {
+      var timesteps = [];
+      for (var c = 0; c < ts_num; c++)
+      {
+        var column = [];
+        breakdown_times[nodeid].forEach( function(d) { 
+          column.push(d[c][0]); 
+        }) 
+
+        timesteps.push({"id": c, "time": (d3.max(column)*time_metics).toFixed(3)}); //(d3.max(d.map(Number))*time_metics).toFixed(3)
+      }
+
+      // update x axis Math.ceil(times.length/5)*5]
+      xScale2.domain([0, timesteps.length-1]).range([0, (container_width - padding*4)]);
+      xAxis2.transition().duration(duration).call(d3.axisBottom(xScale2));
+
+      draw_line_figure(timesteps, container_4_plot, xScale2, yScale2, yAxis2, line2);
+    }
+    else
+    {
+        // get time data for all the ierations
+        console.log(breakdown_times[nodeid]);
+        // var times = [];
+
+        // breakdown_times[nodeid].forEach(function(d, i) { 
+        //   times.push({"id": i, "time": (parseFloat(d[ts])*time_metics).toFixed(3)}); });
+
+        // //update x axis Math.ceil(times.length/5)*5]
+        // xScale.domain([0, times.length-1]).range([0, (container_width - padding*4)]);
+        // xAxis.transition().duration(duration).call(d3.axisBottom(xScale));
+
+        // // update current phase
+        // phase.text("Current Phase: " + nodeid);
+
+        // draw_line_figure(times, container_4_plot, xScale, yScale, yAxis, line);
+
+        d3.select(".xlabel").text("Total number of loop iterations");
+    }
+
+
+}
+
+
 
 function draw_timesteps(source)
 {
@@ -998,23 +1178,11 @@ function draw_timesteps(source)
 
     timesteps.push((d3.max(column)*time_metics).toFixed(3)); //(d3.max(d.map(Number))*time_metics).toFixed(3)
   }
-  
-  // console.log(timesteps);
-//   for (var t = 0; t < ite_num; t++){
-//     var max_time = 0;
-//     for (var p = 0; p < procs_num; p++){
-//       if (source[t][p].children.time > max_time) {
-//         max_time = source[t][p].children.time;}
-//     }
-//     timesteps.push(max_time);
-//   }
-  // console.log(timesteps);
 
   // update x axis 
   xScale2.domain(timesteps.map(function(d, i){ return i; })).range([0, (container_width - padding*4)]);
   xAxis2.transition().duration(duration).call(d3.axisBottom(xScale2));
 
-//   // console.log(timesteps)
   var max_time_step = d3.max(timesteps);
   yScale2.domain([0, Math.ceil(max_time_step)])
     .range([(container_height/2 - 3*padding), 0]);
