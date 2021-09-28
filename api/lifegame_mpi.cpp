@@ -289,7 +289,7 @@ int main(int argc, char **argv)
 
     }
 
-    write_output("lifeGame_8_loop_100");
+    write_output("lifeGame_16_loop_100");
 
     MPI_Finalize();
     return 0;

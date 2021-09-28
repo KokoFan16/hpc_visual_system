@@ -18,7 +18,11 @@ let duration = 750,
     breakdown_times,
     tags,
     ts_num,
-    procs_num;
+    procs_num,
+    show_tag = 0,
+    is_loop = '0',
+    nodeid,
+    cleared = 0;
 
 // draw svg canvas
 var svg = d3.select('#svg_chart').append('svg')
@@ -56,17 +60,97 @@ var container_1_plot = svg.append('g')
 // declares a tree 
 var treemap = d3.tree().size([container_width - padding, container_height - 3*padding]);
 
-var openFile;
-let proc = 0, ts = 0;
+// var openFile;
 var time_metics = 1;
+let proc = 0, ts = 0;
 
 fetch("fileName.txt") // open file to get filename
   .then(res => res.text())
-  .then(data => openFile = data)
-  .then(() => d3.csv(openFile).then(function(flatData) {
+  .then(function(data) { 
+    var openFile = data.split("+"); 
 
-    breakdown_times = {}; // divide times based on rank, ts and loops
-    flatData.forEach(function(d) {
+    var ddOptions = openFile.slice();
+    if (openFile.length > 1) {
+      ddOptions.push("AllFiles(Scale)");
+    }
+
+    var options = d3.select('#selecFiles').selectAll("option")
+                    .data(ddOptions).enter()
+                    .append("option");
+
+    options.text(function(d) { return d;})
+           .attr("value", function(d) { return d.replace(); });
+
+    drawContainers();
+
+    // draw showLoops button
+    drawLoopsButt();
+
+    var file = d3.select("#selecFiles").property("value");
+
+    d3.csv(file).then(function(flatData) {
+      breakdown_times = {}; // divide times based on rank, ts and loops
+      parseData(flatData, breakdown_times);
+      render(flatData);
+      // draw tag legends
+      draw_legends(tags);
+    });
+
+
+    d3.select("#selecFiles").on("change", change)
+    function change() {
+      if (cleared == 1) { drawContainers(); }
+      if (show_loop == 1) {
+          show_loop = 0;
+          d3.select('.showLoops').style("fill", "#FFFFFF");
+          d3.select('.showLoopsText').text("Show Loops");
+      }
+      if (show_tag == 1) {
+        show_tag = 0;
+        d3.select(".tagLegend").style("fill", "none");
+      }
+
+      time_metics = 1;
+      file = d3.select("#selecFiles").property("value");
+      if (file != "AllFiles(Scale)") {  
+        d3.csv(file).then(function(flatData) {
+          breakdown_times = {}; // divide times based on rank, ts and loops
+          parseData(flatData, breakdown_times);
+          render(flatData);
+        });
+        cleared = 0;
+      }
+      else {
+
+        Promise.all(openFile.map(f => d3.csv(f))).then(function(data) {
+          cleared = 1;
+          breakdown_times = {};
+          data.forEach(function(d, i) { 
+            var temp = {};
+            parseData(d, temp); 
+            breakdown_times[i] = temp;
+          })
+        })
+
+        root.children.forEach(collapse);
+        draw_tree(root, tags);
+
+        container_2_plot.selectAll("*").remove();
+        colorbar_plot.selectAll("*").remove();
+        container_3_plot.selectAll("*").remove();
+        container_4_plot.selectAll("*").remove();
+        loops_container.selectAll("*").remove();
+
+        
+      }
+    }
+
+  });
+
+
+function parseData(data, times)
+{
+    data.forEach(function(d) {   
       var list = [];
       var filter_time = d.times.split("|"); // split times based on rank
       filter_time.forEach(function(d) {
@@ -77,33 +161,33 @@ fetch("fileName.txt") // open file to get filename
           ttimes.forEach(function(d){ loops.push(d.split("+")); }); // split times based on loop iterations
           list.push(loops); }
       })
-      breakdown_times[d.id] = list; // id: times
-    });
+      times[d.id] = list; // id: times
+    });  
 
-    // console.log(breakdown_times);
+}
+
+function render(data) {
 
     procs_num = breakdown_times["main"].length; // total number of processes
     d3.select("#selec_pro").attr("max", procs_num-1); // set input box based on this value
 
     ts_num = breakdown_times["main"][0].length; // total number of timesteps
-    d3.select("#selec_ite").attr("max", ts_num-1); // set input box based on this value
+    d3.select("#selec_ite").attr("max", ts_num-1); // set input box based on this value 
 
     if (breakdown_times["main"][0][0] < 0.1) {time_metics *= 1000;} // time metrics (s or ms)
 
     // assign null correctly
-    flatData.forEach(function(d) {
+    data.forEach(function(d) {
         if (d.parent == "null") { d.parent = null};
         if (d.tag == "null") { d.tag = null}; 
         d.times = null;
       });
 
-    // console.log(breakdown_times);
-
     // convert the flat data into a hierarchy 
     var treeData = d3.stratify()
       .id(function(d) { return d.id; })
       .parentId(function(d) { return d.parent; })
-      (flatData);
+      (data);
 
     // set node name based on its id
     treeData.each(function(d) {
@@ -111,18 +195,30 @@ fetch("fileName.txt") // open file to get filename
       d.name = callNames[callNames.length-1];
     });
 
+    root = d3.hierarchy(treeData, function(d) {
+        return d.children;
+      });
+
+    root.x2 = (container_height - 2*padding) / 2;
+    root.y2 = (container_width - padding) / 2;
+
+    // calculate whether the node has loop
+    root.eachAfter(function(d){
+        var sum = Number(d.data.data.is_loop),
+            children = d.children,
+            c = children && children.length;
+        while (--c >= 0) { sum += children[c].has_loop; }
+        d.has_loop = sum; })
+
     // set time for each node (need to be updated based on current rank and ts)
     treeData_update(); 
+
+    // collapse
+    root.children.forEach(collapse);
 
     // recursively find out all the tags
     tags = [];
     root.children.forEach(function(d){ findtags(d, tags); })
-
-    // draw showLoops button
-    drawLoopsButt();
-
-    // draw tag legends
-    draw_legends(tags);
 
     // draw tree
     draw_tree(root, tags);
@@ -130,16 +226,13 @@ fetch("fileName.txt") // open file to get filename
     // draw zoomable treemap
     draw_treemap(root);
 
+    nodeid = "main";
+
     // draw line chart
-    draw_processes(ts, "main");
+    draw_processes(ts, nodeid, '0');
 
     // draw bar charts for all the timesteps
-    draw_ts_or_ite("main");
-    // hightlight first bar
-    // d3.select(".bar_0").attr("fill", "steelblue");
-
-    // draw_ts_or_ite(breakdown_times["main"]);
-
+    draw_ts_or_ite(nodeid);
 
     d3.select("#selec_ite").on("input", graph_display_1); // select timestep input box
     d3.select("#selec_pro").on("input", graph_display_2); // select process input box
@@ -155,13 +248,10 @@ fetch("fileName.txt") // open file to get filename
       draw_treemap(root); // draw zoomable treemap
 
       // redraw figure
-      draw_processes(ts, "main");
+      draw_processes(ts, nodeid, is_loop);
 
-      // // hightlight the bar with current ts value   
-      // for (var b = 0; b < ts_num; b++){
-      //   var color = (b == ts)? "steelblue" : "#ccc";
-      //   d3.select(".bar_"+b).attr("fill", color);
-      // }
+      draw_ts_or_ite(nodeid);
+
     }
 
     function graph_display_2()
@@ -174,50 +264,162 @@ fetch("fileName.txt") // open file to get filename
 
       draw_tree(root, tags);
       draw_treemap(root); // draw zoomable treemap
+
+      if (show_loop == 1) { draw_ts_or_ite(nodeid); }
     }
 
-    function treeData_update()
-    {
+
+    function treeData_update() {
       // assign the name to each node 
-      treeData.each(function(d) {
-          var t = breakdown_times[d.id][proc][ts];
-          if (d.data.is_loop == "0"){
-            d.time = (parseFloat(t)*time_metics).toFixed(3);}
-          else {
-            var total_time = 0;
-            t.forEach(function(d){ total_time += parseFloat(d); })
-            d.time = (total_time*time_metics).toFixed(3);}
+      root.each(function(d) {
+        var t = breakdown_times[d.data.id][proc][ts];
+        if (d.data.data.is_loop == "0"){
+          d.data.time = (parseFloat(t)*time_metics).toFixed(3);}
+        else {
+          var total_time = 0;
+          t.forEach(function(d){ total_time += parseFloat(d); })
+          d.data.time = (total_time*time_metics).toFixed(3);}
       });
-
-      //  assigns the data to a hierarchy using parent-child relationships
-      root = d3.hierarchy(treeData, function(d) {
-          return d.children;
-        });
-
-      root.x2 = (container_height - 2*padding) / 2;
-      root.y2 = (container_width - padding) / 2;
-
-      // calculate whether the node has loop
-      root.eachAfter(function(d){
-          var sum = Number(d.data.data.is_loop),
-              children = d.children,
-              c = children && children.length;
-          while (--c >= 0) { sum += children[c].has_loop; }
-          d.has_loop = sum; })
-
-      // only show first two levels 
-      root.children.forEach(collapse); 
-
     }
+}
 
-  }))
+// fetch("fileName.txt") // open file to get filename
+//   .then(res => res.text())
+//   .then(data => openFile = data)
+//   .then(() => d3.csv(openFile).then(function(flatData) {
+
+//     breakdown_times = {}; // divide times based on rank, ts and loops
+//     flatData.forEach(function(d) {
+//       var list = [];
+//       var filter_time = d.times.split("|"); // split times based on rank
+//       filter_time.forEach(function(d) {
+//         var ttimes = d.split("-"); // split times based on ts
+//         if (d.is_loop == "0") { list.push(ttimes); } // not loop
+//         else {  // is loop
+//           var loops = [];
+//           ttimes.forEach(function(d){ loops.push(d.split("+")); }); // split times based on loop iterations
+//           list.push(loops); }
+//       })
+//       breakdown_times[d.id] = list; // id: times
+//     });
+
+//     procs_num = breakdown_times["main"].length; // total number of processes
+//     d3.select("#selec_pro").attr("max", procs_num-1); // set input box based on this value
+
+//     ts_num = breakdown_times["main"][0].length; // total number of timesteps
+//     d3.select("#selec_ite").attr("max", ts_num-1); // set input box based on this value
+
+//     if (breakdown_times["main"][0][0] < 0.1) {time_metics *= 1000;} // time metrics (s or ms)
+
+//     // assign null correctly
+//     flatData.forEach(function(d) {
+//         if (d.parent == "null") { d.parent = null};
+//         if (d.tag == "null") { d.tag = null}; 
+//         d.times = null;
+//       });
+
+//     // console.log(breakdown_times);
+
+//     // convert the flat data into a hierarchy 
+//     var treeData = d3.stratify()
+//       .id(function(d) { return d.id; })
+//       .parentId(function(d) { return d.parent; })
+//       (flatData);
+
+//     // set node name based on its id
+//     treeData.each(function(d) {
+//       var callNames = d.id.split("-");
+//       d.name = callNames[callNames.length-1];
+//     });
+
+//     root = d3.hierarchy(treeData, function(d) {
+//         return d.children;
+//       });
+
+//     root.x2 = (container_height - 2*padding) / 2;
+//     root.y2 = (container_width - padding) / 2;
+
+//     // calculate whether the node has loop
+//     root.eachAfter(function(d){
+//         var sum = Number(d.data.data.is_loop),
+//             children = d.children,
+//             c = children && children.length;
+//         while (--c >= 0) { sum += children[c].has_loop; }
+//         d.has_loop = sum; })
+
+//     // set time for each node (need to be updated based on current rank and ts)
+//     treeData_update(); 
+
+//     // collapse
+//     root.children.forEach(collapse);
+
+//     // recursively find out all the tags
+//     tags = [];
+//     root.children.forEach(function(d){ findtags(d, tags); })
+
+//     // draw showLoops button
+//     drawLoopsButt();
+
+//     // draw tag legends
+//     draw_legends(tags);
+
+//     // draw tree
+//     draw_tree(root, tags);
+
+//     // draw zoomable treemap
+//     draw_treemap(root);
+
+//     nodeid = "main";
+
+//     // draw line chart
+//     draw_processes(ts, nodeid, '0');
+
+//     // draw bar charts for all the timesteps
+//     draw_ts_or_ite(nodeid);
 
 
-function drawLoopsButt()
-{
-  var loops_container = container_1_plot.append('g')
-  .attr("transform", "translate(" + (container_width-6*padding-10) + ", " + padding*0.8 + ")")
+//     d3.select("#selec_ite").on("input", graph_display_1); // select timestep input box
+//     d3.select("#selec_pro").on("input", graph_display_2); // select process input box
+//     function graph_display_1()
+//     {
+//       // Obtained value from input box
+//       ts = d3.select("#selec_ite").property("value");
+//       proc = d3.select("#selec_pro").property("value");
 
+//       treeData_update();
+
+//       draw_tree(root, tags); // draw tree 
+//       draw_treemap(root); // draw zoomable treemap
+
+//       // redraw figure
+//       draw_processes(ts, nodeid, is_loop);
+
+//       draw_ts_or_ite(nodeid);
+
+//     }
+
+//     function graph_display_2()
+//     {
+//       // Obtained value from input box
+//       ts = d3.select("#selec_ite").property("value");
+//       proc = d3.select("#selec_pro").property("value");
+
+//       treeData_update();
+
+//       draw_tree(root, tags);
+//       draw_treemap(root); // draw zoomable treemap
+
+//       if (show_loop == 1) { draw_ts_or_ite(nodeid); }
+//     }
+
+
+
+//   }))
+
+var loops_container = container_1_plot.append('g')
+      .attr("transform", "translate(" + (container_width-6*padding-10) + ", " + padding*0.8 + ")");
+
+function drawLoopsButt() {
   loops_container.append("rect")
     .attr('class', 'showLoops')
     .attr("width", 100)
@@ -244,16 +446,17 @@ function drawLoopsButt()
     .text("Show Loops")
     .attr('text-anchor', 'middle')
     .style('fill-opacity', 0.8)
+}
 
-  function showloops()
-  {
+function showloops() {
+  if (show_tag == 0) {
     if (show_loop == 0) { 
       show_loop = 1; 
       d3.select('.showLoops').style("fill", "#AED6F1");
 
       d3.select('.showLoopsText').text("Back");
 
-      root.children.forEach(findAllLoops); 
+      root.children.forEach(findAllLoops); // show the nodes who have loop nodes
     }
     else { 
       show_loop = 0;
@@ -262,119 +465,25 @@ function drawLoopsButt()
       d3.select('.showLoopsText').text("Show Loops");
 
       root.children.forEach(collapse);
-     }
 
+      draw_processes(ts, "main", is_loop); 
+      draw_ts_or_ite("main");
+     }
      draw_tree(root, tags, draw_treemap);
      draw_treemap(root);
-     draw_ts_or_ite("main");
-
-  }
-
-  function findAllLoops(d)
-  {
-    if (d.has_loop){
-      if (d._children){
-        d.children = d._children;
-        d.children.forEach(findAllLoops)
-        d._children = null;
-      }
-    }
-    else { collapse(d); }
   }
 }
 
-
-// 1. draw tree structure of the tree
-
-// // Read Json file
-// console.time('readJson');
-
-// d3.json("data/parallel-io.json").then(function(treeData){
-
-//   // find number of iterations
-//   ite_num = Object.keys(treeData).length;
-//   d3.select("#selec_ite").attr("max", ite_num-1);
-
-//   procs_num = Object.keys(treeData[0]).length;
-//   d3.select("#selec_pro").attr("max", procs_num-1);
-
-//   // Assign parent, children, height, depth
-//   root = d3.hierarchy(treeData[0][0]["children"], function(d) { return d.children; });
-//   root.x2 = (container_height - 2*padding) / 2;
-//   root.y2 = (container_width - padding) / 2;
-
-//   root.children.forEach(collapse); // only show first two levels 
-
-//   draw_treemap(root); // draw zoomable treemap
-
-//   // recursively find out all the tags
-//   var tags = [];
-//   root.children.forEach(function(d){ findtags(d, tags); })
-
-//   // remove tag "NONE"
-//   var index = tags.indexOf('NONE');
-//   if (index > -1) { tags.splice(index, 1); }
-
-//   // draw tag legends
-//   draw_legends(tags);
-
-//   // draw tree
-//   draw_tree(root, tags);
-
-//   // draw line chart
-//   ite_data = treeData[0];
-//   draw_line_figure(ite_data[0]["children"].id);
-
-//   draw_timesteps(treeData);
-//   d3.select(".bar_0").attr("fill", "steelblue");
-
-//   d3.select("#selec_ite").on("input", graph_display_1); // select timestep input box
-//   d3.select("#selec_pro").on("input", graph_display_2); // select process input box
-//   function graph_display_1()
-//   {
-//     // Obtained value from input box
-//     var ite = d3.select("#selec_ite").property("value");
-//     var proc = d3.select("#selec_pro").property("value");
-
-//     // draw tree
-//     root = d3.hierarchy(treeData[ite][proc]["children"], function(d) { return d.children; });
-//     root.x2 = (container_height - 2*padding) / 2;
-//     root.y2 = (container_width - padding) / 2;
-//     root.children.forEach(collapse);
-
-//     draw_tree(root, tags);
-//     draw_treemap(root); // draw zoomable treemap
-
-//     // redraw figure
-//     ite_data = treeData[ite];
-//     draw_line_figure(ite_data[0]["children"].id);
-
-//     // var barclass = "bar"+   
-//     for (var b = 0; b < ite_num; b++){
-//       var color = (b == ite)? "steelblue" : "#ccc";
-//       d3.select(".bar_"+b).attr("fill", color);
-//     }
-//   }
-   
-
-//   function graph_display_2()
-//   {
-//     // Obtained value from input box
-//     var ite = d3.select("#selec_ite").property("value");
-//     var proc = d3.select("#selec_pro").property("value");
-
-//     // draw tree
-//     root = d3.hierarchy(treeData[ite][proc]["children"], function(d) { return d.children; });
-//     root.x2 = (container_height - 2*padding) / 2;
-//     root.y2 = (container_width - padding) / 2;
-//     root.children.forEach(collapse);
-
-//     draw_tree(root, tags);
-//     draw_treemap(root); // draw zoomable treemap
-//   }
-
-// });
-// console.timeEnd('readJson');
+function findAllLoops(d) {
+  if (d.has_loop){
+    if (d._children){
+      d.children = d._children;
+      d.children.forEach(findAllLoops)
+      d._children = null;
+    }
+  }
+  else { collapse(d); }
+}
 
 // collapse tree levels
 function collapse(d) {
@@ -397,7 +506,6 @@ function uncollapse(d) {
 function findtags(d, tags) {
   if(d._children) {
     d._children.forEach(function(d){ 
-      // console.log(d.data.data.tag);
       if (!tags.includes(d.data.data.tag)) { tags.push(d.data.data.tag); }
       findtags(d, tags);
     });
@@ -411,12 +519,13 @@ var color = d3.scaleOrdinal(d3.schemeAccent);
 function draw_legends(tags)
 {
   container_1_plot.append("rect")
+    .attr("class", "tagLegend")
     .attr("transform", "translate(" + (padding*1.2) + ", " + padding*0.8 + ")")
     .attr("width", 80)
     .attr("height", tags.length*22)
     .style("stroke", "grey")
     .style("stroke-width", 2)
-    .style("fill", "none")
+    .style("fill", "#FCF4DC")
     .on('mouseover', function(d) {
       d3.select(this)
       .style("stroke-width","4px"); })
@@ -438,8 +547,7 @@ function draw_legends(tags)
   var legend_group_1 = container_1_plot.append("g")
     .attr("transform", "translate(" + (padding*1.5) + ", " + padding + ")");
 
-  tags.forEach(function(item, index)
-  {
+  tags.forEach(function(item, index) {
     var legends = legend_group_1.append("g")
       .attr("transform", "translate(0, " + (index * 20) + ")");
 
@@ -461,20 +569,32 @@ function draw_legends(tags)
           .style("stroke-width","2px"); })
       .on('mouseout', function(d) {
         d3.select(this)
-          .style("stroke", "none") });
+          .style("stroke", "none") })
+      .on('click', function(d) {
+            if (show_tag == 1) { draw_processes(ts, "", is_loop, item); }
+        });
   });
-
-  function showTags(){
-    // root.children.forEach(uncollapse); 
-    // // uncollapse(root);
-    // console.log(root);
-    // draw_tree(root, tags);
-
-    // draw_treemap(root);
-  }
 }
 
-
+function showTags() {
+  if (cleared == 0 && show_loop == 0) {
+    if (show_tag == 0) {
+      show_tag = 1;
+      d3.select(".tagLegend").style("fill", "#AED6F1")
+        .style('fill-opacity', 0.5);
+      root.children.forEach(uncollapse); 
+    }
+    else {
+      show_tag = 0;
+      d3.select(".tagLegend").style("fill", "none");
+      root.children.forEach(collapse); 
+      draw_processes(ts, "main", is_loop); 
+      draw_ts_or_ite("main");
+    }
+    draw_tree(root, tags);
+    draw_treemap(root);
+  }
+}
 
 
 // draw trees
@@ -517,7 +637,8 @@ function draw_tree(source, tags, loop=0)
           .duration(500)
           .style('opacity', 0); })
       .on('click', function(d) {
-          if (show_loop == 0) { return click(d); }
+          if (show_loop == 0 && show_tag == 0) { return click(d); }
+          else if (show_tag == 1) { if (d.data.data.tag) { return click(d);} }
           else {
             if (d.data.data.is_loop == "1") { return click(d); } }
         });
@@ -553,10 +674,12 @@ function draw_tree(source, tags, loop=0)
     })
     .style('fill-opacity', function(d) {
       if (show_loop == 1 ) { return (d.data.data.is_loop == "1") ? 1: 0.1; }
+      else if (show_tag == 1) { return d.data.data.tag ? 1: 0.1; }
       else { return 1; }
     }) 
     .style('stroke-opacity', function(d){
       if (show_loop == 1) { return (d.data.data.is_loop == "1") ? 1: 0.1; }
+      else if (show_tag == 1) { return d.data.data.tag ? 1: 0.1; }
       else { return 1; }
     })
     .attr('cursor', 'pointer');
@@ -564,6 +687,7 @@ function draw_tree(source, tags, loop=0)
   nodeUpdate.select('.nodename')
     .style('fill-opacity', function(d){
       if (show_loop == 1) { return (d.data.data.is_loop == "1") ? 1: 0.1; }
+      else if (show_tag == 1) { return d.data.data.tag ? 1: 0.1; }
       else { return 1; }
     });
 
@@ -595,6 +719,7 @@ function draw_tree(source, tags, loop=0)
   var linkUpdate = linkEnter.merge(link)
       .style('stroke-opacity', function(d){
         if (show_loop == 1) { return (d.data.data.is_loop == "1") ? 1: 0.2; }
+        else if (show_tag == 1) { return d.data.data.tag ? 1: 0.2; }
         else { return 1; }
       });
 
@@ -619,8 +744,11 @@ function draw_tree(source, tags, loop=0)
   });
 
   // click node
-  function click(d) 
-  {
+  function click(d) {
+
+    nodeid = d.data.id;
+    is_loop = d.data.data.is_loop;
+
     if (d.children || d._children) {
       if (d.children) {
         d._children = d.children;
@@ -632,12 +760,21 @@ function draw_tree(source, tags, loop=0)
       }
 
       draw_tree(d, tags); // refresh tree 
-      draw_treemap(root); // refresh treemap 
+
+      if (cleared == 0) {
+        draw_treemap(root); // refresh treemap 
+        draw_processes(ts, d.data.id, is_loop); // refresh figure of processes 
+        draw_ts_or_ite(d.data.id); // refresh figure of ts or ite 
+      }
     }
     else {
-      if (show_loop == 1) { console.log(d.data.id) }
+      if (cleared == 0) {
+        draw_processes(ts, d.data.id, is_loop); 
+        draw_ts_or_ite(d.data.id); 
+      }
     }
   }
+
 }
 
 // Creates a curved (diagonal) path from parent to the child nodes
@@ -651,13 +788,91 @@ function diagonal(s, d)
   return path
 }
 
-// // var container_2 = svg.append('rect')
-// // .attr('fill', 'none')
-// // .attr('stroke', 'black')
-// // .attr('x', container_width + padding*2)
-// // .attr('y',  padding*2)
-// // .attr('width', container_width + padding)
-// // .attr('height', container_height);
+
+function drawContainers() {
+
+  colorbar_plot.append("g")
+    .attr("transform","rotate(180)")
+    .append("g")
+    .attr("class","trianglepointer")
+    .attr("transform","translate(" + (-padding - legendlen/2) + ", " + (-padding-5) + ")")
+    .append("path")
+    .attr("d",symbolGenerator());
+
+  colorbar_plot.append("rect")
+    .attr("transform","translate(" + padding + ", " + (padding+14) + ")")
+    .attr("width", (container_width -padding)+"px")
+    .attr("height", "12px")
+    .attr("fill", "none")
+    .attr('stroke', '#5D6D7E');
+
+  colorbar_plot.append("g")
+  .attr("class","LegText")
+    .attr("transform","translate(" + container_width/2 + ", " + (padding*3+5) + ")")
+    .append("text")
+    .attr("x",legendlen/2)
+    .attr('font-weight', 'normal')
+    .style("text-anchor", "middle")
+    .text(colorbartext[0]);
+
+  if (cleared == 1) {
+
+    xAxis = container_3_plot.append('g')
+      .call(d3.axisBottom(xScale))
+      .attr("class", "axis")
+      .attr("transform", "translate(" + padding*2 + ", " + (container_height/2 - padding*2+2) + ")");
+
+    // draw y axis
+    yAxis = container_3_plot.append('g')
+      .call(d3.axisLeft(yScale))
+      .attr("class", "axis")
+      .attr("transform", "translate(" + padding*2 + ", " + padding + ")"); 
+
+    // write current phase
+    phase = container_3_plot.append('text')
+      .attr("font-size", "15px")
+      .attr("text-anchor", "middle")
+      .attr("x", container_width/2)
+      .attr("y", padding*2);
+
+    xAxis2 = container_4_plot.append('g')
+      .call(d3.axisBottom(xScale2))
+      .attr("class", "axis")
+      .attr("transform", "translate(" + padding*2 + ", " + (container_height/2 - padding*2) + ")");
+
+    // draw y axis
+    yAxis2 = container_4_plot.append('g')
+      .call(d3.axisLeft(yScale2))
+      .attr("class", "axis")
+      .attr("transform", "translate(" + padding*2 + ", " + padding + ")"); 
+
+  }
+
+  container_3_plot.append('text')
+    .attr("class", "labels")
+    .attr("transform", "translate(" + container_width/2 + ", " + (container_height/2 - 0.5*padding) + ")")
+    .text("Total number of processes");
+
+  container_3_plot.append('text')
+    .attr("class", "labels")
+    .attr("x", -container_height/4)
+    .attr("y", padding/2)
+    .attr("transform", "rotate(-90)")
+    .text("Time Taken (ms)");
+
+  // labels
+  container_4_plot.append('text')
+    .attr("class", "xlabel")
+    .attr("transform", "translate(" + container_width/2 + ", " + (container_height/2 - 0.5*padding) + ")")
+    .text("Total number of timesteps");
+
+  container_4_plot.append('text')
+    .attr("class", "labels")
+    .attr("x", -container_height/4)
+    .attr("y", padding/2)
+    .attr("transform", "rotate(-90)")
+    .text("Time Taken (ms)");
+}
 
 // canvans for ploting treemap
 var container_2_plot = svg.append('g')
@@ -668,40 +883,23 @@ var colorbar_plot = svg.append('g')
   .attr('class', 'colorbar_plot')
   .attr('transform', `translate(${padding*2 + container_width}, ${container_width + padding*3/2})`);
 
+// // var container_2 = svg.append('rect')
+// // .attr('fill', 'none')
+// // .attr('stroke', 'black')
+// // .attr('x', container_width + padding*2)
+// // .attr('y',  padding*2)
+// // .attr('width', container_width + padding)
+// // .attr('height', container_height);
+
 // add color bar
 var symbolGenerator = d3.symbol().type(d3.symbolTriangle).size(64); // pointer
-var legendlen = (container_width -padding)/20;
+var legendlen = (container_width-padding)/20;
 var colorbartext = ["0% to 5%", "5% to 10%", "10% to 15%", "15% to 20%", "20% to 25%", 
 "25% to 30%", "30% to 35%", "35% to 40%", "40% to 45%", "45% to 50%", "50% to 55%",
 "55% to 60%", "60% to 65%", "65% to 70%", "70% to 75%", "75% to 80%", "80% to 85%",
 "85% to 90%", "90% to 95%", "95% to 100%"];
 
-colorbar_plot.append("g")
-  .attr("transform","rotate(180)")
-  .append("g")
-  .attr("class","trianglepointer")
-  .attr("transform","translate(" + (-padding - legendlen/2) + ", " + (-padding-5) + ")")
-  .append("path")
-  .attr("d",symbolGenerator());
-
-colorbar_plot.append("rect")
-  .attr("transform","translate(" + padding + ", " + (padding+14) + ")")
-  .attr("width", (container_width -padding)+"px")
-  .attr("height", "12px")
-  .attr("fill", "none")
-  .attr('stroke', '#5D6D7E');
-
-colorbar_plot.append("g")
-.attr("class","LegText")
-  .attr("transform","translate(" + container_width/2 + ", " + (padding*3+5) + ")")
-  .append("text")
-  .attr("x",legendlen/2)
-  .attr('font-weight', 'normal')
-  .style("text-anchor", "middle")
-  .text(colorbartext[0])
-
-function draw_treemap(source)
-{
+function draw_treemap(source) {
   // initial treemap
   var init_treemap = d3.treemap().tile(d3.treemapResquarify)
     .size([(container_width + padding), container_width])
@@ -732,39 +930,23 @@ function draw_treemap(source)
   //Legend Rectangels
   var color_values = [];
   var unit_value = max_leaf_value/20;
-  for (var k = 0; k < 20; k++) { color_values.push(myColor(unit_value*(k+1)));}
+  
+  if (show_tag == 1) {
+    for (var k = 0; k < tags.length; k++) { color_values.push(color(k));} 
+    legendlen = (container_width -padding)/tags.length;
+  }
+  else {
+   for (var k = 0; k < 20; k++) { color_values.push(myColor(unit_value*(k+1)));} 
+   legendlen = (container_width -padding)/20; 
+  }
 
   // draw rects
   var cell = container_2_plot.selectAll('g')
     .data(mydata.leaves());
 
   // rect enter
-  var cellEnter = cell.enter().append("g")
-    .on('mouseover', function(d) { 
-      d3.select(this)
-        .style("stroke-width","4px")
-      d3.select(".trianglepointer")
-        .transition(200)
-        .delay(100)
-        .attr("transform","translate(" + (-padding-legendlen/2-(Math.floor(d.data.time/unit_value)*legendlen)) + ", " + (-padding-5) + ")");
-      d3.select(".LegText").select("text").text(colorbartext[Math.floor(d.data.time/unit_value)])
-      var_div
-        .transition()
-        .duration(200)
-        .style('opacity', 0.9)
-      var_div
-        .html(d.data.id + '<br/>' + "(" + d.data.time + ")")
-        .style('width', Math.max(d.data.id.length, d.data.time.length)*7 + 'px')
-        .style('left', d3.event.pageX + 'px')
-        .style('top', d3.event.pageY - 10 + 'px'); })
-    .on('mouseout', function(d) {
-      d3.select(this)
-        .style("stroke-width","2px")
-      var_div
-        .transition()
-        .duration(500)
-        .style('opacity', 0); })
-    .on('click', update_linechart);
+  var cellEnter = cell.enter().append("g");
+    // .on('click', update_linechart);
 
   cellEnter.append("rect")
     .attr("id", function(d) { return d.data.id; })
@@ -787,7 +969,43 @@ function draw_treemap(source)
     .attr("width", function(d) { return d.x1 - d.x0; })
     .attr("height", function(d) { return d.y1 - d.y0; })
     .attr('stroke', '#5D6D7E')
-    .attr("fill", function(d) { return myColor(d.data.time); })
+    .attr("fill", function(d) { 
+      if (show_tag == 1) { return color(tags.indexOf(d.data.data.tag)); }
+      else { return myColor(d.data.time); } }) 
+    .on('mouseover', function(d) { 
+      var trans_dis = 0;
+      var label;
+      if (show_tag == 0) {
+        trans_dis = -padding-legendlen/2-(Math.floor(d.data.time/unit_value)*legendlen);
+        label = colorbartext[Math.floor(d.data.time/unit_value)];
+      }
+      else {
+        trans_dis = -padding-legendlen/2-tags.indexOf(d.data.data.tag)*legendlen;
+        label = "TAG: " + d.data.data.tag;
+      }
+      d3.select(this)
+        .style("stroke-width","4px")
+      d3.select(".trianglepointer")
+        .transition(200)
+        .delay(100)
+        .attr("transform", "translate(" + trans_dis + ", " + (-padding-5) + ")" );
+      d3.select(".LegText").select("text").text(label)
+      var_div
+        .transition()
+        .duration(200)
+        .style('opacity', 0.9)
+      var_div
+        .html(d.data.id + '<br/>' + "(" + d.data.time + ")")
+        .style('width', Math.max(d.data.id.length, d.data.time.length)*7 + 'px')
+        .style('left', d3.event.pageX + 'px')
+        .style('top', d3.event.pageY - 10 + 'px'); })
+    .on('mouseout', function(d) {
+      d3.select(this)
+        .style("stroke-width","2px")
+      var_div
+        .transition()
+        .duration(500)
+        .style('opacity', 0); })
   
    cellUpdate.select('text')
     .text(function(d) {
@@ -829,7 +1047,7 @@ function draw_treemap(source)
     .remove();
 
 
-  function update_linechart(d){ draw_processes(ts, d.data.id); }
+  // function update_linechart(d){ draw_processes(ts, d.data.id); }
 }
 
 // wrap texts based on the width
@@ -906,19 +1124,6 @@ var yAxis = container_3_plot.append('g')
   .attr("class", "axis")
   .attr("transform", "translate(" + padding*2 + ", " + padding + ")"); 
 
-// labels
-container_3_plot.append('text')
-  .attr("class", "labels")
-  .attr("transform", "translate(" + container_width/2 + ", " + (container_height/2 - 0.5*padding) + ")")
-  .text("Total number of processes");
-
-container_3_plot.append('text')
-  .attr("class", "labels")
-  .attr("x", -container_height/4)
-  .attr("y", padding/2)
-  .attr("transform", "rotate(-90)")
-  .text("Time Taken (ms)");
-
 // write current phase
 var phase = container_3_plot.append('text')
   .attr("font-size", "15px")
@@ -926,41 +1131,64 @@ var phase = container_3_plot.append('text')
   .attr("x", container_width/2)
   .attr("y", padding*2);
 
-// draw second container (for line chart)
-container_3_plot.append('rect')
-// .attr('fill', '#FCF4DC')
-.attr('stroke', 'black')
-.attr('x', container_width*3)
-.attr('y', padding*2)
-.attr('width', 40)
-.attr('height', 20);
 
 
-function draw_processes(ts, nodeid)
+// // draw second container (for line chart)
+// container_3_plot.append('rect')
+// .attr('stroke', 'black')
+// .attr('x', container_width*3)
+// .attr('y', padding*2)
+// .attr('width', 40)
+// .attr('height', 20);
+
+
+function draw_processes(ts, nodeid, is_loop, is_tag=null)
 {
   // get time data for all the processes
   var times = [];
+  if (is_tag) {
+    var ptimes = new Array(procs_num).fill(0);
 
-  breakdown_times[nodeid].forEach(function(d, i) { 
-    times.push({"id": i, "time": (parseFloat(d[ts])*time_metics).toFixed(3)}); });
+    var tag_time = 0;
+    root.leaves().forEach(function(d) {
+      if (d.data.data.tag == is_tag) {
+        breakdown_times[d.data.id].forEach(function(d, i){
+          var t = Number(parseFloat(d3.sum(d[ts]))*time_metics).toFixed(3);
+          ptimes[i] += Number(t);
+        })
+      }
+    })
+    ptimes.forEach(function(d, i){ times.push({"id": i, "time": d.toFixed(3)}); });
+    
+  }
+  else
+  {
+    breakdown_times[nodeid].forEach(function(d, i) { 
+    var t = (is_loop == 0)? d[ts]: d3.sum(d[ts]);
+    times.push({"id": i, "time": Number(parseFloat(t)*time_metics).toFixed(3)}); 
+  });
+
+  }
+
 
   //update x axis Math.ceil(times.length/5)*5]
   xScale.domain([0, times.length-1]).range([0, (container_width - padding*4)]);
   xAxis.transition().duration(duration).call(d3.axisBottom(xScale));
 
   // update current phase
-  phase.text("Current Phase: " + nodeid);
+  if (is_tag == null ) { phase.text("Current Phase: " + nodeid); }
+  else {phase.text("Current Phase: " + is_tag);}
 
   draw_line_figure(times, container_3_plot, xScale, yScale, yAxis, line)
 }
 
 
 // draw line chart
-function draw_line_figure(source, container, xs, ys, y, l)
+function draw_line_figure(source, container, xs, ys, y, li)
 {
   // update y axis
-  var min_time = d3.min(source, function(d){ return d.time; });
-  var max_time = d3.max(source, function(d){ return d.time; });
+  var min_time = d3.min(source, function(d){ return Number(d.time); });
+  var max_time = d3.max(source, function(d){ return Number(d.time); });
 
   ys.domain([min_time*0.95, max_time*1.05])
     .range([(container_height/2 - 3*padding), 0]);
@@ -980,12 +1208,12 @@ function draw_line_figure(source, container, xs, ys, y, l)
   // Transition back to the parent element position
   linkUpdate.transition()
     .duration(duration)
-    .attr('d', l);
+    .attr('d', li);
 
   // Remove any exiting paths
   var linkExit = links.exit().transition()
     .duration(duration)
-    .attr('d', l)
+    .attr('d', li)
     .remove();
 
   // add dots for line graph
@@ -1020,6 +1248,9 @@ function draw_line_figure(source, container, xs, ys, y, l)
   
   nodeUpdate.transition()
     .duration(duration)
+    .attr("cx", function(d) { return xs(d.id); })
+    .attr("cy", function(d) { return ys(d.time); })
+    .attr("r", 3)
     .style('fill-opacity', 1);
 
   var nodeExit = node.exit().transition()
@@ -1048,9 +1279,6 @@ function draw_line_figure(source, container, xs, ys, y, l)
   // Remove any exiting paths
   hor_lines.exit().transition()
     .duration(duration)
-    .attr('y1', function(d) {return ys(d); })
-    .attr("x2", container_width - 4*padding)
-    .attr('y2', function(d) {return ys(d); })
     .remove();
 
   var texts = container.selectAll('.timeLable')
@@ -1086,6 +1314,11 @@ var yScale2 = d3.scaleLinear()
   .domain([0, 100])
   .range([(container_height/2 - 3*padding), 0]);
 
+var line2 = d3.line()
+    .x(function(d) { return xScale2(d.id); }) // set the x values for the line generator
+    .y(function(d) { return yScale2(d.time); }) // set the y values for the line generator 
+    .curve(d3.curveMonotoneX); // apply smoothing to the line
+
 var xAxis2 = container_4_plot.append('g')
   .call(d3.axisBottom(xScale2))
   .attr("class", "axis")
@@ -1097,11 +1330,6 @@ var yAxis2 = container_4_plot.append('g')
   .attr("class", "axis")
   .attr("transform", "translate(" + padding*2 + ", " + padding + ")"); 
 
-
-var line2 = d3.line()
-    .x(function(d) { return xScale2(d.id); }) // set the x values for the line generator
-    .y(function(d) { return yScale2(d.time); }) // set the y values for the line generator 
-    .curve(d3.curveMonotoneX); // apply smoothing to the line
 
 // labels
 container_4_plot.append('text')
@@ -1119,48 +1347,32 @@ container_4_plot.append('text')
 
 function draw_ts_or_ite(nodeid)
 {
-    // get time data for all the timesteps
-    if (show_loop == 0)
-    {
-      var timesteps = [];
-      for (var c = 0; c < ts_num; c++)
-      {
+    // get time data
+    var times = [];
+
+    if (show_loop == 0) {
+      for (var c = 0; c < ts_num; c++) {
         var column = [];
         breakdown_times[nodeid].forEach( function(d) { 
-          column.push(d[c][0]); 
+          column.push(d3.sum(d[c])); 
         }) 
-
-        timesteps.push({"id": c, "time": (d3.max(column)*time_metics).toFixed(3)}); //(d3.max(d.map(Number))*time_metics).toFixed(3)
+        times.push({"id": c, "time": (d3.max(column)*time_metics).toFixed(3)}); //(d3.max(d.map(Number))*time_metics).toFixed(3)
       }
 
-      // update x axis Math.ceil(times.length/5)*5]
-      xScale2.domain([0, timesteps.length-1]).range([0, (container_width - padding*4)]);
-      xAxis2.transition().duration(duration).call(d3.axisBottom(xScale2));
-
-      draw_line_figure(timesteps, container_4_plot, xScale2, yScale2, yAxis2, line2);
+      d3.select(".xlabel").text("Total number of timesteps");
     }
-    else
-    {
-        // get time data for all the ierations
-        console.log(breakdown_times[nodeid]);
-        // var times = [];
-
-        // breakdown_times[nodeid].forEach(function(d, i) { 
-        //   times.push({"id": i, "time": (parseFloat(d[ts])*time_metics).toFixed(3)}); });
-
-        // //update x axis Math.ceil(times.length/5)*5]
-        // xScale.domain([0, times.length-1]).range([0, (container_width - padding*4)]);
-        // xAxis.transition().duration(duration).call(d3.axisBottom(xScale));
-
-        // // update current phase
-        // phase.text("Current Phase: " + nodeid);
-
-        // draw_line_figure(times, container_4_plot, xScale, yScale, yAxis, line);
-
-        d3.select(".xlabel").text("Total number of loop iterations");
+    else {
+      // get time data for all the ierations
+      breakdown_times[nodeid][proc][ts].forEach( function(d, i) {
+        times.push({"id": i, "time": (Number(d)*time_metics).toFixed(3)}) });
+      d3.select(".xlabel").text("Total number of loop iterations");
     }
 
+    // update x axis Math.ceil(times.length/5)*5]
+    xScale2.domain([0, times.length-1]).range([0, (container_width - padding*4)]);
+    xAxis2.transition().duration(duration).call(d3.axisBottom(xScale2));
 
+    draw_line_figure(times, container_4_plot, xScale2, yScale2, yAxis2, line2);
 }
 
 

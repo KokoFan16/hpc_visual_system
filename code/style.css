@@ -20,6 +20,14 @@ input {
   border: 2px solid #eee;
 }
 
+#selecFiles {
+  padding-left: 10px;
+  padding-right: 10px;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  border: 2px solid #eee;
+}
+
 .dot {
     fill: black;
     stroke: #fff;
