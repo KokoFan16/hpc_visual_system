@@ -99,7 +99,10 @@ fetch("fileName.txt") // open file to get filename
 
     d3.select("#selecFiles").on("change", change)
     function change() {
-      if (cleared == 1) { drawContainers(); }
+      if (cleared == 1) { 
+        drawContainers(); 
+        container_2_plot.selectAll("*").remove();
+      }
       if (show_loop == 1) {
           show_loop = 0;
           d3.select('.showLoops').style("fill", "#FFFFFF");
@@ -130,6 +133,10 @@ fetch("fileName.txt") // open file to get filename
             parseData(d, temp); 
             breakdown_times[i] = temp;
           })
+
+          draw_scale("main", 1);
+          draw_scale_stacked("main", 1);
+          // console.log(breakdown_times);
         })
 
         root.children.forEach(collapse);
@@ -141,7 +148,6 @@ fetch("fileName.txt") // open file to get filename
         container_4_plot.selectAll("*").remove();
         loops_container.selectAll("*").remove();
 
-        
       }
     }
 
@@ -766,11 +772,17 @@ function draw_tree(source, tags, loop=0)
         draw_processes(ts, d.data.id, is_loop); // refresh figure of processes 
         draw_ts_or_ite(d.data.id); // refresh figure of ts or ite 
       }
+      else {
+        draw_scale(d.data.id);
+      }
     }
     else {
       if (cleared == 0) {
         draw_processes(ts, d.data.id, is_loop); 
         draw_ts_or_ite(d.data.id); 
+      }
+      else {
+        draw_scale(d.data.id);
       }
     }
   }
@@ -883,13 +895,220 @@ var colorbar_plot = svg.append('g')
   .attr('class', 'colorbar_plot')
   .attr('transform', `translate(${padding*2 + container_width}, ${container_width + padding*3/2})`);
 
-// // var container_2 = svg.append('rect')
-// // .attr('fill', 'none')
-// // .attr('stroke', 'black')
-// // .attr('x', container_width + padding*2)
-// // .attr('y',  padding*2)
-// // .attr('width', container_width + padding)
-// // .attr('height', container_height);
+var select = "Max";
+time_metics = 1000;
+
+var xScale3, yScale3, xAxis3, line3, phase2;
+function draw_scale(nodeid, inital=0) {
+
+  var times = [];
+  var nprocs_counts = [];
+  Object.keys(breakdown_times).forEach(function(d) {
+    var ites = [];
+    for (var t = 0; t < ts_num; t++) {
+      var column = [];
+      breakdown_times[d][nodeid].forEach(function(d) {
+        column.push(d3.sum(d[t]));
+      });
+      ites.push(d3.max(column));
+    }
+    nprocs_counts.push(breakdown_times[d][nodeid].length);
+    if (select == "Max") {
+      times.push({"id": breakdown_times[d][nodeid].length, "time": Number(parseFloat(d3.max(ites))*time_metics).toFixed(3)}); 
+    }
+  });
+
+  if (inital == 1) {
+    // x scale (change values based on the real data)
+    xScale3 = d3.scalePoint()
+      .domain([0, 100])
+      .range([0, (container_width - padding*4)]);
+
+      // y scale (change values based on the real data)
+    yScale3 = d3.scaleLinear()
+      .domain([0, 100])
+      .range([(container_height/2 - 3*padding), 0]);
+
+    xAxis3 = container_2_plot.append('g')
+      .call(d3.axisBottom(xScale3))
+      .attr("class", "axis")
+      .attr("transform", "translate(" + padding*2 + ", " + (container_height/2 - padding*2+2) + ")");
+
+    // draw y axis
+    yAxis3 = container_2_plot.append('g')
+      .call(d3.axisLeft(yScale3))
+      .attr("class", "axis")
+      .attr("transform", "translate(" + padding*2 + ", " + padding + ")"); 
+
+    line3 = d3.line()
+        .x(function(d) { return xScale3(d.id); }) // set the x values for the line generator
+        .y(function(d) { return yScale3(d.time); }) // set the y values for the line generator 
+        .curve(d3.curveMonotoneX); // apply smoothing to the line
+
+    container_2_plot.append('text')
+      .attr("class", "labels")
+      .attr("transform", "translate(" + container_width/2 + ", " + (container_height/2 - 0.5*padding) + ")")
+      .text("Processes Counts");
+
+    container_2_plot.append('text')
+      .attr("class", "labels")
+      .attr("x", -container_height/4)
+      .attr("y", padding/2)
+      .attr("transform", "rotate(-90)")
+      .text("Time Taken (ms)");
+
+    // write current phase
+    phase2 = container_2_plot.append('text')
+      .attr("font-size", "15px")
+      .attr("text-anchor", "middle")
+      .attr("x", container_width/2)
+      .attr("y", padding*2);
+  }
+  
+
+  xScale3.domain(nprocs_counts).range([0, (container_width - padding*4)]);
+  xAxis3.transition().duration(duration).call(d3.axisBottom(xScale3));
+
+  phase2.text("Current Phase: " + nodeid);
+
+  draw_line_figure(times, container_2_plot, xScale3, yScale3, yAxis3, line3);
+}
+
+
+var container_stacked = svg.append('g')
+  .attr('class', 'container_stacked')
+  .attr('transform', `translate(${padding*5/2 + container_width}, ${container_height/2+padding*3/2})`);
+
+
+var xScale4, yScale4, xAxis4, line4;
+function draw_scale_stacked(nodeid, inital=0) {
+
+  time_metics = 1000;
+
+  if (inital == 1) {
+
+    xScale4 = d3.scaleBand()
+      .range([0, (container_width - padding*4)])
+      .padding(0.1)
+
+    yScale4 = d3.scaleLinear()
+      .domain([0, 100])
+      .range([(container_height/2 - 3*padding), 0]);
+
+    xAxis4 = container_stacked.append('g')
+      .call(d3.axisBottom(xScale4))
+      .attr("class", "axis")
+      .attr("transform", "translate(" + padding*2 + ", " + (container_height/2 - padding*2) + ")");
+
+    yAxis4 = container_stacked.append('g')
+      .call(d3.axisLeft(yScale4))
+      .attr("class", "axis")
+      .attr("transform", "translate(" + padding*2 + ", " + padding + ")"); 
+  }
+
+  var keys = [];
+  root.leaves().forEach(function(d) { keys.push(d.data.id); });
+
+  var data = [];
+  var columns = [];
+  Object.keys(breakdown_times).forEach(function(d) {
+    var nprocs = breakdown_times[d]["main"].length;
+    columns.push(nprocs);
+
+    var item = {};
+    keys.forEach(function(key) {
+      var ites = [];
+      find_max_value_per_ite(breakdown_times[d][key], ites);
+
+      item["nprocs"] = nprocs;
+
+      if (select == "Max") { item[key] = d3.max(ites)*time_metics; }
+    })
+    data.push(item);
+  })
+
+  // console.log(d3.max(data, d => d3.sum(keys, k => +d[k])));
+
+  
+  
+  xScale4.domain(columns);
+  xAxis4.transition().duration(duration).call(d3.axisBottom(xScale4));
+
+  // yScale4.domain([0,]);
+  yScale4.domain([0, d3.max(data, d => d3.sum(keys, k => +d[k]))]).nice();
+  yAxis4.transition().duration(duration).call(d3.axisLeft(yScale4));
+
+  var group = container_stacked.selectAll(".layer")
+    .data(d3.stack().keys(keys)(data), d => d.key)
+
+  group.exit().remove()
+
+  group.enter().append("g")
+    .classed("layer", true)
+    .attr("transform", "translate(" + (padding*2) + ", " + (padding) + ")")
+    .attr("fill", d => color(d.key) ); //
+
+  var bars = container_stacked.selectAll(".layer").selectAll("rect")
+    .data(d => d, e => e.data.nprocs);
+
+  bars.exit().remove()
+
+  bars.enter().append("rect")
+    .attr("width", xScale4.bandwidth())
+    .merge(bars)
+    .transition().duration(duration)
+    .attr("x", d => xScale4(d.data.nprocs))
+    .attr("y", d => yScale4(d[1]))
+    .attr("height", d => yScale4(d[0]) - yScale4(d[1]))
+
+
+  var legend = container_stacked.selectAll(".legend")
+    .data(keys)
+    .enter().append("g")
+    .attr("class", "legend")
+    .attr("transform", function(d, i) { return "translate(0," + i * 20 + ")"; });
+
+  legend.append("rect")
+    .attr("x", container_width - padding - 18)
+    .attr("width", 18)
+    .attr("height", 18)
+    .style("fill", color);
+
+  legend.append("text")
+    .attr("x", container_width - padding - 24)
+    .attr("y", 9)
+    .attr("dy", ".35em")
+    .style("text-anchor", "end")
+    .text(function(d) { return d; });
+
+}
+
+function find_max_value_per_ite(data, ites) {
+
+    for (var t = 0; t < data[0].length; t++) {
+      var column = [];
+      for (var p = 0; p < data.length; p++) {
+        column.push(d3.sum(data[p][t]));
+      }
+      ites.push(d3.max(column));
+    }
+}
+
+  // get time data for all the processes
+  // var times = [];
+  // else
+  // {
+  //   breakdown_times[nodeid].forEach(function(d, i) { 
+  //   var t = (is_loop == 0)? d[ts]: d3.sum(d[ts]);
+  //   times.push({"id": i, "time": Number(parseFloat(t)*time_metics).toFixed(3)}); 
+  // });
+
+  // }
+
+
+  // //update x axis Math.ceil(times.length/5)*5]
+  // xScale.domain([0, times.length-1]).range([0, (container_width - padding*4)]);
+  // xAxis.transition().duration(duration).call(d3.axisBottom(xScale));
 
 // add color bar
 var symbolGenerator = d3.symbol().type(d3.symbolTriangle).size(64); // pointer
