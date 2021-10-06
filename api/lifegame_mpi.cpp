@@ -60,14 +60,14 @@ int main(int argc, char **argv)
     set_rank(rank, process_count);
     set_namespath("");
 
-	Events e("main", "null");
+	Events e("main", "null", 100);
 
     int *board, *counts, *offset, *my_board, *my_next;
     int N, maxGeneration, my_count, my_N;
 
     // Get arguments
     {
-    	Events e("Pre", "null");
+    	Events e("Pre", "null", 100);
 
 		N = atoi(argv[1]);
 		maxGeneration = atoi(argv[2]);
@@ -289,7 +289,7 @@ int main(int argc, char **argv)
 
     }
 
-    write_output("lifeGame_16_loop_100");
+    write_output("lifeGame_2_loop_100");
 
     MPI_Finalize();
     return 0;

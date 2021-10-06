@@ -19,18 +19,16 @@
 
 #include "csvWrite.h"
 
-//#include <json/writer.h>
-
-int ntimestep = 1;
-int curTs = 0;
-int nprocs = 1;
-int curRank = 0;
-std::string namespath = ""; // call path of functions
+static int ntimestep = 1;
+static int curTs = 0;
+static int nprocs = 1;
+static int curRank = 0;
+static std::string namespath = ""; // call path of functions
 
 
-void set_timestep(int t, int n) {curTs = t; ntimestep = n;} // set the number of timesteps and current timestep
-void set_rank(int r, int n) {curRank = r; nprocs = n;} // set the number of processes and the current rank
-void set_namespath(std::string name) {namespath = name;} // set the call path of functions
+static void set_timestep(int t, int n) {curTs = t; ntimestep = n;} // set the number of timesteps and current timestep
+static void set_rank(int r, int n) {curRank = r; nprocs = n;} // set the number of processes and the current rank
+static void set_namespath(std::string name) {namespath = name;} // set the call path of functions
 
 std::map<std::string, std::string> output; // store the output dictionary
 
@@ -47,49 +45,40 @@ private:
 	long bsize = 0;
 
 public:
-	Events(std::string name, std::string tags, long size=0, bool loop=0, int ite=0);
-	~Events();
+	Events(std::string n, std::string t, long size=0, bool loop=0, int ite=0)
+	{
+		name = n;
+		tags = t;
+		is_loop = loop;
+		loop_ite = ite;
+		bsize = size;
+		auto start = std::chrono::system_clock::now();
+		start_time = start; // get start time
+		if (namespath == "") { namespath += name; } // set name-path as key
+		else { namespath += "-" + name; }
+	}
+	~Events() {
+		auto end_time = std::chrono::system_clock::now();
+		std::chrono::duration<double> elapsed_seconds = end_time-start_time; // calculate duration
+		elapsed_time = elapsed_seconds.count();
+
+		std::string delimiter = "-";
+		std::size_t found = namespath.rfind(delimiter);
+
+		// set value (time and tag) of each function across all the time-steps
+		if (curTs == 0 && output[namespath] == ""){
+			output[namespath] += tags + "-" + std::to_string(bsize) + "-" + std::to_string(is_loop) + ";" + std::to_string(elapsed_time);
+		}
+		else {
+			if (loop_ite == 0){ output[namespath] += "-" + std::to_string(elapsed_time); }
+			else { output[namespath] += "+" + std::to_string(elapsed_time); }
+		}
+		namespath = namespath.substr(0, found); // back to last level
+	}
 };
 
-Events::Events(std::string n, std::string t, long size, bool loop, int ite)
-{
-	name = n;
-	tags = t;
-	is_loop = loop;
-	loop_ite = ite;
-	bsize = size;
-	auto start = std::chrono::system_clock::now();
-	start_time = start; // get start time
-	if (namespath == "") { namespath += name; } // set name-path as key
-	else { namespath += "-" + name; }
-
-//	output[namespath] += "";
-}
-
-Events::~Events()
-{
-	auto end_time = std::chrono::system_clock::now();
-	std::chrono::duration<double> elapsed_seconds = end_time-start_time; // calculate duration
-	elapsed_time = elapsed_seconds.count();
-
-	std::string delimiter = "-";
-	std::size_t found = namespath.rfind(delimiter);
-
-	// set value (time and tag) of each function across all the time-steps
-	if (curTs == 0 && output[namespath] == ""){
-		output[namespath] += tags + "-" + std::to_string(bsize) + "-" + std::to_string(is_loop) + ";" + std::to_string(elapsed_time);
-	}
-	else {
-		if (loop_ite == 0){ output[namespath] += "-" + std::to_string(elapsed_time); }
-		else { output[namespath] += "+" + std::to_string(elapsed_time); }
-	}
-	namespath = namespath.substr(0, found); // back to last level
-
-//	std::cout << namespath << ", " << output[namespath] << "\n";
-}
-
 // gather info from all the processes
-void gather_info()
+static void gather_info()
 {
 	std::map<std::string, std::string> ::iterator p1; // map pointer
 	std::vector<std::string> events; // get all the events
@@ -100,30 +89,36 @@ void gather_info()
 		events.push_back(p1->first);
 		std::size_t found = p1->second.rfind(";");
 		std::string times = p1->second.substr(found+1, p1->second.length()-found-1);
-//		std::cout << curRank << ", " << p1->first << ", " << times << "\n";
 		message += times + ' ';
 	}
 	message.pop_back();
 	message += ','; // add comma sat the end of each message
 	strLen = message.length();
 
-	int max_strLen = 0; // maximum length of messages
-	MPI_Allreduce(&strLen, &max_strLen, 1, MPI_INT, MPI_MAX, MPI_COMM_WORLD);
+	int* messageLens = (int*)malloc(nprocs * sizeof(int));
+	MPI_Gather(&strLen, 1, MPI_INT, messageLens, 1, MPI_INT, 0, MPI_COMM_WORLD);
 
-	// padding with spaces for messages whose length are less than the maximum one
-	if (strLen < max_strLen) { message += std::string((max_strLen-strLen), ' '); }
+	int *displs = NULL;
+	int totalLen = 0;
+	char* gather_buffer = NULL;
+	if (curRank == 0) {
+		displs = (int*)malloc(nprocs * sizeof(int));
+		for (int i = 0; i < nprocs; i++) {
+			displs[i] = totalLen;
+			totalLen += messageLens[i];
+		}
+		gather_buffer = (char*)malloc((totalLen+1) * sizeof(char));
+	}
 
-	// gather messages from processes to rank 0
-	char* gather_buffer = (char*)malloc(max_strLen*nprocs);
-	MPI_Gather((char*)message.c_str(), max_strLen, MPI_CHAR, gather_buffer, max_strLen, MPI_CHAR, 0, MPI_COMM_WORLD);
-	gather_buffer[max_strLen*nprocs-1] = '\0'; // end symbol of string
-	std::string gather_message = std::string(gather_buffer); // convert it to string
-	free(gather_buffer);
+	MPI_Gatherv((char*)message.c_str(), strLen, MPI_CHAR, gather_buffer, messageLens, displs, MPI_CHAR, 0, MPI_COMM_WORLD);
+	free(messageLens);
+	free(displs);
 
-//	std::cout << curRank << ": " << gather_buffer << "\n";
-//
 	if (curRank == 0)
 	{
+		gather_buffer[totalLen-1] = '\0'; // end symbol of string
+		std::string gather_message = std::string(gather_buffer); // convert it to string
+
 		// ignore the message of rank 0
 		std::size_t pos = gather_message.find(',');
 		gather_message.erase(0, pos+1);
@@ -138,19 +133,23 @@ void gather_info()
 				output[events[j]] += '|' + pmessage.substr(0, found); // add to corresponding event
 				pmessage.erase(0, found+1);
 			}
+
 			pos = gather_message.find(',');
 			gather_message.erase(0, pos+1);
 		}
 	}
+
+	free(gather_buffer);
+	std::vector<std::string>().swap(events);
 }
 
-void write_output(std::string filename)
+static void write_output(std::string filename)
 {
 	gather_info(); // gather info from all the processes
 
 	if (curRank == 0) // rank 0 writes csv file
 	{
-		std::string filePath = "../code/" + filename + ".csv"; // create file path
+		std::string filePath = "../src/data/" + filename + ".csv"; // create file path
 		csvfile csv(filePath); // open CSV file
 
 		// set CSV file Hearer
@@ -178,12 +177,11 @@ void write_output(std::string filename)
 			size = temp.substr(0, found);
 			loop = temp.substr(found+1, 1);
 
-//			std::cout << p1->first << ", " << tag << ", " << loop << ", " << times << std::endl;
-
 			// set CSV file content
 			csv << p1->first << parent << tag << size << loop << times << endrow;
 		}
 	}
+
 }
 
 #endif /* LOGGING_API_H_ */
