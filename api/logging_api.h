@@ -40,12 +40,12 @@ private:
 	double elapsed_time = 0;
 	std::string name;
 	std::string tags;
-	bool is_loop = 0;
+	int is_loop = 0;
 	int loop_ite = 0;
 	long bsize = 0;
 
 public:
-	Events(std::string n, std::string t, long size=0, bool loop=0, int ite=0)
+	Events(std::string n, std::string t, long size=0, int loop=0, int ite=0)
 	{
 		name = n;
 		tags = t;
@@ -70,8 +70,15 @@ public:
 			output[namespath] += tags + "-" + std::to_string(bsize) + "-" + std::to_string(is_loop) + ";" + std::to_string(elapsed_time);
 		}
 		else {
-			if (loop_ite == 0){ output[namespath] += "-" + std::to_string(elapsed_time); }
-			else { output[namespath] += "+" + std::to_string(elapsed_time); }
+			if (is_loop == 2) {
+				int found = output[namespath].rfind(";");
+				double curTime = std::stod(output[namespath].substr(found+1, output[namespath].length()-found-1)) + elapsed_time;
+				output[namespath].replace(found+1, std::to_string(curTime).length(), std::to_string(curTime));
+			}
+			else {
+				if (loop_ite == 0){ output[namespath] += "-" + std::to_string(elapsed_time); }
+				else { output[namespath] += "+" + std::to_string(elapsed_time); }
+			}
 		}
 		namespath = namespath.substr(0, found); // back to last level
 	}
