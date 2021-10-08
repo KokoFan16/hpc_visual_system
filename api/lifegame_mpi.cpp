@@ -141,7 +141,7 @@ int main(int argc, char **argv)
 			int change_flag = 0;
 
 			{
-				Events e("exchange", "COMM", 1, k);
+				Events e("exchange", "COMM", 0, 1, k);
 
 				// If the process_count is larger than 1, send first row and last row to prev and next process
 				if(process_count != 1)
@@ -179,7 +179,7 @@ int main(int argc, char **argv)
 
 
 			{
-				Events e("BoardChange", "COMP", 1, k);
+				Events e("BoardChange", "COMP", 0, 1, k);
 
 				for (int i = 1; i < my_N+1; i++)
 				{
@@ -226,7 +226,7 @@ int main(int argc, char **argv)
 			}
 
 			{
-				Events e("statusCheck", "COMP", 1, k);
+				Events e("statusCheck", "COMP", 0, 1, k);
 
 				// Copy ghost cell
 				copyGhostCell(my_next, my_N, N);

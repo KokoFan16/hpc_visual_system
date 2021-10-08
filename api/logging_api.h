@@ -30,7 +30,7 @@ static void set_timestep(int t, int n) {curTs = t; ntimestep = n;} // set the nu
 static void set_rank(int r, int n) {curRank = r; nprocs = n;} // set the number of processes and the current rank
 static void set_namespath(std::string name) {namespath = name;} // set the call path of functions
 
-std::map<std::string, std::string> output; // store the output dictionary
+static std::map<std::string, std::string> output; // store the output dictionary
 
 // the class to collect timing info
 class Events
@@ -188,6 +188,8 @@ static void write_output(std::string filename)
 			csv << p1->first << parent << tag << size << loop << times << endrow;
 		}
 	}
+
+	output.clear();
 
 }
 
