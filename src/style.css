@@ -1,0 +1,108 @@
+div {
+	text-align: center;
+}
+
+h1{
+    font-size: 40px;
+}
+
+p{
+  font-size: 22px;
+  margin-left: 50px;
+}
+
+input {
+  width: 40px;
+  height: 25px;
+  line-height: 3;
+  margin-right: 80px;
+  padding-left: 20px;
+  border: 2px solid #eee;
+}
+
+#selecFiles {
+  padding-left: 10px;
+  padding-right: 10px;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  border: 2px solid #eee;
+}
+
+.dot {
+    fill: black;
+    stroke: #fff;
+}
+
+.container_name{
+	font-size: 20px;
+	text-anchor: middle;
+}
+
+.node circle {
+  fill: #fff;
+  stroke: steelblue;
+  stroke-width: 3px;
+}
+
+.node text {
+  font: 15px sans-serif;
+}
+
+.link {
+  fill: none;
+  stroke: #ccc;
+  stroke-width: 2px;
+}
+
+div.tooltip {
+  color: white;
+  position: absolute;
+  text-align: center;
+  width: 100px;
+  height: 28px;
+  padding: 2px;
+  font: 12px sans-serif;
+  background: rgba(0,0,0,.8);
+  border: 2px solid black;
+  pointer-events: none;
+}
+
+div.tooltip2 {
+  color: white;
+  position: absolute;
+  text-align: center;
+  height: 28px;
+  padding: 2px;
+  font: 12px sans-serif;
+  background: rgba(0,0,0,.8);
+  border: 2px solid black;
+  pointer-events: none;
+}
+
+.labels{
+  font-size: 12px;
+  text-anchor: middle;
+}
+
+.xlabel{
+  font-size: 12px;
+  text-anchor: middle;
+}
+
+
+.hor_line{
+  stroke: #ccc;
+  stroke-width: 1px;
+  stroke-dasharray: 5
+}
+
+.timeLable{
+  font-size: 12px;
+  text-anchor: middle;
+}
+
+
+/*.bar {
+  fill: steelblue;
+}*/
+
