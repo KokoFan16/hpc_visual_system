@@ -18,7 +18,7 @@ export function draw_line_figure(source, container, xs, ys, y, li)
   // Enter any new links at the parent's previous position.
   var linkEnter = links.enter().append("path")
       .attr("class", "link")
-      .attr("transform", "translate(" + padding*2 + ", " + (padding*1.5-6) + ")");
+      .attr("transform", "translate(" + padding*1.5 + ", " + (padding*1.5-6) + ")");
 
   var linkUpdate = linkEnter.merge(links);
 
@@ -43,7 +43,7 @@ export function draw_line_figure(source, container, xs, ys, y, li)
     .attr("cx", function(d) { return xs(d.id); })
     .attr("cy", function(d) { return ys(d.time); })
     .attr("r", 3)
-    .attr("transform", "translate(" + padding*2 + ", " + (padding*1.5-6) + ")")
+    .attr("transform", "translate(" + padding*1.5 + ", " + (padding*1.5-6) + ")")
     .style('fill-opacity', 0)
     .on('mouseover', function(d) { 
       div
@@ -82,7 +82,7 @@ export function draw_line_figure(source, container, xs, ys, y, li)
   // Enter any new links at the parent's previous position.
   var lineEnter = hor_lines.enter().append("line")
       .attr("class", "hor_line")
-      .attr("transform", "translate(" + padding*2 + ", " + (padding*1.5-6) + ")");
+      .attr("transform", "translate(" + padding*1.5 + ", " + (padding*1.5-6) + ")");
 
   var lineUpdate = lineEnter.merge(hor_lines);
 
@@ -90,7 +90,7 @@ export function draw_line_figure(source, container, xs, ys, y, li)
   lineUpdate.transition()
     .duration(duration)
     .attr('y1', function(d) {return ys(d); })
-    .attr("x2", container_width - 5*padding)
+    .attr("x2", container_width - 4*padding)
     .attr('y2', function(d) {return ys(d); });
 
   // Remove any exiting paths
@@ -103,7 +103,7 @@ export function draw_line_figure(source, container, xs, ys, y, li)
 
   var textsEnter = texts.enter().append("text")
     .attr("class", "timeLable")
-    .attr("transform", "translate(" + (container_width - 5*padding) + ", " + padding + ")");
+    .attr("transform", "translate(" + (container_width - 4*padding) + ", " + padding + ")");
 
   textsEnter.merge(texts)
     .transition()

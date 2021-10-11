@@ -4,7 +4,7 @@ import { container_3_plot } from './container.js';
 // x scale (change values based on the real data)
 var xScale = d3.scaleLinear()
 .domain([0, 100])
-.range([0, (container_width - padding*5)]);
+.range([0, (container_width - padding*4)]);
 
 // y scale (change values based on the real data)
 var yScale = d3.scaleLinear()
@@ -16,16 +16,19 @@ var line = d3.line()
     .y(function(d) { return yScale(d.time); }) // set the y values for the line generator 
     .curve(d3.curveMonotoneX); // apply smoothing to the line
 
+var timeLabel = "Time (";
+timeLabel += (time_metics == 1)? "s)": "ms)";
+
 var xAxis = container_3_plot.append('g')
   .call(d3.axisBottom(xScale))
   .attr("class", "axis")
-  .attr("transform", "translate(" + padding*2 + ", " + (container_height/2 - padding*2+2) + ")");
+  .attr("transform", "translate(" + padding*1.5 + ", " + (container_height/2 - padding*2+2) + ")");
 
 // draw y axis
 var yAxis = container_3_plot.append('g')
   .call(d3.axisLeft(yScale))
   .attr("class", "axis")
-  .attr("transform", "translate(" + padding*2 + ", " + padding + ")"); 
+  .attr("transform", "translate(" + padding*1.5 + ", " + padding + ")"); 
 
 // write current phase
 var phase = container_3_plot.append('text')
@@ -33,6 +36,12 @@ var phase = container_3_plot.append('text')
   .attr("text-anchor", "middle")
   .attr("x", container_width/2)
   .attr("y", padding*2);
+
+var time = container_3_plot.append('text')
+  .attr("class", "labels")
+  .attr("x", padding+8)
+  .attr("y", padding-5)
+  .text(timeLabel)
 
 container_3_plot.append('text')
   .attr("class", "labels")
@@ -64,6 +73,12 @@ export function draw_processes(ts, nodeid, is_loop, is_tag=null) {
       .attr("text-anchor", "middle")
       .attr("x", container_width/2)
       .attr("y", padding*2);
+
+    time = container_3_plot.append('text')
+      .attr("class", "labels")
+      .attr("x", padding+5)
+      .attr("y", padding-5)
+      .text(timeLabel)
   }
 
   // get time data for all the processes
@@ -91,7 +106,7 @@ export function draw_processes(ts, nodeid, is_loop, is_tag=null) {
   }
 
   //update x axis Math.ceil(times.length/5)*5]
-  xScale.domain([0, times.length-1]).range([0, (container_width - padding*5)]);
+  xScale.domain([0, times.length-1]).range([0, (container_width - padding*4)]);
   xAxis.transition().duration(duration).call(d3.axisBottom(xScale));
 
   // update current phase

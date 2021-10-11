@@ -36,27 +36,27 @@ export var loops_container = container_1_plot.append('g')
 // canvans for ploting treemap
 export var container_2_plot = svg2.append('g')
   .attr('class', 'container_2_plot')
-  .attr('transform', `translate(${padding}, ${padding})`);
+  .attr('transform', `translate(${0}, ${padding})`);
   // .attr('transform', `translate(${padding*2 + container_width}, ${padding*2})`);
 
 export var colorbar_plot = svg2.append('g')
   .attr('class', 'colorbar_plot')
-  .attr('transform', `translate(${padding/2}, ${container_height-padding*2})`);
+  .attr('transform', `translate(${0}, ${container_height-padding*2})`);
   // .attr('transform', `translate(${padding*2 + container_width}, ${container_width + padding*3/2})`);
 
 export var container_3_plot = svg3.append('g')
   .attr('class', 'container_3_plot')
-  .attr('transform', `translate(${padding/2}, ${padding})`);
+  .attr('transform', `translate(${0}, ${padding})`);
   // .attr('transform', `translate(${padding*7/2 + 2*container_width}, ${padding*3/2})`); 
 
 export var container_4_plot = svg3.append('g')
   .attr('class', 'container_4_plot')
-  .attr('transform', `translate(${padding/2}, ${container_height/2+padding})`);
+  .attr('transform', `translate(${0}, ${container_height/2+padding})`);
   // .attr('transform', `translate(${padding*7/2 + 2*container_width}, ${container_height/2+padding*3/2})`);
 
 export var container_stacked = svg2.append('g')
   .attr('class', 'container_stacked')
-  .attr('transform', `translate(${padding/2}, ${container_height/2+padding})`);
+  .attr('transform', `translate(${0}, ${container_height/2+padding})`);
   // .attr('transform', `translate(${padding*2 + container_width}, ${container_height/2+padding*2})`);
 
 

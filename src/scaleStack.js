@@ -1,6 +1,6 @@
 import { container_stacked } from './container.js';
 import { find_max_value_per_ite } from './utils.js';
-import { color } from './env.js';
+// import { color } from './env.js';
 
 var select = "Max";
 var xScale, yScale, xAxis, yAxis, line;

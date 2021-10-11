@@ -3,7 +3,7 @@ import { draw_line_figure } from './lineChart.js';
 
 var xScale = d3.scaleLinear()
   .domain([0, 100])
-  .range([0, (container_width - padding*5)]);
+  .range([0, (container_width - padding*4)]);
 
 // y scale (change values based on the real data)
 var yScale = d3.scaleLinear()
@@ -18,13 +18,13 @@ var line = d3.line()
 var xAxis = container_4_plot.append('g')
   .call(d3.axisBottom(xScale))
   .attr("class", "axis")
-  .attr("transform", "translate(" + padding*2 + ", " + (container_height/2 - padding*2) + ")");
+  .attr("transform", "translate(" + padding*1.5 + ", " + (container_height/2 - padding*2) + ")");
 
 // draw y axis
 var yAxis = container_4_plot.append('g')
   .call(d3.axisLeft(yScale))
   .attr("class", "axis")
-  .attr("transform", "translate(" + padding*2 + ", " + padding + ")"); 
+  .attr("transform", "translate(" + padding*1.5 + ", " + padding + ")"); 
 
 // labels
 container_4_plot.append('text')
@@ -45,13 +45,13 @@ export function draw_ts_or_ite(nodeid) {
       xAxis = container_4_plot.append('g')
         .call(d3.axisBottom(xScale))
         .attr("class", "axis")
-        .attr("transform", "translate(" + padding*2 + ", " + (container_height/2 - padding*2) + ")");
+        .attr("transform", "translate(" + padding*1.5 + ", " + (container_height/2 - padding*2) + ")");
 
       // draw y axis
       yAxis = container_4_plot.append('g')
         .call(d3.axisLeft(yScale))
         .attr("class", "axis")
-        .attr("transform", "translate(" + padding*2 + ", " + padding + ")"); 
+        .attr("transform", "translate(" + padding*1.5 + ", " + padding + ")"); 
 
       container_4_plot.append('text')
         .attr("class", "xlabel")
@@ -81,7 +81,7 @@ export function draw_ts_or_ite(nodeid) {
     }
 
     // update x axis Math.ceil(times.length/5)*5]
-    xScale.domain([0, times.length-1]).range([0, (container_width - padding*5)]);
+    xScale.domain([0, times.length-1]).range([0, (container_width - padding*4)]);
     xAxis.transition().duration(duration).call(d3.axisBottom(xScale));
 
     draw_line_figure(times, container_4_plot, xScale, yScale, yAxis, line);

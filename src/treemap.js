@@ -1,9 +1,9 @@
-import { color } from './env.js';
+// import { color } from './env.js';
 import { container_2_plot, colorbar_plot } from './container.js';
 import { wraptext } from './utils.js';
 
 var symbolGenerator = d3.symbol().type(d3.symbolTriangle).size(64); // pointer
-var legendlen = (container_width-padding)/20;
+var legendlen = (container_width)/20;
 var colorbartext = ["0% to 5%", "5% to 10%", "10% to 15%", "15% to 20%", "20% to 25%", 
 "25% to 30%", "30% to 35%", "35% to 40%", "40% to 45%", "45% to 50%", "50% to 55%",
 "55% to 60%", "60% to 65%", "65% to 70%", "70% to 75%", "75% to 80%", "80% to 85%",
@@ -19,7 +19,7 @@ export function draw_treemap(source) {
 
   // initial treemap
   var init_treemap = d3.treemap().tile(d3.treemapResquarify)
-    .size([(container_width - 2*padding), (container_height-3*padding)])
+    .size([(container_width), (container_height-3*padding)])
     .round(true)
     .paddingInner(4);
 
@@ -48,11 +48,11 @@ export function draw_treemap(source) {
   
   if (show_tag == 1) {
     for (var k = 0; k < tags.length; k++) { color_values.push(color(k));} 
-    legendlen = (container_width -padding)/tags.length;
+    legendlen = (container_width)/tags.length;
   }
   else {
    for (var k = 0; k < 20; k++) { color_values.push(myColor(unit_value*(k+1)));} 
-   legendlen = (container_width - 2*padding)/20; 
+   legendlen = (container_width)/20; 
   }
 
   // draw rects
@@ -91,11 +91,11 @@ export function draw_treemap(source) {
       var trans_dis = 0;
       var label;
       if (show_tag == 0) {
-        trans_dis = -padding-legendlen/2-(Math.floor(d.data.time/unit_value)*legendlen);
+        trans_dis = -legendlen/2 -(Math.floor(d.data.time/unit_value)*legendlen); //
         label = colorbartext[Math.floor(d.data.time/unit_value)];
       }
       else {
-        trans_dis = -padding-legendlen/2-tags.indexOf(d.data.data.tag)*legendlen;
+        trans_dis = -legendlen/2 -tags.indexOf(d.data.data.tag)*legendlen; // -legendlen/2
         label = "TAG: " + d.data.data.tag;
       }
       d3.select(this)
@@ -111,7 +111,7 @@ export function draw_treemap(source) {
         .style('opacity', 0.9)
       var_div
         .html(d.data.id + '<br/>' + "(" + d.data.time + ")")
-        .style('width', Math.max(d.data.id.length, d.data.time.length)*7 + 'px')
+        .style('width', Math.max(d.data.id.length, d.data.time.length)*8 + 'px')
         .style('left', d3.event.pageX + 'px')
         .style('top', d3.event.pageY - 10 + 'px'); })
     .on('mouseout', function(d) {
@@ -126,8 +126,9 @@ export function draw_treemap(source) {
     .text(function(d) {
       if ( (d.x1 - d.x0) < 60 || (d.y1 - d.y0) < 60 ) { return " "; }
       else { return (d.data.name + " (" + d.data.time + ")"); } })
+    .style('fill', function(d) { return (d.data.time/unit_value > 11)? "white": "black"; })
     .call(wraptext);
-
+ 
   // Remove any exiting rects
   var cellExit = cell.exit().transition()
         .duration(duration)
@@ -144,10 +145,10 @@ export function draw_treemap(source) {
 
   // colorbar enter
   var colorbarEnter = colorbar.enter().append("rect")
-    .attr("transform","translate(" + padding/2 + ", " + (padding+15) + ")")
     .attr("class","LegRect");
 
-  var colorbarUpdate = colorbarEnter.merge(colorbar);
+  var colorbarUpdate = colorbarEnter.merge(colorbar)
+    .attr("transform","translate(" + 1 + ", " + (padding+15) + ")");
 
   colorbarUpdate.transition()
     .duration(duration)
@@ -170,13 +171,13 @@ function colorbarStatic() {
     .attr("transform","rotate(180)")
     .append("g")
     .attr("class","trianglepointer")
-    .attr("transform","translate(" + (-padding - legendlen/2) + ", " + (-padding-5) + ")")
+    .attr("transform","translate(" + (-legendlen/2) + ", " + (-padding-5) + ")")
     .append("path")
     .attr("d",symbolGenerator());
 
   colorbar_plot.append("rect")
-    .attr("transform","translate(" + padding/2 + ", " + (padding+14) + ")")
-    .attr("width", (container_width - 2*padding)+"px")
+    .attr("transform","translate(" + 0 + ", " + (padding+14) + ")")
+    .attr("width", (container_width)+"px")
     .attr("height", "12px")
     .attr("fill", "none")
     .attr('stroke', '#5D6D7E');

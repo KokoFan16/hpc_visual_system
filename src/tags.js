@@ -1,5 +1,5 @@
 import { container_1_plot } from './container.js';
-import { color } from './env.js';
+// import { color } from './env.js';
 import { uncollapse, collapse } from './utils.js'; 
 import { draw_tree } from './tree.js';
 import { draw_treemap } from './treemap.js';
