@@ -1,4 +1,4 @@
-import { color, div } from './env.js';
+import { color } from './env.js';
 import { container_1_plot } from './container.js';
 import { draw_treemap } from './treemap.js';
 import { draw_processes } from './processes.js';
@@ -10,6 +10,12 @@ import { draw_scale_stacked } from './scaleStack.js'
 let nodes;
 var treemap = d3.tree().size([container_width - padding, container_height - 3*padding]);
 var i = 0;
+
+var var_div = d3
+  .select('body')
+  .append('div')
+  .attr('class', 'tooltip2')
+  .style('opacity', 0);
 
 export function draw_tree(source)
 {
@@ -35,16 +41,17 @@ export function draw_tree(source)
       .attr("transform", function(d) {
         return "translate(" + source.x2 + "," + source.y2 + ")"; })
       .on('mouseover', function(d) { 
-        div
+        var_div
           .transition()
           .duration(200)
           .style('opacity', 0.9);
-        div
-          .html("Name: " + d.data.name + '<br/>' + "Time: " + d.data.time)
+        var_div
+          .html(d.data.name + '<br/>' + "(" + d.data.time + ")")
+          .style('width', Math.max(d.data.name.length, d.data.time.length)*7 + 'px')
           .style('left', d3.event.pageX + 'px')
-          .style('top', d3.event.pageY - 28 + 'px'); })
+          .style('top', d3.event.pageY - 10 + 'px'); })
       .on('mouseout', () => {
-        div
+        var_div
           .transition()
           .duration(500)
           .style('opacity', 0); })

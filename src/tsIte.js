@@ -3,7 +3,7 @@ import { draw_line_figure } from './lineChart.js';
 
 var xScale = d3.scaleLinear()
   .domain([0, 100])
-  .range([0, (container_width - padding*4)]);
+  .range([0, (container_width - padding*5)]);
 
 // y scale (change values based on the real data)
 var yScale = d3.scaleLinear()
@@ -81,7 +81,7 @@ export function draw_ts_or_ite(nodeid) {
     }
 
     // update x axis Math.ceil(times.length/5)*5]
-    xScale.domain([0, times.length-1]).range([0, (container_width - padding*4)]);
+    xScale.domain([0, times.length-1]).range([0, (container_width - padding*5)]);
     xAxis.transition().duration(duration).call(d3.axisBottom(xScale));
 
     draw_line_figure(times, container_4_plot, xScale, yScale, yAxis, line);

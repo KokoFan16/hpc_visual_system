@@ -90,7 +90,7 @@ export function draw_line_figure(source, container, xs, ys, y, li)
   lineUpdate.transition()
     .duration(duration)
     .attr('y1', function(d) {return ys(d); })
-    .attr("x2", container_width - 4*padding)
+    .attr("x2", container_width - 5*padding)
     .attr('y2', function(d) {return ys(d); });
 
   // Remove any exiting paths
@@ -103,7 +103,7 @@ export function draw_line_figure(source, container, xs, ys, y, li)
 
   var textsEnter = texts.enter().append("text")
     .attr("class", "timeLable")
-    .attr("transform", "translate(" + (container_width - 4*padding) + ", " + padding + ")");
+    .attr("transform", "translate(" + (container_width - 5*padding) + ", " + padding + ")");
 
   textsEnter.merge(texts)
     .transition()

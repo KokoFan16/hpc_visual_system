@@ -11,7 +11,21 @@ p{
   margin-left: 50px;
 }
 
-input {
+/*input.selec_ite {
+  width: 40px;
+  height: 25px;
+  line-height: 3;
+  padding-left: 20px;
+  border: 2px solid #eee;
+}*/
+
+/*input[type=text] {
+  padding:10px;
+  border:0;
+  box-shadow:0 0 15px 4px rgba(0,0,0,0.06);
+}*/
+
+/*input {
   width: 40px;
   height: 25px;
   line-height: 3;
@@ -20,13 +34,18 @@ input {
   border: 2px solid #eee;
 }
 
+input, select, textarea{
+    color: black;
+}
+
 #selecFiles {
   padding-left: 10px;
   padding-right: 10px;
   padding-top: 5px;
   padding-bottom: 5px;
   border: 2px solid #eee;
-}
+  color: black;
+}*/
 
 .dot {
     fill: black;
@@ -59,7 +78,7 @@ div.tooltip {
   position: absolute;
   text-align: center;
   width: 100px;
-  height: 28px;
+  height: 30px;
   padding: 2px;
   font: 12px sans-serif;
   background: rgba(0,0,0,.8);
@@ -71,7 +90,7 @@ div.tooltip2 {
   color: white;
   position: absolute;
   text-align: center;
-  height: 28px;
+  height: 35px;
   padding: 2px;
   font: 12px sans-serif;
   background: rgba(0,0,0,.8);

@@ -1,5 +1,5 @@
 // Env params
-import { svg, } from './env.js'; //padding, container_width, container_height, time_metics
+// import { svg, } from './env.js'; //padding, container_width, container_height, time_metics
 import { container_2_plot, colorbar_plot, container_3_plot, container_4_plot, loops_container, container_stacked } from './container.js';
 import { parseData, treeData_update, collapse, findtags } from './utils.js'; //, , findAllLoops, uncollapse 
 import { drawLoopsButt } from './loops.js';
@@ -10,6 +10,7 @@ import { draw_processes } from './processes.js';
 import { draw_ts_or_ite } from './tsIte.js';
 import { draw_scale } from './scale.js';
 import { draw_scale_stacked } from './scaleStack.js'
+
 
 fetch("data/fileName.txt") // open file to get filename
   .then(res => res.text())
@@ -26,7 +27,8 @@ fetch("data/fileName.txt") // open file to get filename
                     .append("option");
 
     options.text(function(d) { return d;})
-           .attr("value", function(d) { return d.replace(); });
+           .attr("value", function(d) { return d.replace(); })
+           .style('font-size', '1em')
 
     // draw showLoops button
     drawLoopsButt();

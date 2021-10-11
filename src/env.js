@@ -1,9 +1,9 @@
 
 // draw svg canvas
-export var svg = d3.select('#svg_chart').append('svg')
-				   .attr('width', svg_width)
-				   .attr('height', svg_height)
-				   .style("background", "#FCF4DC"); //#F1EFEE
+// export var svg = d3.select('#svg_chart').append('svg')
+// 				   .attr('width', svg_width)
+// 				   .attr('height', svg_height)
+// 				   .style("background", "#FCF4DC"); //#F1EFEE
 
 export var color = d3.scaleOrdinal(d3.schemeAccent); 
 

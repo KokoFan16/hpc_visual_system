@@ -15,7 +15,7 @@ export function draw_legends() {
     .attr("height", tags.length*22)
     .style("stroke", "grey")
     .style("stroke-width", 2)
-    .style("fill", "#FCF4DC")
+    .style("fill", "white")
     .on('mouseover', function(d) {
       d3.select(this)
       .style("stroke-width","4px"); })

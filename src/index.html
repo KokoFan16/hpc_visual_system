@@ -3,49 +3,28 @@
     <head>
         <meta charset="UTF-8">
         <title>HPC performance visualization</title>
+        <link href="bootstrap-5.0.2-dist/css/bootstrap.min.css" rel="stylesheet">
         <link rel="stylesheet" href="style.css">
     </head>
     <body>
         <div>
     	   <h1> HPC Performance Visualization System</h1>
             <p>
-                Select timestep: <input type="number" min=0 max=20 step=1 value=0 id="selec_ite"> 
-                Select process: <input type="number" min=0 max=20 step=1 value=0 id="selec_pro"> 
-                Select file: <select id="selecFiles">
-                  <!-- <option value=" " selected> </option> -->
-                </select>
-                <!-- Display Options: <select id = "drop_down"></select> -->
+                Select timestep: <input style="margin-right:50px; line-height:1; border:2px solid #eee; padding-left:20px; font-size:18px;" type="number" min=0 max=20 step=1 value=0 id="selec_ite"> 
+                Select process: <input style="margin-right:50px; line-height:1; border:2px solid #eee; padding-left:20px; font-size:18px;" type="number" min=0 max=20 step=1 value=0 id="selec_pro"> 
+                Select file: <select style="line-height:1; border:2px solid #eee; padding-left:20px; font-size:18px;" id="selecFiles"></select>
         	</p>
-            <div id="svg_chart">
-            </div>
         </div>  
-        <script src="globalVal.js"></script>
-        
-<!--         <script type='text/javascript' > 
-            const padding = 20;
-            const container_width = 600;
-            const container_height = 650;
-            const svg_width = container_width*3 + padding*3;
-            const svg_height = container_height + padding*3;
+        <div class="row">
+            <div class="col" id="area1"></div>
+            <div class="col" id="area2"></div>
+            <div class="col" id="area3"></div>
+        </div>
 
-            var show_loop = 0,
-                root,
-                breakdown_times,
-                time_metics = 1000,
-                duration = 750,
-                tags,
-                ts_num,
-                procs_num,
-                show_tag = 0,
-                is_loop = '0',
-                nodeid = "main",
-                cleared = 0,
-                proc = 0, 
-                ts = 0;
-        </script>   -->   
+        <script src="bootstrap-5.0.2-dist/js/bootstrap.bundle.min.js"></script>
+        <script src="globalVal.js"></script> 
         <!-- <script src="https://d3js.org/d3.v5.min.js"></script> -->
         <script src="d3/d3.min.js"></script>
         <script type="module" src="main.js"></script>
-        <!-- <script type="module" src="env.js"></script> -->
     </body>
 </html>

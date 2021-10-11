@@ -19,7 +19,7 @@ export function draw_treemap(source) {
 
   // initial treemap
   var init_treemap = d3.treemap().tile(d3.treemapResquarify)
-    .size([(container_width + padding), container_width])
+    .size([(container_width - 2*padding), (container_height-3*padding)])
     .round(true)
     .paddingInner(4);
 
@@ -52,7 +52,7 @@ export function draw_treemap(source) {
   }
   else {
    for (var k = 0; k < 20; k++) { color_values.push(myColor(unit_value*(k+1)));} 
-   legendlen = (container_width -padding)/20; 
+   legendlen = (container_width - 2*padding)/20; 
   }
 
   // draw rects
@@ -144,7 +144,7 @@ export function draw_treemap(source) {
 
   // colorbar enter
   var colorbarEnter = colorbar.enter().append("rect")
-    .attr("transform","translate(" + padding + ", " + (padding +15) + ")")
+    .attr("transform","translate(" + padding/2 + ", " + (padding+15) + ")")
     .attr("class","LegRect");
 
   var colorbarUpdate = colorbarEnter.merge(colorbar);
@@ -175,15 +175,15 @@ function colorbarStatic() {
     .attr("d",symbolGenerator());
 
   colorbar_plot.append("rect")
-    .attr("transform","translate(" + padding + ", " + (padding+14) + ")")
-    .attr("width", (container_width -padding)+"px")
+    .attr("transform","translate(" + padding/2 + ", " + (padding+14) + ")")
+    .attr("width", (container_width - 2*padding)+"px")
     .attr("height", "12px")
     .attr("fill", "none")
     .attr('stroke', '#5D6D7E');
 
   colorbar_plot.append("g")
     .attr("class","LegText")
-    .attr("transform","translate(" + container_width/2 + ", " + (padding*3+5) + ")")
+    .attr("transform","translate(" + (container_width/2-padding) + ", " + (padding*3+5) + ")")
     .append("text")
     .attr("x",legendlen/2)
     .attr('font-weight', 'normal')
