@@ -1,8 +1,11 @@
 import { container_2_plot } from './container.js';
 import { draw_line_figure } from './lineChart.js';
 
+var timeLabel = "Time (";
+timeLabel += (time_metics == 1)? "s)": "ms)";
+
 var select = "Max";
-var xScale, yScale, xAxis, yAxis, line, phase;
+var xScale, yScale, xAxis, yAxis, line, phase, time ;
 export function draw_scale(nodeid, inital=0) {
 
   var times = [];
@@ -36,13 +39,13 @@ export function draw_scale(nodeid, inital=0) {
     xAxis = container_2_plot.append('g')
       .call(d3.axisBottom(xScale))
       .attr("class", "axis")
-      .attr("transform", "translate(" + padding*2 + ", " + (container_height/2 - padding*2+2) + ")");
+      .attr("transform", "translate(" + padding*1.5 + ", " + (container_height/2 - padding*2+2) + ")");
 
     // draw y axis
     yAxis = container_2_plot.append('g')
       .call(d3.axisLeft(yScale))
       .attr("class", "axis")
-      .attr("transform", "translate(" + padding*2 + ", " + padding + ")"); 
+      .attr("transform", "translate(" + padding*1.5 + ", " + padding + ")"); 
 
     line = d3.line()
         .x(function(d) { return xScale(d.id); }) // set the x values for the line generator
@@ -67,6 +70,12 @@ export function draw_scale(nodeid, inital=0) {
       .attr("text-anchor", "middle")
       .attr("x", container_width/2)
       .attr("y", padding*2);
+
+    time = container_2_plot.append('text')
+      .attr("class", "labels")
+      .attr("x", padding+8)
+      .attr("y", padding-5)
+      .text(timeLabel)
   }
   
 
@@ -75,5 +84,5 @@ export function draw_scale(nodeid, inital=0) {
 
   phase.text("Current Phase: " + nodeid);
 
-  draw_line_figure(times, container_2_plot, xScale, yScale, yAxis, line);
+  draw_line_figure(times, container_2_plot, xScale, yScale, yAxis, line, 2);
 }

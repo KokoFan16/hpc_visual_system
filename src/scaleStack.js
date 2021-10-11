@@ -17,12 +17,12 @@ export function draw_scale_stacked(inital=0) {
     xAxis = container_stacked.append('g')
       .call(d3.axisBottom(xScale))
       .attr("class", "axis")
-      .attr("transform", "translate(" + padding*2 + ", " + (container_height/2 - padding*2) + ")");
+      .attr("transform", "translate(" + padding*1.5 + ", " + (container_height/2 - padding*2) + ")");
 
     yAxis = container_stacked.append('g')
       .call(d3.axisLeft(yScale))
       .attr("class", "axis")
-      .attr("transform", "translate(" + (padding*2) + ", " + padding + ")"); 
+      .attr("transform", "translate(" + (padding*1.5) + ", " + padding + ")"); 
 
     container_stacked.append('text')
       .attr("class", "labels")
@@ -70,7 +70,7 @@ export function draw_scale_stacked(inital=0) {
 
   group.enter().append("g")
     .classed("layer", true)
-    .attr("transform", "translate(" + (padding*2) + ", " + (padding) + ")")
+    .attr("transform", "translate(" + (padding*1.5) + ", " + (padding) + ")")
     .attr("fill", d => color(d.key) ); //
 
   var bars = container_stacked.selectAll(".layer").selectAll("rect")

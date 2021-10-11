@@ -1,5 +1,4 @@
-// Env params
-// import { svg, } from './env.js'; //padding, container_width, container_height, time_metics
+
 import { container_2_plot, colorbar_plot, container_3_plot, container_4_plot, loops_container, container_stacked } from './container.js';
 import { parseData, treeData_update, collapse, findtags } from './utils.js'; //, , findAllLoops, uncollapse 
 import { drawLoopsButt } from './loops.js';

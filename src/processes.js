@@ -113,5 +113,5 @@ export function draw_processes(ts, nodeid, is_loop, is_tag=null) {
   if (is_tag == null ) { phase.text("Current Phase: " + nodeid); }
   else {phase.text("Current Phase: " + is_tag);}
 
-  draw_line_figure(times, container_3_plot, xScale, yScale, yAxis, line)
+  draw_line_figure(times, container_3_plot, xScale, yScale, yAxis, line, 0)
 }

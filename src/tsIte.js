@@ -61,8 +61,9 @@ export function draw_ts_or_ite(nodeid) {
 
     // get time data
     var times = [];
-
+    var flag = 1;
     if (show_loop == 0) {
+      flag = 1;
       for (var c = 0; c < ts_num; c++) {
         var column = [];
         breakdown_times[nodeid].forEach( function(d) { 
@@ -74,6 +75,7 @@ export function draw_ts_or_ite(nodeid) {
       d3.select(".xlabel").text("Total number of timesteps");
     }
     else {
+      flag = 3;
       // get time data for all the ierations
       breakdown_times[nodeid][proc][ts].forEach( function(d, i) {
         times.push({"id": i, "time": (Number(d)*time_metics).toFixed(3)}) });
@@ -84,5 +86,5 @@ export function draw_ts_or_ite(nodeid) {
     xScale.domain([0, times.length-1]).range([0, (container_width - padding*4)]);
     xAxis.transition().duration(duration).call(d3.axisBottom(xScale));
 
-    draw_line_figure(times, container_4_plot, xScale, yScale, yAxis, line);
+    draw_line_figure(times, container_4_plot, xScale, yScale, yAxis, line, flag);
 }

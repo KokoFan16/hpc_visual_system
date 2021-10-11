@@ -1,7 +1,13 @@
-import { div } from './env.js';
+// import { div } from './env.js';
+
+var var_div = d3
+  .select('body')
+  .append('div')
+  .attr('class', 'tooltip2')
+  .style('opacity', 0);
 
 // draw line chart
-export function draw_line_figure(source, container, xs, ys, y, li)
+export function draw_line_figure(source, container, xs, ys, y, li, flag)
 {
   // update y axis
   var min_time = d3.min(source, function(d){ return Number(d.time); });
@@ -37,6 +43,12 @@ export function draw_line_figure(source, container, xs, ys, y, li)
   var node = container.selectAll(".dot")
     .data(source, function(d){ return d.time; });
 
+  var idName;
+  if (flag == 0) { idName = "Rank: "; }
+  if (flag == 1) { idName = "Ts: "; }
+  if (flag == 2) { idName = "Processes: "; }
+  if (flag == 3) { idName = "Ite: "; }
+
   // enter nodes
   var nodeEnter = node.enter().append("circle") // Uses the enter().append() method
     .attr("class", "dot") // Assign a class for styling
@@ -46,16 +58,16 @@ export function draw_line_figure(source, container, xs, ys, y, li)
     .attr("transform", "translate(" + padding*1.5 + ", " + (padding*1.5-6) + ")")
     .style('fill-opacity', 0)
     .on('mouseover', function(d) { 
-      div
+      var_div
         .transition()
         .duration(200)
         .style('opacity', 0.9);
-      div
-        .html("Rank: " + d.id+ '<br/>' + "Time: " + d.time)
+      var_div
+        .html(idName + d.id+ '<br/>' + "Time: " + d.time)
         .style('left', d3.event.pageX + 'px')
         .style('top', d3.event.pageY - 28 + 'px'); })
     .on('mouseout', function(d) {
-      div
+      var_div
         .transition()
         .duration(500)
         .style('opacity', 0); });

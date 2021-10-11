@@ -47,7 +47,7 @@ export function draw_tree(source)
           .style('opacity', 0.9);
         var_div
           .html(d.data.name + '<br/>' + "(" + d.data.time + ")")
-          .style('width', Math.max(d.data.name.length, d.data.time.length)*7 + 'px')
+          .style('width', Math.max(d.data.name.length, d.data.time.length)*9 + 'px')
           .style('left', d3.event.pageX + 'px')
           .style('top', d3.event.pageY - 10 + 'px'); })
       .on('mouseout', () => {
