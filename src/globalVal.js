@@ -20,6 +20,7 @@ var show_loop = 0,
     nodeid = "main",
     cleared = 0,
     proc = 0, 
-    ts = 0;
+    ts = 0,
+    is_abs = 0;
 
 var color = d3.scaleOrdinal(d3.schemeAccent); 

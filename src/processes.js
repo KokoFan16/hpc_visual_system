@@ -1,5 +1,8 @@
 import { draw_line_figure } from './lineChart.js';
 import { container_3_plot } from './container.js';
+import { drawYMetrics } from './yMetrics.js';
+
+drawYMetrics(container_3_plot);
 
 // x scale (change values based on the real data)
 var xScale = d3.scaleLinear()
@@ -35,7 +38,7 @@ var phase = container_3_plot.append('text')
   .attr("font-size", "15px")
   .attr("text-anchor", "middle")
   .attr("x", container_width/2)
-  .attr("y", padding*2);
+  .attr("y", padding/2);
 
 var time = container_3_plot.append('text')
   .attr("class", "labels")
@@ -72,7 +75,7 @@ export function draw_processes(ts, nodeid, is_loop, is_tag=null) {
       .attr("font-size", "15px")
       .attr("text-anchor", "middle")
       .attr("x", container_width/2)
-      .attr("y", padding*2);
+      .attr("y", padding/2);
 
     time = container_3_plot.append('text')
       .attr("class", "labels")

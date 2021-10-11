@@ -1,5 +1,6 @@
 import { container_2_plot } from './container.js';
 import { draw_line_figure } from './lineChart.js';
+import { drawYMetrics } from './yMetrics.js';
 
 var timeLabel = "Time (";
 timeLabel += (time_metics == 1)? "s)": "ms)";
@@ -7,6 +8,8 @@ timeLabel += (time_metics == 1)? "s)": "ms)";
 var select = "Max";
 var xScale, yScale, xAxis, yAxis, line, phase, time ;
 export function draw_scale(nodeid, inital=0) {
+
+  drawYMetrics(container_2_plot);
 
   var times = [];
   var nprocs_counts = [];
@@ -69,7 +72,7 @@ export function draw_scale(nodeid, inital=0) {
       .attr("font-size", "15px")
       .attr("text-anchor", "middle")
       .attr("x", container_width/2)
-      .attr("y", padding*2);
+      .attr("y", padding/2);
 
     time = container_2_plot.append('text')
       .attr("class", "labels")

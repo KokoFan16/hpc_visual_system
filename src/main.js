@@ -9,6 +9,8 @@ import { draw_processes } from './processes.js';
 import { draw_ts_or_ite } from './tsIte.js';
 import { draw_scale } from './scale.js';
 import { draw_scale_stacked } from './scaleStack.js'
+import { drawYMetrics } from './yMetrics.js'
+
 
 
 fetch("data/fileName.txt") // open file to get filename
@@ -48,6 +50,7 @@ fetch("data/fileName.txt") // open file to get filename
         container_2_plot.selectAll("*").remove();
         container_stacked.selectAll("*").remove();
         drawLoopsButt();
+        drawYMetrics(container_3_plot);
       }
       if (show_loop == 1) {
           show_loop = 0;
