@@ -30,6 +30,12 @@
 static int rank;
 static int process_count;
 
+int ntimestep;
+int curTs;
+int nprocs;
+int curRank;
+std::string namespath; // call path of functions
+
 void randomInitBoard(int *b, int N, int M);
 void printBoard(int *b, int N, int M);
 void copyGhostCell(int *b, int N, int M);
@@ -141,7 +147,7 @@ int main(int argc, char **argv)
 			int change_flag = 0;
 
 			{
-				Events e("exchange", "COMM", 0, 1, k);
+				Events e("exchange", "COMM", 0, 2, k);
 
 				// If the process_count is larger than 1, send first row and last row to prev and next process
 				if(process_count != 1)
@@ -179,7 +185,7 @@ int main(int argc, char **argv)
 
 
 			{
-				Events e("BoardChange", "COMP", 0, 1, k);
+				Events e("BoardChange", "COMP", 0, 2, k);
 
 				for (int i = 1; i < my_N+1; i++)
 				{
@@ -226,7 +232,7 @@ int main(int argc, char **argv)
 			}
 
 			{
-				Events e("statusCheck", "COMP", 0, 1, k);
+				Events e("statusCheck", "COMP", 0, 2, k);
 
 				// Copy ghost cell
 				copyGhostCell(my_next, my_N, N);
@@ -264,7 +270,8 @@ int main(int argc, char **argv)
     
 
     {
-    	Events e("gather", "COMP");
+    	if (rank == 1)
+    		Events e("gather", "COMP");
 		// Sync each process, gather the final board, and calculate the taken time
 		MPI_Barrier(MPI_COMM_WORLD);
 		MPI_Gatherv(my_board, my_count, MPI_INT, board, counts, offset, MPI_INT, 0, MPI_COMM_WORLD);
