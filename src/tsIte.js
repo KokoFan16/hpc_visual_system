@@ -2,6 +2,7 @@ import { container_4_plot } from './container.js';
 import { draw_line_figure } from './lineChart.js';
 
 var height = 230;
+var xAxis, yAxis, x_label;
 
 var xScale = d3.scaleLinear();
 
@@ -15,83 +16,66 @@ var line = d3.line()
     .y(function(d) { return yScale(d.time); }) // set the y values for the line generator 
     .curve(d3.curveMonotoneX); // apply smoothing to the line
 
-var xAxis = container_4_plot.append('g')
-  .call(d3.axisBottom(xScale))
-  .attr("class", "axis")
-  .attr("transform", "translate(" + padding*1.5 + ", " + (height+padding) + ")");
-
-// draw y axis
-var yAxis = container_4_plot.append('g')
-  .call(d3.axisLeft(yScale))
-  .attr("class", "axis")
-  .attr("transform", "translate(" + padding*1.5 + ", " + padding + ")"); 
-
-// labels
-var x_label = container_4_plot.append('text')
-  .attr("class", "xlabel")
-  .attr("y", 280)
-  // .attr("transform", "translate(" + container_width/2 + ", " + (container_height/2 - 0.5*padding) + ")")
-  .text("Total number of timesteps");
-
-// container_4_plot.append('text')
-//   .attr("class", "labels")
-//   .attr("x", -container_height/4)
-//   .attr("y", padding/2)
-//   .attr("transform", "rotate(-90)")
-//   .text("Time Taken (ms)");
+draw_statics();
 
 export function draw_ts_or_ite(nodeid) {
 
   var curWidth = container_4_plot.node().getBoundingClientRect().width;
   var width = (curWidth-padding*3);
 
-  // console.log(width);
+  if (cleared == 1) { draw_statics(); }
 
-    // if (cleared == 1) {
-    //   xAxis = container_4_plot.append('g')
-    //     .call(d3.axisBottom(xScale))
-    //     .attr("class", "axis")
-    //     .attr("transform", "translate(" + padding*1.5 + ", " + (container_height/2 - padding*2) + ")");
-
-    //   // draw y axis
-    //   yAxis = container_4_plot.append('g')
-    //     .call(d3.axisLeft(yScale))
-    //     .attr("class", "axis")
-    //     .attr("transform", "translate(" + padding*1.5 + ", " + padding + ")"); 
-
-    //   container_4_plot.append('text')
-    //     .attr("class", "xlabel")
-    //     .attr("transform", "translate(" + container_width/2 + ", " + (container_height/2 - 0.5*padding) + ")")
-    //     .text("Total number of timesteps");
-    // }
-
-    // // console.log(breakdown_times[nodeid]);
-
-    // get time data
-    var times = [];
-    var flag = 1;
-    if (show_loop == 0) {
-      flag = 1;
-      for (var c = 0; c < ts_num; c++) {
-        var column = [];
-        breakdown_times[nodeid].forEach( function(d) { 
-          column.push(d3.sum(d[c])); 
-        }) 
-        times.push({"id": c, "time": (d3.max(column)*time_metics).toFixed(3)}); //(d3.max(d.map(Number))*time_metics).toFixed(3)
-      }
-      x_label.transition().duration(duration).attr("x", (curWidth)/2);
+  // get time data
+  var times = [];
+  var flag = 1;
+  if (show_loop == 0) {
+    flag = 1;
+    for (var c = 0; c < ts_num; c++) {
+      var column = [];
+      breakdown_times[nodeid].forEach( function(d) { 
+        column.push(d3.sum(d[c])); 
+      }) 
+      times.push({"id": c, "time": (d3.max(column)*time_metics).toFixed(3)}); //(d3.max(d.map(Number))*time_metics).toFixed(3)
     }
-    else {
-      flag = 3;
-      // get time data for all the ierations
-      breakdown_times[nodeid][proc][ts].forEach( function(d, i) {
-        times.push({"id": i, "time": (Number(d)*time_metics).toFixed(3)}) 
-      });
-      x_label.transition().duration(duration).attr("x", (curWidth)/2);
-    }
+    x_label.transition().duration(duration).attr("x", (curWidth)/2);
+  }
+  else {
+    flag = 3;
+    // get time data for all the ierations
+    breakdown_times[nodeid][proc][ts].forEach( function(d, i) {
+      times.push({"id": i, "time": (Number(d)*time_metics).toFixed(3)}) 
+    });
+    x_label.transition().duration(duration).attr("x", (curWidth)/2);
+  }
 
-    xScale.domain([0, times.length-1]).range([0, width]);
-    xAxis.transition().duration(duration).call(d3.axisBottom(xScale));
+  xScale.domain([0, times.length-1]).range([0, width]);
+  xAxis.transition().duration(duration).call(d3.axisBottom(xScale));
 
-    draw_line_figure(times, container_4_plot, xScale, yScale, yAxis, line, flag);
+  draw_line_figure(times, container_4_plot, xScale, yScale, yAxis, line, flag);
+}
+
+function draw_statics() {
+  xAxis = container_4_plot.append('g')
+    .call(d3.axisBottom(xScale))
+    .attr("class", "axis")
+    .attr("transform", "translate(" + padding*1.5 + ", " + (height+padding) + ")");
+
+  // draw y axis
+  yAxis = container_4_plot.append('g')
+    .call(d3.axisLeft(yScale))
+    .attr("class", "axis")
+    .attr("transform", "translate(" + padding*1.5 + ", " + padding + ")"); 
+
+  // labels
+  x_label = container_4_plot.append('text')
+    .attr("class", "xlabel")
+    .attr("y", 280)
+    .text("Total number of timesteps");
+
+  // container_4_plot.append('text')
+  //   .attr("class", "labels")
+  //   .attr("x", -container_height/4)
+  //   .attr("y", padding/2)
+  //   .attr("transform", "rotate(-90)")
+  //   .text("Time Taken (ms)");
 }

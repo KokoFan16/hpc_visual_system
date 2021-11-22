@@ -5,40 +5,9 @@ import { container_3_plot } from './container.js';
 // var timeLabel = "Time (";
 // timeLabel += (time_metics == 1)? "s)": "ms)";
 
-// write current phase
-var phase = container_3_plot.append('text')
-  .attr("font-size", "15px")
-  .attr("text-anchor", "middle")
-  .attr("y", padding);
-
-var x_label = container_3_plot.append('text')
-  .attr("class", "labels")
-  .attr("transform", "translate(0," + 280 + ")")
-  .text("Total number of processes");
-
-var minValue = container_3_plot.append('text')
-  .attr("font-size", "10px")
-  .attr("text-anchor", "start")
-  .attr("x", padding*3)
-  .attr("y", padding*1.2);
-
-var maxValue = container_3_plot.append('text')
-  .attr("font-size", "10px")
-  .attr("text-anchor", "start")
-  .attr("x", padding*8)
-  .attr("y", padding*1.2);
-
-var meanValue = container_3_plot.append('text')
-  .attr("font-size", "10px")
-  .attr("text-anchor", "end")
-  .attr("y", padding*1.2);
-
-var medianValue = container_3_plot.append('text')
-  .attr("font-size", "10px")
-  .attr("text-anchor", "end")
-  .attr("y", padding*1.2);
-
 var height = 170, height2 = 30;
+var phase, x_label, minValue, maxValue, meanValue, medianValue, clip;
+var line_chart, focus, context, xAxis, yAxis, xAxis2, tip, bushCall, linex, liney;
 
 var x = d3.scaleLinear(),
     x2 = d3.scaleLinear(),
@@ -54,72 +23,14 @@ var line2 = d3.line()
     .x(function(d) { return x2(d.id); }) 
     .y(function(d) { return y2(d.time); })  
     .curve(d3.curveMonotoneX); 
-
-var clip = container_3_plot.append("defs").append("svg:clipPath")
-    .attr("id", "clip")
-    .append("svg:rect")
-    .attr("height", height)
-    .attr("x", 0)
-    .attr("y", 0); 
-
-var line_chart = container_3_plot.append("g")
-    .attr("class", "focus")
-    .attr("transform", "translate(" + padding*1.5 + "," + padding + ")")
-    .attr("clip-path", "url(#clip)");
-
-var focus = container_3_plot.append("g")
-    .attr("class", "focus")
-    .attr("transform", "translate(" + padding*1.5 + "," + padding + ")");
-
-var context = container_3_plot.append("g")
-    .attr("class", "context")
-    .attr("transform", "translate(" + padding*1.5 + "," + (height+padding*2.5) + ")");
-
-var xAxis = focus.append("g").call(d3.axisBottom(x))
-            .attr("class", "axis axis--x")
-            .attr("transform", "translate(0," + height + ")"),
-    yAxis = focus.append("g").call(d3.axisLeft(y)),
-    xAxis2 = context.append("g").call(d3.axisBottom(x2))
-            .attr("transform", "translate(0," + height2 + ")");
-
-var tip = line_chart.append("g").style("display", "none");   
+  
 var bisect = d3.bisector(d => d.id).left;
 
-var bushCall = context.append("g")
-  .attr("class", "brush");
-
-tip.append("circle")
-  .attr("class", "y") 
-  .style("fill", "black")
-  .style("stroke", "black")
-  .attr("r", 3);
-
-tip.append("text")
-    .attr("class", "y2")
-    .attr("font-size", "14px")
-    .attr("dx", 8)
-    .attr("dy", "-.3em");
-
-tip.append("text")
-    .attr("class", "y4")
-    .attr("font-size", "14px")
-    .attr("dx", 8)
-    .attr("dy", "1em");
-
-var linex = tip.append("line")
-  .attr("class", "x")
-  .style("stroke", "black")
-  .style("stroke-dasharray", "3,3")
-  .style("opacity", 0.5)
-  .attr("y1", 0);
-
-var liney = tip.append("line")
-  .attr("class", "y")
-  .style("stroke", "black")
-  .style("stroke-dasharray", "3,3")
-  .style("opacity", 0.5);
+draw_statics();
 
 export function draw_processes(ts, nodeid, is_loop, is_tag=null) {
+
+  if (cleared == 1) { draw_statics(); }
   
   var curWidth = container_3_plot.node().getBoundingClientRect().width;
   var width = (curWidth-padding*4);
@@ -170,7 +81,6 @@ export function draw_processes(ts, nodeid, is_loop, is_tag=null) {
     render(new_time);
   }
   else { render(times); }
-
 
   function render(data) {
     var minMax = d3.extent(data, d=> Number(d.time));
@@ -264,7 +174,6 @@ export function draw_processes(ts, nodeid, is_loop, is_tag=null) {
     } 
   }
   
-
   var change = (times.length > 512)? 0: -1;
   function brushed() {
     if (d3.event.sourceEvent && d3.event.sourceEvent.type === "zoom") return; // ignore brush-by-zoom
@@ -302,38 +211,99 @@ export function draw_processes(ts, nodeid, is_loop, is_tag=null) {
   // }
 }
 
+function draw_statics() {
+  phase = container_3_plot.append('text')
+      .attr("font-size", "15px")
+      .attr("text-anchor", "middle")
+      .attr("y", padding);
 
-// export function draw_processes(ts, nodeid, is_loop, is_tag=null) {
+  x_label = container_3_plot.append('text')
+    .attr("class", "labels")
+    .attr("transform", "translate(0," + 280 + ")")
+    .text("Total number of processes");
 
-//   if (cleared == 1) {
-//     xAxis = container_3_plot.append('g')
-//       .call(d3.axisBottom(xScale))
-//       .attr("class", "axis")
-//       .attr("transform", "translate(" + padding*2 + ", " + (container_height/2 - padding*2+2) + ")");
+  minValue = container_3_plot.append('text')
+    .attr("font-size", "10px")
+    .attr("text-anchor", "start")
+    .attr("x", padding*3)
+    .attr("y", padding*1.2);
 
-//     // draw y axis
-//     yAxis = container_3_plot.append('g')
-//       .call(d3.axisLeft(yScale))
-//       .attr("class", "axis")
-//       .attr("transform", "translate(" + padding*2 + ", " + padding + ")"); 
+  maxValue = container_3_plot.append('text')
+    .attr("font-size", "10px")
+    .attr("text-anchor", "start")
+    .attr("x", padding*8)
+    .attr("y", padding*1.2);
 
-//     container_3_plot.append('text')
-//       .attr("class", "labels")
-//       // .attr("transform", "translate(" + (width/2) + ", " + (200) + ")")
-//       .text("Total number of processes");
+  meanValue = container_3_plot.append('text')
+    .attr("font-size", "10px")
+    .attr("text-anchor", "end")
+    .attr("y", padding*1.2);
 
-//     // write current phase
-//     phase = container_3_plot.append('text')
-//       .attr("font-size", "15px")
-//       .attr("text-anchor", "middle")
-//       .attr("x", width/2)
-//       .attr("y", padding/2);
+  medianValue = container_3_plot.append('text')
+    .attr("font-size", "10px")
+    .attr("text-anchor", "end")
+    .attr("y", padding*1.2);
 
-//     time = container_3_plot.append('text')
-//       .attr("class", "labels")
-//       .attr("x", padding+5)
-//       .attr("y", padding-5)
-//       .text(timeLabel)
-//   }
+  clip = container_3_plot.append("defs").append("svg:clipPath")
+    .attr("id", "clip")
+    .append("svg:rect")
+    .attr("height", height)
+    .attr("x", 0)
+    .attr("y", 0); 
 
-// }
+  focus = container_3_plot.append("g")
+    .attr("class", "focus")
+    .attr("transform", "translate(" + padding*1.5 + "," + padding + ")");
+
+  context = container_3_plot.append("g")
+    .attr("class", "context")
+    .attr("transform", "translate(" + padding*1.5 + "," + (height+padding*2.5) + ")");
+
+  line_chart = container_3_plot.append("g")
+    .attr("class", "focus")
+    .attr("transform", "translate(" + padding*1.5 + "," + padding + ")")
+    .attr("clip-path", "url(#clip)");
+
+  xAxis = focus.append("g").call(d3.axisBottom(x))
+          .attr("class", "axis axis--x")
+          .attr("transform", "translate(0," + height + ")"),
+  yAxis = focus.append("g").call(d3.axisLeft(y)),
+  xAxis2 = context.append("g").call(d3.axisBottom(x2))
+          .attr("transform", "translate(0," + height2 + ")");
+
+  tip = line_chart.append("g").style("display", "none");
+
+  bushCall = context.append("g").attr("class", "brush");
+
+  tip.append("circle")
+     .attr("class", "y") 
+     .style("fill", "black")
+     .style("stroke", "black")
+     .attr("r", 3);
+
+  tip.append("text")
+     .attr("class", "y2")
+     .attr("font-size", "14px")
+     .attr("dx", 8)
+     .attr("dy", "-.3em");
+
+  tip.append("text")
+     .attr("class", "y4")
+     .attr("font-size", "14px")
+     .attr("dx", 8)
+     .attr("dy", "1em");
+
+  linex = tip.append("line")
+     .attr("class", "x")
+     .style("stroke", "black")
+     .style("stroke-dasharray", "3,3")
+     .style("opacity", 0.5)
+     .attr("y1", 0);
+
+  liney = tip.append("line")
+     .attr("class", "y")
+     .style("stroke", "black")
+     .style("stroke-dasharray", "3,3")
+     .style("opacity", 0.5);
+}
+

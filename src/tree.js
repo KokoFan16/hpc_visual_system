@@ -1,8 +1,8 @@
 // import { color } from './env.js';
 import { container_1_plot } from './container.js';
 import { draw_treemap } from './treemap.js';
-// import { draw_processes } from './processes.js';
-// import { draw_ts_or_ite } from './tsIte.js';
+import { draw_processes } from './processes.js';
+import { draw_ts_or_ite } from './tsIte.js';
 // import { draw_scale } from './scale.js';
 // import { draw_scale_stacked } from './scaleStack.js'
 
@@ -200,8 +200,8 @@ export function clicktree(d) {
 
       if (cleared == 0) {
           draw_treemap(root); // refresh treemap 
-          // draw_processes(ts, nodeid, is_loop); // refresh figure of processes 
-          // draw_ts_or_ite(nodeid); // refresh figure of ts or ite 
+          draw_processes(ts, nodeid, is_loop); // refresh figure of processes 
+          draw_ts_or_ite(nodeid); // refresh figure of ts or ite 
       }
       else {
         draw_scale(nodeid);
@@ -210,8 +210,8 @@ export function clicktree(d) {
     }
     else {
       if (cleared == 0) {
-        // draw_processes(ts, nodeid, is_loop); 
-        // draw_ts_or_ite(nodeid); 
+        draw_processes(ts, nodeid, is_loop); 
+        draw_ts_or_ite(nodeid); 
       }
       else {
         draw_scale(nodeid);
