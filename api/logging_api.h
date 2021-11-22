@@ -227,8 +227,8 @@ static void write_output(std::string filename, int flag=0)
 	output.clear();
 }
 
-void split_merge_times(std::string times, int flag=0) {
-
-}
+//void split_merge_times(std::string times, int flag=0) {
+//
+//}
 
 #endif /* LOGGING_API_H_ */

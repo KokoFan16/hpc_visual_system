@@ -1,14 +1,15 @@
 // import { color } from './env.js';
 import { container_1_plot } from './container.js';
 import { draw_treemap } from './treemap.js';
-import { draw_processes } from './processes.js';
-import { draw_ts_or_ite } from './tsIte.js';
-import { draw_scale } from './scale.js';
-import { draw_scale_stacked } from './scaleStack.js'
+// import { draw_processes } from './processes.js';
+// import { draw_ts_or_ite } from './tsIte.js';
+// import { draw_scale } from './scale.js';
+// import { draw_scale_stacked } from './scaleStack.js'
 
 //draw trees
 let nodes;
-var treemap = d3.tree().size([container_width - padding, container_height - 3*padding]);
+// var treemap = d3.tree().size([container_width - padding, container_height - 4*padding]);
+var treemap = d3.tree().size([container_height*1.5-padding, container_width - padding*3]);
 var i = 0;
 
 var var_div = d3
@@ -39,7 +40,8 @@ export function draw_tree(source)
   var nodeEnter = node.enter().append("g")
       .attr('class', 'node')
       .attr("transform", function(d) {
-        return "translate(" + source.x2 + "," + source.y2 + ")"; })
+        return "translate(" + source.y2 + "," + source.x2 + ")"; })
+        // return "translate(" + source.x2 + "," + source.y2 + ")"; })
       .on('mouseover', function(d) { 
         var_div
           .transition()
@@ -68,10 +70,10 @@ export function draw_tree(source)
   //Add text and tooltips for node and links
   nodeEnter.append("text")
     .attr('class', 'nodename')
-    .attr("dx", ".1em")
-    .attr("y", "1.5em")
-    .style("text-anchor", "middle")
-    .text(function(d) {return d.data.name; });
+    .attr("y", ".3em")
+    .attr("x", "-1em")
+    .style("text-anchor", "end")
+    .text(function(d) {return (d.data.name == "main")? "": d.data.name; });
 
   // Make the tree zoomable and collapsible
   var nodeUpdate = nodeEnter.merge(node);
@@ -80,7 +82,8 @@ export function draw_tree(source)
   nodeUpdate.transition()
     .duration(duration)
     .attr("transform", function(d) {
-      return "translate(" + d.x + "," + d.y + ")";
+      return "translate(" + d.y + "," + d.x + ")";
+      // return "translate(" + d.x + "," + d.y + ")";
     });
 
   // Update the node attributes and styl
@@ -113,7 +116,8 @@ export function draw_tree(source)
   var nodeExit = node.exit().transition()
         .duration(duration)
         .attr("transform", function(d) {
-            return "translate(" + source.x + "," + source.y + ")";
+          return "translate(" + source.y + "," + source.x + ")";
+            // return "translate(" + source.x + "," + source.y + ")";
           })
         .remove();
 
@@ -163,10 +167,14 @@ export function draw_tree(source)
 }
 
 function diagonal(s, d) {
-  var path = `M ${s.x} ${s.y}
-          C ${(s.x + d.x) / 2} ${s.y},
-            ${(s.x + d.x) / 2} ${d.y},
-            ${d.x} ${d.y}`
+  // var path = `M ${s.x} ${s.y}
+  //         C ${(s.x + d.x) / 2} ${s.y},
+  //           ${(s.x + d.x) / 2} ${d.y},
+  //           ${d.x} ${d.y}`
+  var path = `M ${s.y} ${s.x}
+          C ${(s.y + d.y) / 2} ${s.x},
+            ${(s.y + d.y) / 2} ${d.x},
+            ${d.y} ${d.x}`
 
   return path
 }
@@ -192,8 +200,8 @@ export function clicktree(d) {
 
       if (cleared == 0) {
           draw_treemap(root); // refresh treemap 
-          draw_processes(ts, nodeid, is_loop); // refresh figure of processes 
-          draw_ts_or_ite(nodeid); // refresh figure of ts or ite 
+          // draw_processes(ts, nodeid, is_loop); // refresh figure of processes 
+          // draw_ts_or_ite(nodeid); // refresh figure of ts or ite 
       }
       else {
         draw_scale(nodeid);
@@ -202,8 +210,8 @@ export function clicktree(d) {
     }
     else {
       if (cleared == 0) {
-        draw_processes(ts, nodeid, is_loop); 
-        draw_ts_or_ite(nodeid); 
+        // draw_processes(ts, nodeid, is_loop); 
+        // draw_ts_or_ite(nodeid); 
       }
       else {
         draw_scale(nodeid);

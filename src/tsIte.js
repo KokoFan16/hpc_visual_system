@@ -59,6 +59,8 @@ export function draw_ts_or_ite(nodeid) {
         .text("Total number of timesteps");
     }
 
+    // console.log(breakdown_times[nodeid]);
+
     // get time data
     var times = [];
     var flag = 1;
@@ -67,6 +69,7 @@ export function draw_ts_or_ite(nodeid) {
       for (var c = 0; c < ts_num; c++) {
         var column = [];
         breakdown_times[nodeid].forEach( function(d) { 
+          // console.log(d[c]);
           column.push(d3.sum(d[c])); 
         }) 
         times.push({"id": c, "time": (d3.max(column)*time_metics).toFixed(3)}); //(d3.max(d.map(Number))*time_metics).toFixed(3)

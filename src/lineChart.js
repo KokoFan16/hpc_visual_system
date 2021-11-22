@@ -9,6 +9,11 @@ var var_div = d3
 // draw line chart
 export function draw_line_figure(source, container, xs, ys, y, li, flag)
 {
+
+  var width = container.node().getBoundingClientRect().width;
+
+  // var scale_width = (width > 0)? (width-padding*4): (container_width - padding*4);
+
   // update y axis
   var min_time = d3.min(source, function(d){ return Number(d.time); });
   var max_time = d3.max(source, function(d){ return Number(d.time); });
@@ -17,7 +22,8 @@ export function draw_line_figure(source, container, xs, ys, y, li, flag)
   // console.log();
 
   ys.domain([ymin, max_time*1.05])
-    .range([(container_height/2 - 3*padding), 0]);
+    .range([(220), 0]);
+    // .range([(container_height/2 - 3*padding), 0]);
   y.transition().duration(duration).call(d3.axisLeft(ys));
 
   // draw line graph
@@ -73,7 +79,22 @@ export function draw_line_figure(source, container, xs, ys, y, li, flag)
       var_div
         .transition()
         .duration(500)
-        .style('opacity', 0); });
+        .style('opacity', 0); })
+    .on('click', function(d) {
+      if (flag == 2) { 
+        // if (d.click == 0) { d.click = 1; console.log(d.click);}
+        if (d.click == 1) { 
+          d.click = 0; 
+          d3.select(this)
+            .attr("r", 3)
+            .style('fill', 'black');
+        }
+        else { 
+          d.click = 1; 
+          d3.select(this).attr("r", 5).style('fill', 'red');
+        }        
+      }
+    });
 
   // update nodes
   var nodeUpdate = nodeEnter.merge(node);
@@ -105,7 +126,7 @@ export function draw_line_figure(source, container, xs, ys, y, li, flag)
   lineUpdate.transition()
     .duration(duration)
     .attr('y1', function(d) {return ys(d); })
-    .attr("x2", container_width - 4*padding)
+    .attr("x2", width-4*padding)
     .attr('y2', function(d) {return ys(d); });
 
   // Remove any exiting paths
@@ -118,11 +139,19 @@ export function draw_line_figure(source, container, xs, ys, y, li, flag)
 
   var textsEnter = texts.enter().append("text")
     .attr("class", "timeLable")
-    .attr("transform", "translate(" + (container_width - 4*padding) + ", " + padding + ")");
+    .attr("transform", "translate(" + (width-4*padding) + ", " + padding + ")");
 
   textsEnter.merge(texts)
     .transition()
     .duration(duration)
+    .attr("transform", function(d, i) {
+        var h = (i == 0) ? padding: padding*2;
+        return "translate(" + (width-5*padding) + ", " + (h) + ")";
+      })
     .attr("y", function(d) { return ys(d); })
     .text(function(d, i) { return (i == 0) ? ("Max: " + d) : ("Min: " + d); });
+}
+
+function click(d) {
+
 }

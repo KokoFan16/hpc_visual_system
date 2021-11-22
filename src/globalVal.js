@@ -3,9 +3,9 @@ const padding = 20;
 var winWidth = window.innerWidth;
 var winHeight = window.innerHeight;
 
-var container_width = window.innerWidth/3 - padding;
+var container_width = window.innerWidth/2 - padding;
 container_width = (container_width < 500)? 500: container_width;
-const container_height = winHeight - padding * 10;
+const container_height = winHeight/3;
 
 var show_loop = 0,
     root,

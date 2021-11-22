@@ -3,7 +3,7 @@ import { collapse, findAllLoops } from './utils.js'; //, , , uncollapse
 import { draw_tree } from './tree.js';
 import { draw_treemap } from './treemap.js';
 import { draw_processes } from './processes.js';
-import { draw_ts_or_ite } from './tsIte.js';
+// import { draw_ts_or_ite } from './tsIte.js';
 
 export function drawLoopsButt() {
   loops_container.append("rect")
@@ -52,7 +52,7 @@ function showloops() {
       root.children.forEach(collapse);
 
       draw_processes(ts, "main", is_loop); 
-      draw_ts_or_ite("main");
+      // draw_ts_or_ite("main");
      }
      draw_tree(root);
      draw_treemap(root);

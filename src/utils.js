@@ -61,7 +61,7 @@ export function uncollapse(d) {
 export function findtags(d, tags) {
   if(d._children) {
     d._children.forEach(function(d){ 
-      if (!tags.includes(d.data.data.tag)) { tags.push(d.data.data.tag); }
+      if (d.data.data.tag && !tags.includes(d.data.data.tag)) { tags.push(d.data.data.tag); }
       findtags(d, tags);
     });
   }

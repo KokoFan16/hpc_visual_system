@@ -19,7 +19,7 @@ export function draw_treemap(source) {
 
   // initial treemap
   var init_treemap = d3.treemap().tile(d3.treemapResquarify)
-    .size([(container_width), (container_height-3*padding)])
+    .size([(container_width), (container_height*1.5-3*padding)])
     .round(true)
     .paddingInner(4);
 
