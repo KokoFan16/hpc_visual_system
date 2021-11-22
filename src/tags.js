@@ -1,5 +1,4 @@
 import { container_1_plot } from './container.js';
-// import { color } from './env.js';
 import { uncollapse, collapse } from './utils.js'; 
 import { draw_tree } from './tree.js';
 import { draw_treemap } from './treemap.js';
@@ -10,7 +9,7 @@ import { draw_ts_or_ite } from './tsIte.js';
 export function draw_legends() {
   container_1_plot.append("rect")
     .attr("class", "tagLegend")
-    .attr("transform", "translate(" + (padding*1.2) + ", " + padding*0.8 + ")")
+    .attr("transform", "translate(0," + padding*0.8 + ")")
     .attr("width", 80)
     .attr("height", tags.length*22)
     .style("stroke", "grey")
@@ -24,18 +23,17 @@ export function draw_legends() {
       .style("stroke-width","2px"); })
     .on('click', showTags);
 
-
   container_1_plot.append("text")
     .text("Tags")
-    .attr("x", 45)
+    .attr("x", 23)
     .attr("y", 8)
     .attr("text-anchor", "start")
     .style("text-transform", "capitalize")
-    .style("font-size", "20px")
+    .style("font-size", "16px")
 
   // legend 
   var legend_group_1 = container_1_plot.append("g")
-    .attr("transform", "translate(" + (padding*1.5) + ", " + padding + ")");
+    .attr("transform", "translate(5, " + padding + ")");
 
   tags.forEach(function(item, index) {
     var legends = legend_group_1.append("g")

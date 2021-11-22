@@ -95,28 +95,14 @@ tip.append("circle")
   .attr("r", 3);
 
 tip.append("text")
-    .attr("class", "y1")
-    .style("stroke", "white")
-    .style("stroke-width", "1px")
-    .style("opacity", 1)
-    .attr("dx", 8)
-    .attr("dy", "-.3em");
-
-tip.append("text")
     .attr("class", "y2")
+    .attr("font-size", "14px")
     .attr("dx", 8)
     .attr("dy", "-.3em");
-
-tip.append("text")
-    .attr("class", "y3")
-    .style("stroke", "white")
-    .style("stroke-width", "1px")
-    .style("opacity", 1)
-    .attr("dx", 8)
-    .attr("dy", "1em");
 
 tip.append("text")
     .attr("class", "y4")
+    .attr("font-size", "14px")
     .attr("dx", 8)
     .attr("dy", "1em");
 
@@ -136,8 +122,8 @@ var liney = tip.append("line")
 export function draw_processes(ts, nodeid, is_loop, is_tag=null) {
   
   var curWidth = container_3_plot.node().getBoundingClientRect().width;
-  var width = (curWidth-padding*5);
-  clip.attr("width", (curWidth-padding*5));
+  var width = (curWidth-padding*4);
+  clip.attr("width", width);
 
   x_label.transition().duration(duration).attr("x", (curWidth)/2);
   phase.transition().duration(duration).attr("x", (curWidth)/2);
@@ -145,7 +131,7 @@ export function draw_processes(ts, nodeid, is_loop, is_tag=null) {
   else { phase.text("Current Phase: " + is_tag); }
 
   var brush = d3.brushX()
-    .extent([[0, 0], [(curWidth-padding*5), height2]])
+    .extent([[0, 0], [width, height2]])
     .on("brush end", brushed);
 
   // var zoom = d3.zoom()
@@ -187,8 +173,6 @@ export function draw_processes(ts, nodeid, is_loop, is_tag=null) {
 
 
   function render(data) {
-    // var min_time = d3.min(data, d=> Number(d.time));
-    // var max_time = d3.max(data, d=> Number(d.time));
     var minMax = d3.extent(data, d=> Number(d.time));
     var ymin = (is_abs == 1)? 0: minMax[0]*0.95;
 
@@ -201,7 +185,7 @@ export function draw_processes(ts, nodeid, is_loop, is_tag=null) {
     meanValue.transition().duration(duration).attr("x", width-padding).text("Mean: " + mean.toFixed(3));
     medianValue.transition().duration(duration).attr("x", width-padding*6).text("Median: " + median.toFixed(3));
 
-    x.domain([0, d3.max(data, d=>d.id)]).range([0, (curWidth - padding*5)]);
+    x.domain([0, d3.max(data, d=>d.id)]).range([0, width]);
     y.domain([ymin, minMax[1]*1.05]);
     x2.domain(x.domain()).range(x.range());
     y2.domain(y.domain());
@@ -246,10 +230,10 @@ export function draw_processes(ts, nodeid, is_loop, is_tag=null) {
 
     linex.attr("y2", height);
 
-    liney.attr("x1", (curWidth - padding*5)).attr("x2", (curWidth - padding*5));
+    liney.attr("x1", width).attr("x2", width);
 
     line_chart.append("rect")                                 
-      .attr("width", (curWidth - padding*5))                            
+      .attr("width", width)                            
       .attr("height", height)                           
       .style("fill", "none")                            
       .style("pointer-events", "all")                   
@@ -272,14 +256,8 @@ export function draw_processes(ts, nodeid, is_loop, is_tag=null) {
       tip.select("line.y").attr("transform", "translate(" + width * -1 + "," + y(d.time) + ")")
          .attr("x2", width + width);
 
-      tip.select("text.y1").attr("transform", "translate(" + x(d.id) + "," + y(d.time) + ")")
-         .text(d.time);
-
       tip.select("text.y2").attr("transform", "translate(" + x(d.id) + "," + y(d.time) + ")")
          .text(d.time);
-
-      tip.select("text.y3").attr("transform", "translate(" + x(d.id) + "," + y(d.time) + ")")
-         .text("P"+d.id);
 
       tip.select("text.y4").attr("transform", "translate(" + x(d.id) + "," + y(d.time) + ")")
          .text("P"+d.id);

@@ -11,9 +11,6 @@ export function draw_line_figure(source, container, xs, ys, y, li, flag)
 {
 
   var width = container.node().getBoundingClientRect().width;
-
-  // var scale_width = (width > 0)? (width-padding*4): (container_width - padding*4);
-
   // update y axis
   var min_time = d3.min(source, function(d){ return Number(d.time); });
   var max_time = d3.max(source, function(d){ return Number(d.time); });
@@ -27,12 +24,12 @@ export function draw_line_figure(source, container, xs, ys, y, li, flag)
   y.transition().duration(duration).call(d3.axisLeft(ys));
 
   // draw line graph
-  var links = container.selectAll('.link')
+  var links = container.selectAll('.line')
      .data([source], function(d){ return d.id; });
 
   // Enter any new links at the parent's previous position.
   var linkEnter = links.enter().append("path")
-      .attr("class", "link")
+      .attr("class", "line")
       .attr("transform", "translate(" + padding*1.5 + ", " + (padding*1.5-6) + ")");
 
   var linkUpdate = linkEnter.merge(links);
@@ -52,11 +49,11 @@ export function draw_line_figure(source, container, xs, ys, y, li, flag)
   var node = container.selectAll(".dot")
     .data(source, function(d){ return d.time; });
 
-  var idName;
-  if (flag == 0) { idName = "Rank: "; }
-  if (flag == 1) { idName = "Ts: "; }
-  if (flag == 2) { idName = "Processes: "; }
-  if (flag == 3) { idName = "Ite: "; }
+  var idName
+  if (flag == 0) { idName = "rank: "; }
+  if (flag == 1) { idName = "ts: "; }
+  if (flag == 2) { idName = "processes: "; }
+  if (flag == 3) { idName = "ite: "; }
 
   // enter nodes
   var nodeEnter = node.enter().append("circle") // Uses the enter().append() method
@@ -72,7 +69,7 @@ export function draw_line_figure(source, container, xs, ys, y, li, flag)
         .duration(200)
         .style('opacity', 0.9);
       var_div
-        .html(idName + d.id+ '<br/>' + "Time: " + d.time)
+        .html(idName + d.id+ '<br/>' + d.time)
         .style('left', d3.event.pageX + 'px')
         .style('top', d3.event.pageY - 28 + 'px'); })
     .on('mouseout', function(d) {

@@ -1,15 +1,15 @@
 import Split from './split.js'
 
-import { container_1_plot, container_3_plot} from './container.js';
+import { container_1_plot, container_3_plot, container_4_plot} from './container.js';
 
 // import { container_2_plot, colorbar_plot, container_3_plot, container_4_plot, loops_container, container_stacked } from './container.js';
 import { parseData, treeData_update, collapse, findtags } from './utils.js'; //, , findAllLoops, uncollapse, 
 import { drawLoopsButt } from './loops.js';
-// import { draw_legends } from './tags.js';
+import { draw_legends } from './tags.js';
 import { draw_tree } from './tree.js';
 import { draw_treemap } from './treemap.js';
 import { draw_processes } from './processes.js';
-// import { draw_ts_or_ite } from './tsIte.js';
+import { draw_ts_or_ite } from './tsIte.js';
 // import { draw_scale } from './scale.js';
 // import { draw_scale_stacked } from './scaleStack.js'
 // import { drawYMetrics } from './yMetrics.js'
@@ -47,9 +47,7 @@ fetch("data/fileName.txt") // open file to get filename
            .attr("value", function(d) { return d.replace(); })
            .style('font-size', '1em')
 
-    // draw showLoops button
-    drawLoopsButt();
-
+    drawLoopsButt(); // draw showLoops button
     
     var file = d3.select("#selecFiles").property("value");
     d3.csv("data/"+file).then(function(flatData) {
@@ -57,8 +55,7 @@ fetch("data/fileName.txt") // open file to get filename
       breakdown_times = parseData(flatData);
       // // if (breakdown_times["main"][0][0] < 0.1) { time_metics = 1000; } // time metrics (s or ms)
       render(flatData);
-      // draw_legends(); // draw tag legends
-
+      draw_legends(); // draw tag legends
     });
 
 
@@ -126,10 +123,18 @@ function responsive() {
   container_3_plot.attr('width', width).attr('height', 300);
   draw_processes(ts, nodeid, '0');
 
+  var width2 = d3.select("div#two").node().getBoundingClientRect().width;
+  container_4_plot.attr('width', width2).attr('height', 300);
+  draw_ts_or_ite(nodeid);
+
   d3.select(".gutter").on("mouseup", function(d) {
       width = d3.select("div#one").node().getBoundingClientRect().width;
       container_3_plot.attr('width', width).attr('height', 300);
       draw_processes(ts, nodeid, '0');
+
+      var width2 = d3.select("div#two").node().getBoundingClientRect().width;
+      container_4_plot.attr('width', width2).attr('height', 300);
+      draw_ts_or_ite(nodeid);
   });
 }
 
@@ -137,13 +142,13 @@ function responsive() {
 function render(data, flag=0) {
     var renderStart = performance.now();
 
-    responsive();
-
     procs_num = breakdown_times["main"].length; // total number of processes
     d3.select("#selec_pro").attr("max", procs_num-1); // set input box based on this value
 
     ts_num = breakdown_times["main"][0].length; // total number of timesteps
     d3.select("#selec_ite").attr("max", ts_num-1); // set input box based on this value 
+
+    responsive();
 
     // assign null correctly
     data.forEach(function(d) {
@@ -198,7 +203,7 @@ function render(data, flag=0) {
     // draw line chart
     // draw_processes(ts, nodeid, '0');
 
-    // // draw bar charts for all the timesteps
+    // draw bar charts for all the timesteps
     // draw_ts_or_ite(nodeid);
 
     // d3.select("#selec_ite").on("input", graph_display_1); // select timestep input box

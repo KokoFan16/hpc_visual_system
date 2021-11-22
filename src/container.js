@@ -1,21 +1,22 @@
 
 var svg1 = d3.select('#area11').append('svg')
            .attr('width', container_width)
-           .attr('height', container_height*1.6)
-           // .style("background", "#FCF4DC"); //#F1EFEE
+           .attr('height', container_height*1.6);
 
 var svg2 = d3.select('#area12').append('svg')
            .attr('width', container_width)
            .attr('height', container_height*1.6)
            // .style("background", "#F1EFEE"); //#F1EFEE
 
-
 var div = d3.select("div#one").append("div").classed("svg-container", true);
 export var container_3_plot = div.append("svg")
-   // .attr("preserveAspectRatio", "xMinYMin slice")
-   // .attr("viewBox", "0 0 600 300")
    .classed("svg-content-responsive", true)
    .attr('transform', `translate(${padding}, ${padding/2})`);
+
+var div2 = d3.select("div#two").append("div").classed("svg-container", true);
+export var container_4_plot = div2.append("svg")
+   .classed("svg-content-responsive", true)
+   .attr('transform', `translate(${0}, ${padding/2})`);
 
 // var svg3 = d3.select('#one').append('svg')
 //            .attr('width', container_width)
