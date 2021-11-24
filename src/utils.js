@@ -21,11 +21,11 @@ export function treeData_update() {
   root.each(function(d) {
     var t = breakdown_times[d.data.id][proc][ts];
     if (d.data.data.is_loop == "0"){
-      d.data.time = (parseFloat(t)*time_metics).toFixed(3);}
+      d.data.time = (parseFloat(t)*time_metics).toFixed(3); }
     else {
       var total_time = 0;
       t.forEach(function(d){ total_time += parseFloat(d); })
-      d.data.time = (total_time*time_metics).toFixed(3);}
+      d.data.time = (total_time*time_metics).toFixed(3); }
   });
 }
 

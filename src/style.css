@@ -71,7 +71,7 @@ p{
 
 
 .dot {
-    fill: black;
+    /*fill: black;*/
     stroke: #fff;
 }
 
@@ -113,7 +113,7 @@ div.tooltip2 {
   color: white;
   position: absolute;
   text-align: center;
-  height: 35px;
+  /*height: 22px;*/
   padding: 2px;
   font: 12px sans-serif;
   background: rgba(0,0,0,.8);

@@ -1,7 +1,8 @@
-// import { div } from './env.js';
+import { find_max_value_per_ite } from './utils.js';
+import { draw_tree } from './tree.js';
+import { uncollapse, collapse} from './utils.js'; 
 
-var var_div = d3
-  .select('body')
+var var_div = d3.select('body')
   .append('div')
   .attr('class', 'tooltip2')
   .style('opacity', 0);
@@ -9,6 +10,7 @@ var var_div = d3
 // draw line chart
 export function draw_line_figure(source, container, xs, ys, y, li, flag)
 {
+  // console.log(selectedNodes);
 
   var width = container.node().getBoundingClientRect().width;
   // update y axis
@@ -16,11 +18,9 @@ export function draw_line_figure(source, container, xs, ys, y, li, flag)
   var max_time = d3.max(source, function(d){ return Number(d.time); });
 
   var ymin = (is_abs == 1)? 0: min_time*0.95;
-  // console.log();
-
-  ys.domain([ymin, max_time*1.05])
-    .range([(220), 0]);
-    // .range([(container_height/2 - 3*padding), 0]);
+  
+  var height = (flag == 2)? (container_height-padding): 230;
+  ys.domain([ymin, max_time*1.05]).range([height, 0]);
   y.transition().duration(duration).call(d3.axisLeft(ys));
 
   // draw line graph
@@ -49,10 +49,10 @@ export function draw_line_figure(source, container, xs, ys, y, li, flag)
   var node = container.selectAll(".dot")
     .data(source, function(d){ return d.time; });
 
-  var idName
+  var idName;
   if (flag == 0) { idName = "rank: "; }
   if (flag == 1) { idName = "ts: "; }
-  if (flag == 2) { idName = "processes: "; }
+  if (flag == 2) { idName = "pc: "; }
   if (flag == 3) { idName = "ite: "; }
 
   // enter nodes
@@ -60,37 +60,33 @@ export function draw_line_figure(source, container, xs, ys, y, li, flag)
     .attr("class", "dot") // Assign a class for styling
     .attr("cx", function(d) { return xs(d.id); })
     .attr("cy", function(d) { return ys(d.time); })
-    .attr("r", 3)
+    .attr("r", function(d){ return selectedNodes.length? 5: 3; })
     .attr("transform", "translate(" + padding*1.5 + ", " + (padding*1.5-6) + ")")
     .style('fill-opacity', 0)
     .on('mouseover', function(d) { 
-      var_div
-        .transition()
-        .duration(200)
-        .style('opacity', 0.9);
-      var_div
-        .html(idName + d.id+ '<br/>' + d.time)
+      var_div.transition().duration(200).style('opacity', 0.9);
+      var_div.html(idName + d.id+ '<br/>' + d.time)
         .style('left', d3.event.pageX + 'px')
         .style('top', d3.event.pageY - 28 + 'px'); })
     .on('mouseout', function(d) {
-      var_div
-        .transition()
-        .duration(500)
-        .style('opacity', 0); })
+      var_div.transition().duration(500).style('opacity', 0); })
     .on('click', function(d) {
       if (flag == 2) { 
-        // if (d.click == 0) { d.click = 1; console.log(d.click);}
         if (d.click == 1) { 
           d.click = 0; 
-          d3.select(this)
-            .attr("r", 3)
-            .style('fill', 'black');
+          d3.select(this).attr("r", 3).style('fill', 'black').classed('selected', false);
+          selectedNodes = selectedNodes.filter(item => item !== d.id);
         }
         else { 
           d.click = 1; 
-          d3.select(this).attr("r", 5).style('fill', 'red');
-        }        
+          d3.select(this).attr("r", 5).style('fill', 'red').classed('selected', true);
+          selectedNodes.push(d.id);
+        } 
+        click();  
+
+        console.log(d3.select(this).attr("class"));     
       }
+
     });
 
   // update nodes
@@ -100,7 +96,12 @@ export function draw_line_figure(source, container, xs, ys, y, li, flag)
     .duration(duration)
     .attr("cx", function(d) { return xs(d.id); })
     .attr("cy", function(d) { return ys(d.time); })
-    .attr("r", 3)
+    .attr("fill", function(d) { 
+      if (selectedNodes.includes(d.id)) { d.click = 1;  return "red"; }
+      else { d.click = 0; return "black"; }
+     })
+    .attr("r", function(d){ return selectedNodes.includes(d.id)? 5: 3; })
+    // .attr("r", 3)
     .style('fill-opacity', 1);
 
   var nodeExit = node.exit().transition()
@@ -123,7 +124,7 @@ export function draw_line_figure(source, container, xs, ys, y, li, flag)
   lineUpdate.transition()
     .duration(duration)
     .attr('y1', function(d) {return ys(d); })
-    .attr("x2", width-4*padding)
+    .attr("x2", width-2*padding)
     .attr('y2', function(d) {return ys(d); });
 
   // Remove any exiting paths
@@ -147,8 +148,35 @@ export function draw_line_figure(source, container, xs, ys, y, li, flag)
       })
     .attr("y", function(d) { return ys(d); })
     .text(function(d, i) { return (i == 0) ? ("Max: " + d) : ("Min: " + d); });
-}
 
-function click(d) {
+  function click() {
+    var selected = d3.selectAll(".selected").data();
 
+    if (selected.length == 2) {
+      comp = 1;
+      var data = {};
+      selected.forEach(function(d) {
+        for (var [key, value] of Object.entries(breakdown_times[d.id])) {
+          var ites = [];
+          find_max_value_per_ite(value, ites);
+
+          var value;
+          if (meas == "Median") { value = Number(Number(d3.median(ites))*time_metics).toFixed(3); }
+          else if (meas == "Mean") { value = Number(Number(d3.mean(ites))*time_metics).toFixed(3); }
+          else if (meas == "Min") { value = Number(Number(d3.min(ites))*time_metics).toFixed(3); }
+          else { value = Number(Number(d3.max(ites))*time_metics).toFixed(3); }
+
+          if (data[key] == null) { data[key] = value; }
+          else { data[key] -= value; }
+        }
+      })
+
+      root.children.forEach(uncollapse); 
+      root.each(function(d) { d.data.time = Number(data[d.data.id].toFixed(3)); });
+
+      root.children.forEach(collapse); 
+      draw_tree(root, 1);
+    } 
+    else { comp = 0; }  
+  }
 }

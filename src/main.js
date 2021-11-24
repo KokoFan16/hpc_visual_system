@@ -1,8 +1,5 @@
 import Split from './split.js'
-
 import { container_2_plot, colorbar_plot, container_3_plot, container_4_plot, loops_container } from './container.js';
-
-// import { container_2_plot, colorbar_plot, container_3_plot, container_4_plot, loops_container, container_stacked } from './container.js';
 import { parseData, treeData_update, collapse, findtags } from './utils.js'; //, , findAllLoops, uncollapse, 
 import { drawLoopsButt } from './loops.js';
 import { draw_legends } from './tags.js';
@@ -10,8 +7,8 @@ import { draw_tree } from './tree.js';
 import { draw_treemap } from './treemap.js';
 import { draw_processes } from './processes.js';
 import { draw_ts_or_ite } from './tsIte.js';
-// import { draw_scale } from './scale.js';
-// import { draw_scale_stacked } from './scaleStack.js'
+import { draw_scale } from './scale.js';
+import { draw_scale_stacked } from './scaleStack.js'
 // import { drawYMetrics } from './yMetrics.js'
 
 var startTime = performance.now();
@@ -53,6 +50,7 @@ fetch("data/fileName.txt") // open file to get filename
     d3.csv("data/"+file).then(function(flatData) {
       breakdown_times = {}; // divide times based on rank, ts and loops
       breakdown_times = parseData(flatData);
+      // console.log(breakdown_times);
       // // if (breakdown_times["main"][0][0] < 0.1) { time_metics = 1000; } // time metrics (s or ms)
       render(flatData);
       draw_legends(); // draw tag legends
@@ -63,8 +61,8 @@ fetch("data/fileName.txt") // open file to get filename
     d3.select("#selecFiles").on("change", change)
     function change() {
       if (cleared == 1) { 
-        // container_2_plot.selectAll("*").remove();
-        // container_stacked.selectAll("*").remove();
+        container_2_plot.selectAll("*").remove();
+        container_3_plot.selectAll("*").remove();
         drawLoopsButt();
         // drawYMetrics(container_3_plot);
       }
@@ -84,6 +82,7 @@ fetch("data/fileName.txt") // open file to get filename
         d3.csv("data/"+file).then(function(flatData) {
           breakdown_times = {}; // divide times based on rank, ts and loops
           breakdown_times = parseData(flatData);
+          // console.log(breakdown_times);
           render(flatData, 1);
         });
       }
@@ -91,13 +90,12 @@ fetch("data/fileName.txt") // open file to get filename
         Promise.all(openFile.map(f => d3.csv("data/"+f))).then(function(data) {
           cleared = 1;
           breakdown_times = {};
-          data.forEach(function(d, i) { 
-            var temp = {};
-            temp = parseData(d); 
-            breakdown_times[i] = temp;
+          data.forEach(function(d) { 
+            var temp = parseData(d); 
+            breakdown_times[temp["main"].length] = temp;
           })
-          // draw_scale("main", 1);
-          // draw_scale_stacked(1);
+          draw_scale("main", 1);
+          draw_scale_stacked(1);
         })
 
         root.children.forEach(collapse);
@@ -126,13 +124,22 @@ function responsive() {
   draw_ts_or_ite(nodeid);
 
   d3.select(".gutter").on("mouseup", function(d) {
+
       width = d3.select("div#one").node().getBoundingClientRect().width;
       container_3_plot.attr('width', width).attr('height', 300);
-      draw_processes(ts, nodeid, '0');
 
-      var width2 = d3.select("div#two").node().getBoundingClientRect().width;
+      width2 = d3.select("div#two").node().getBoundingClientRect().width;
       container_4_plot.attr('width', width2).attr('height', 300);
-      draw_ts_or_ite(nodeid);
+
+      if (cleared == 0) {
+        draw_processes(ts, nodeid, '0');
+        draw_ts_or_ite(nodeid);
+      }
+      else {
+          draw_scale("main", 0);
+          draw_scale_stacked(0);
+      }
+
   });
 }
 

@@ -18,40 +18,6 @@ export var container_4_plot = div2.append("svg")
    .classed("svg-content-responsive", true)
    .attr('transform', `translate(${0}, ${padding/2})`);
 
-// var svg3 = d3.select('#one').append('svg')
-//            .attr('width', container_width)
-//            .attr('height', "300px")
-//            .style("background", "pink"); //#F1EFEE
-
-// var svg4 = d3.select('#two').append('svg')
-//            .attr('width', container_width*0.5)
-//            // .attr('height', container_height)
-//            .style("background", "lightblue"); //#F1EFEE
-
-// var svg3 = d3.select('#area3').append('svg')
-//            .attr('width', container_width)
-//            .attr('height', container_height+padding*2);
-
-
-// export var container_3_plot = d3.select("div#one")
-//    .append("div")
-//    // Container class to make it responsive.
-//    .classed("svg-container", true) 
-//    .append("svg")
-//    // Responsive SVG needs these 2 attributes and no width and height attr.
-//    // .attr("preserveAspectRatio", "xMinYMin meet")
-//    .attr("preserveAspectRatio", "none")
-//    .attr("viewBox", "0 0 600 300")
-//    // Class to make it responsive.
-//    .classed("svg-content-responsive", true);
-   // Fill with a rectangle for visualization.
-   // .append("rect")
-   // .classed("rect", true)
-   // .attr("width", 600)
-   // .attr("height", 100);
-
-// console.log(container_3_plot.node().clientWidth, container_3_plot.node().clientHeight);
-
 export var container_1_plot = svg1.append('g')
   .attr('class', 'container_1_plot')
   .attr('transform', `translate(${padding*1.5}, ${padding*1.5})`);
@@ -87,7 +53,7 @@ export var colorbar_plot = svg2.append('g')
 
 // export var container_stacked = svg2.append('g')
 //   .attr('class', 'container_stacked')
-//   .attr('transform', `translate(${0}, ${container_height/2+padding})`);
+//   .attr('transform', `translate(${0}, ${padding})`);
 
 
 

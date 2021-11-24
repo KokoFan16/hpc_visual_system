@@ -16,11 +16,9 @@ export function draw_legends() {
     .style("stroke-width", 2)
     .style("fill", "white")
     .on('mouseover', function(d) {
-      d3.select(this)
-      .style("stroke-width","4px"); })
+      d3.select(this).style("stroke-width","4px"); })
     .on('mouseout', function(d) {
-      d3.select(this)
-      .style("stroke-width","2px"); })
+      d3.select(this).style("stroke-width","2px"); })
     .on('click', showTags);
 
   container_1_plot.append("text")

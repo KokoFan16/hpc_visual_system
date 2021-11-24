@@ -3,8 +3,8 @@ import { container_1_plot } from './container.js';
 import { draw_treemap } from './treemap.js';
 import { draw_processes } from './processes.js';
 import { draw_ts_or_ite } from './tsIte.js';
-// import { draw_scale } from './scale.js';
-// import { draw_scale_stacked } from './scaleStack.js'
+import { draw_scale } from './scale.js';
+import { draw_scale_stacked } from './scaleStack.js'
 
 //draw trees
 let nodes;
@@ -90,6 +90,11 @@ export function draw_tree(source)
   nodeUpdate.select('circle.node')
     .attr('r', 10)
     .style("fill", function(d) {
+      if (comp == 1){ 
+        if (d.data.time < 0) { return "red"; }
+        else if (d.data.time > 0) { return "green"; }
+        else { return "white"; }
+      }
       if (!tags.includes(d.data.data.tag)) { return d._children ? "lightsteelblue" : "#fff"; }
       else {var index = tags.indexOf(d.data.data.tag); return color(index);}
     })
