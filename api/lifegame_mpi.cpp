@@ -296,7 +296,7 @@ int main(int argc, char **argv)
 
     }
 
-    write_output("lifeGame_2_loop_100");
+    write_output("lifeGame_loop100");
 
     MPI_Finalize();
     return 0;

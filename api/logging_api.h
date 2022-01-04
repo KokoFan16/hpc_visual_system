@@ -191,7 +191,7 @@ static void write_output(std::string filename, int flag=0)
 
 	if (curRank == master) // rank 0 writes csv file
 	{
-		std::string filePath = filename + ".csv"; // create file path
+		std::string filePath = filename + "_" + std::to_string(ntimestep) + "_" + std::to_string(nprocs) + ".csv"; // create file path
 		csvfile csv(filePath); // open CSV file
 
 		// set CSV file Hearer
