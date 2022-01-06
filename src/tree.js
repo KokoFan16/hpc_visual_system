@@ -8,7 +8,6 @@ import { draw_scale_stacked } from './scaleStack.js'
 
 //draw trees
 let nodes;
-// var treemap = d3.tree().size([container_width - padding, container_height - 4*padding]);
 var treemap = d3.tree().size([container_height*1.5-padding, container_width - padding*3]);
 var i = 0;
 

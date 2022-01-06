@@ -9,6 +9,7 @@ const container_height = winHeight/3;
 
 var show_loop = 0,
     root,
+    dataloads,
     breakdown_times,
     time_metics = 1000,
     duration = 750,

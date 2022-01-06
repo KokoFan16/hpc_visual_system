@@ -77,8 +77,7 @@ export function draw_treemap(source) {
   // Transition to the proper position for the rect
   cellUpdate.transition()
     .duration(duration)
-    .attr("transform", function(d) {return "translate(" + d.x0 + "," + d.y0 + ")"; })
-    .style('fill-opacity', 1);
+    .attr("transform", function(d) { return "translate(" + d.x0 + "," + d.y0 + ")"; });  
 
   cellUpdate.select('rect')
     .attr("width", function(d) { return d.x1 - d.x0; })
@@ -98,29 +97,27 @@ export function draw_treemap(source) {
         trans_dis = -legendlen/2 -tags.indexOf(d.data.data.tag)*legendlen; // -legendlen/2
         label = "TAG: " + d.data.data.tag;
       }
-      d3.select(this)
-        .style("stroke-width","4px")
-      d3.select(".trianglepointer")
-        .transition(200)
+      d3.select(this).style("stroke-width","4px")
+      d3.select(".trianglepointer").transition(200)
         .delay(100)
         .attr("transform", "translate(" + trans_dis + ", " + (-padding-5) + ")" );
       d3.select(".LegText").select("text").text(label)
-      var_div
-        .transition()
+      var_div.transition()
         .duration(200)
         .style('opacity', 0.9)
       var_div
         .html(d.data.id + '<br/>' + "(" + d.data.time + ")")
         .style('width', Math.max(d.data.id.length, d.data.time.length)*8 + 'px')
         .style('left', d3.event.pageX + 'px')
-        .style('top', d3.event.pageY - 10 + 'px'); })
+        .style('top', d3.event.pageY - 10 + 'px'); 
+      })
     .on('mouseout', function(d) {
       d3.select(this)
         .style("stroke-width","2px")
-      var_div
-        .transition()
+      var_div.transition()
         .duration(500)
-        .style('opacity', 0); })
+        .style('opacity', 0); 
+      })
   
    cellUpdate.select('text')
     .text(function(d) {
@@ -130,14 +127,9 @@ export function draw_treemap(source) {
     .call(wraptext);
  
   // Remove any exiting rects
-  var cellExit = cell.exit().transition()
-        .duration(duration)
-        .attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; })
-        .style('fill-opacity', 0)
-        .remove();
-
-  cellExit.select('text')
-    .style('fill-opacity', 0);
+  var cellExit = cell.exit().remove();
+  
+  cellExit.select('text').style('fill-opacity', 0);
 
   // add colorbar 
   var colorbar = colorbar_plot.selectAll(".LegRect")
@@ -157,13 +149,7 @@ export function draw_treemap(source) {
     .attr("fill",function(d){ return d; })
     .attr("x",function(d,i){ return i*legendlen; })
 
-  colorbar.exit()
-    .transition()
-    .duration(duration)
-    .remove();
-
-
-  // function update_linechart(d){ draw_processes(ts, d.data.id); }
+  colorbar.exit().remove();
 }
 
 function colorbarStatic() {

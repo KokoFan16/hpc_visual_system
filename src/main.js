@@ -9,7 +9,6 @@ import { draw_processes } from './processes.js';
 import { draw_ts_or_ite } from './tsIte.js';
 import { draw_scale } from './scale.js';
 import { draw_scale_stacked } from './scaleStack.js'
-// import { drawYMetrics } from './yMetrics.js'
 
 var startTime = performance.now();
 
@@ -21,8 +20,11 @@ var splitobj = Split(["#one","#two"], {
     gutterStyle: function (dimension, gutterSize) { return {'flex-basis':  gutterSize + 'px'} },
     sizes: [67,31],
     minSize: [500, 50],
-    gutterSize: 5
+    gutterSize: 20
 });
+
+breakdown_times = {}; // divide times based on rank, ts and loops
+dataloads = {};
 
 fetch("data/fileName.txt") // open file to get filename
   .then(res => res.text())
@@ -33,7 +35,7 @@ fetch("data/fileName.txt") // open file to get filename
 
     var ddOptions = openFile.slice();
     if (openFile.length > 1) {
-      ddOptions.push("AllFiles(Scale)");
+      ddOptions.push("Ensemble-View");
     }
 
     var options = d3.select('#selecFiles').selectAll("option")
@@ -47,11 +49,17 @@ fetch("data/fileName.txt") // open file to get filename
     drawLoopsButt(); // draw showLoops button
     
     var file = d3.select("#selecFiles").property("value");
+
     d3.csv("data/"+file).then(function(flatData) {
-      breakdown_times = {}; // divide times based on rank, ts and loops
-      breakdown_times = parseData(flatData);
-      // console.log(breakdown_times);
-      // // if (breakdown_times["main"][0][0] < 0.1) { time_metics = 1000; } // time metrics (s or ms)
+      var fileSplit = file.split(/[._]+/);
+      procs_num = fileSplit[fileSplit.length-2]; // total number of processes 
+      ts_num = fileSplit[fileSplit.length-3]; // total number of timesteps
+
+      dataloads[procs_num] = flatData;
+
+      var temp = parseData(flatData); 
+      breakdown_times[procs_num] = temp;
+
       render(flatData);
       draw_legends(); // draw tag legends
     });
@@ -77,22 +85,40 @@ fetch("data/fileName.txt") // open file to get filename
       }
 
       file = d3.select("#selecFiles").property("value");
-      if (file != "AllFiles(Scale)") {  
+      if (file != "Ensemble-View") {  
 
-        d3.csv("data/"+file).then(function(flatData) {
-          breakdown_times = {}; // divide times based on rank, ts and loops
-          breakdown_times = parseData(flatData);
-          // console.log(breakdown_times);
-          render(flatData, 1);
-        });
+        var fileSplit = file.split(/[._]+/);
+        procs_num = fileSplit[fileSplit.length-2];
+        ts_num = fileSplit[fileSplit.length-3];
+
+        if(!breakdown_times[procs_num]) {
+
+          d3.csv("data/"+file).then(function(flatData) {
+
+            dataloads[procs_num] = flatData;
+
+            var temp = parseData(flatData); 
+            breakdown_times[procs_num] = temp;
+
+            render(flatData);
+          });
+        }
+        else { render(dataloads[procs_num]); }
       }
       else {
-        Promise.all(openFile.map(f => d3.csv("data/"+f))).then(function(data) {
+        var filtedFiles = openFile.filter(function(f) {
+          var fileSplit = f.split(/[._]+/);
+          var nprocs = fileSplit[fileSplit.length-2];
+          return !breakdown_times[nprocs];
+        });
+
+        Promise.all(filtedFiles.map(f => d3.csv("data/"+f))).then(function(data) {
           cleared = 1;
-          breakdown_times = {};
           data.forEach(function(d) { 
-            var temp = parseData(d); 
-            breakdown_times[temp["main"].length] = temp;
+            var temp = parseData(d);
+            var p = temp["main"].length;
+            breakdown_times[p] = temp;
+            dataloads[p] = d;
           })
           draw_scale("main", 1);
           draw_scale_stacked(1);
@@ -123,33 +149,29 @@ function responsive() {
   container_4_plot.attr('width', width2).attr('height', 300);
   draw_ts_or_ite(nodeid);
 
-  d3.select(".gutter").on("mouseup", function(d) {
+  d3.select(".gutter").on("click", resize); //mouseup
 
-      width = d3.select("div#one").node().getBoundingClientRect().width;
-      container_3_plot.attr('width', width).attr('height', 300);
+  function resize() {
+    width = d3.select("div#one").node().getBoundingClientRect().width;
+    container_3_plot.attr('width', width).attr('height', 300);
 
-      width2 = d3.select("div#two").node().getBoundingClientRect().width;
-      container_4_plot.attr('width', width2).attr('height', 300);
+    width2 = d3.select("div#two").node().getBoundingClientRect().width;
+    container_4_plot.attr('width', width2).attr('height', 300);
 
-      if (cleared == 0) {
-        draw_processes(ts, nodeid, '0');
-        draw_ts_or_ite(nodeid);
-      }
-      else {
-          draw_scale("main", 0);
-          draw_scale_stacked(0);
-      }
-
-  });
+    if (cleared == 0) {
+      draw_processes(ts, nodeid, '0');
+      draw_ts_or_ite(nodeid);
+    }
+    else {
+      draw_scale("main", 0);
+      draw_scale_stacked(0);
+    }
+  }
 }
 
-function render(data, flag=0) {
+function render(data) {
     var renderStart = performance.now();
-
-    procs_num = breakdown_times["main"].length; // total number of processes
     d3.select("#selec_pro").attr("max", procs_num-1); // set input box based on this value
-
-    ts_num = breakdown_times["main"][0].length; // total number of timesteps
     d3.select("#selec_ite").attr("max", ts_num-1); // set input box based on this value 
 
     responsive();
@@ -191,9 +213,6 @@ function render(data, flag=0) {
     // set time for each node (need to be updated based on current rank and ts)
     treeData_update(); 
 
-    // collapse
-    root.children.forEach(collapse);
-
     // recursively find out all the tags
     tags = [];
     root.children.forEach(function(d){ findtags(d, tags); })
@@ -205,11 +224,17 @@ function render(data, flag=0) {
     draw_treemap(root);
 
     d3.select("#selec_ite").on("input", graph_display_1); // select timestep input box
-    d3.select("#selec_pro").on("input", graph_display_2); // select process input box
+    d3.select("#selec_pro").on("input", graph_display_1); // select process input box
+
+    // // var iteValue = document.getElementById("demo");
+    // // iteValue.innerHTML = "(" + 0 + ")";
+
     function graph_display_1() {
       // Obtained value from input box
       ts = d3.select("#selec_ite").property("value");
       proc = d3.select("#selec_pro").property("value");
+
+      // iteValue.innerHTML = "(" + ts + ")";
 
       treeData_update();
 
@@ -219,19 +244,6 @@ function render(data, flag=0) {
       // redraw figure
       draw_processes(ts, nodeid, is_loop);
       draw_ts_or_ite(nodeid);
-    }
-
-    function graph_display_2() {
-      // Obtained value from input box
-      ts = d3.select("#selec_ite").property("value");
-      proc = d3.select("#selec_pro").property("value");
-
-      treeData_update();
-
-      draw_tree(root);
-      draw_treemap(root);
-
-      if (show_loop == 1) { draw_ts_or_ite(nodeid); }
     }
 
     cleared = 0;

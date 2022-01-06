@@ -11,7 +11,7 @@ var svg2 = d3.select('#area12').append('svg')
 var div = d3.select("div#one").append("div").classed("svg-container", true);
 export var container_3_plot = div.append("svg")
    .classed("svg-content-responsive", true)
-   .attr('transform', `translate(${padding}, ${padding/2})`);
+   .attr('transform', `translate(${0}, ${padding/2})`);
 
 var div2 = d3.select("div#two").append("div").classed("svg-container", true);
 export var container_4_plot = div2.append("svg")
@@ -42,18 +42,6 @@ export var container_2_plot = svg2.append('g')
 export var colorbar_plot = svg2.append('g')
   .attr('class', 'colorbar_plot')
   .attr('transform', `translate(${0}, ${container_height*1.5-padding*2})`);
-
-// export var container_3_plot = svg3.append('g')
-//   .attr('class', 'container_3_plot')
-//   .attr('transform', `translate(${0}, ${padding})`);
-
-// export var container_4_plot = svg3.append('g')
-//   .attr('class', 'container_4_plot')
-//   .attr('transform', `translate(${0}, ${container_height/2+padding})`);
-
-// export var container_stacked = svg2.append('g')
-//   .attr('class', 'container_stacked')
-//   .attr('transform', `translate(${0}, ${padding})`);
 
 
 

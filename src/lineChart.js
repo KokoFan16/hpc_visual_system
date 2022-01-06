@@ -10,9 +10,8 @@ var var_div = d3.select('body')
 // draw line chart
 export function draw_line_figure(source, container, xs, ys, y, li, flag)
 {
-  // console.log(selectedNodes);
-
   var width = container.node().getBoundingClientRect().width;
+
   // update y axis
   var min_time = d3.min(source, function(d){ return Number(d.time); });
   var max_time = d3.max(source, function(d){ return Number(d.time); });
@@ -30,7 +29,7 @@ export function draw_line_figure(source, container, xs, ys, y, li, flag)
   // Enter any new links at the parent's previous position.
   var linkEnter = links.enter().append("path")
       .attr("class", "line")
-      .attr("transform", "translate(" + padding*1.5 + ", " + (padding*1.5-6) + ")");
+      .attr("transform", "translate(" + padding*2 + ", " + (padding*1.5-6) + ")");
 
   var linkUpdate = linkEnter.merge(links);
 
@@ -50,7 +49,6 @@ export function draw_line_figure(source, container, xs, ys, y, li, flag)
     .data(source, function(d){ return d.time; });
 
   var idName;
-  if (flag == 0) { idName = "rank: "; }
   if (flag == 1) { idName = "ts: "; }
   if (flag == 2) { idName = "pc: "; }
   if (flag == 3) { idName = "ite: "; }
@@ -61,7 +59,7 @@ export function draw_line_figure(source, container, xs, ys, y, li, flag)
     .attr("cx", function(d) { return xs(d.id); })
     .attr("cy", function(d) { return ys(d.time); })
     .attr("r", function(d){ return selectedNodes.length? 5: 3; })
-    .attr("transform", "translate(" + padding*1.5 + ", " + (padding*1.5-6) + ")")
+    .attr("transform", "translate(" + padding*2 + ", " + (padding*1.5-6) + ")")
     .style('fill-opacity', 0)
     .on('mouseover', function(d) { 
       var_div.transition().duration(200).style('opacity', 0.9);
@@ -83,8 +81,6 @@ export function draw_line_figure(source, container, xs, ys, y, li, flag)
           selectedNodes.push(d.id);
         } 
         click();  
-
-        console.log(d3.select(this).attr("class"));     
       }
 
     });
@@ -97,10 +93,15 @@ export function draw_line_figure(source, container, xs, ys, y, li, flag)
     .attr("cx", function(d) { return xs(d.id); })
     .attr("cy", function(d) { return ys(d.time); })
     .attr("fill", function(d) { 
+      if (flag == 1) {return (d.id == ts)? "red": "black";}
       if (selectedNodes.includes(d.id)) { d.click = 1;  return "red"; }
       else { d.click = 0; return "black"; }
      })
-    .attr("r", function(d){ return selectedNodes.includes(d.id)? 5: 3; })
+    .attr("r", function(d){ 
+      if (flag == 1) { return (d.id == ts)? 5: 3; }
+      if (flag == 2) { return selectedNodes.includes(d.id)? 5: 3; }
+      else {return 3; }
+    })
     // .attr("r", 3)
     .style('fill-opacity', 1);
 
@@ -116,7 +117,7 @@ export function draw_line_figure(source, container, xs, ys, y, li, flag)
   // Enter any new links at the parent's previous position.
   var lineEnter = hor_lines.enter().append("line")
       .attr("class", "hor_line")
-      .attr("transform", "translate(" + padding*1.5 + ", " + (padding*1.5-6) + ")");
+      .attr("transform", "translate(" + padding*2 + ", " + (padding*1.5-6) + ")");
 
   var lineUpdate = lineEnter.merge(hor_lines);
 
@@ -124,7 +125,7 @@ export function draw_line_figure(source, container, xs, ys, y, li, flag)
   lineUpdate.transition()
     .duration(duration)
     .attr('y1', function(d) {return ys(d); })
-    .attr("x2", width-2*padding)
+    .attr("x2", width-3*padding)
     .attr('y2', function(d) {return ys(d); });
 
   // Remove any exiting paths
@@ -146,8 +147,8 @@ export function draw_line_figure(source, container, xs, ys, y, li, flag)
         var h = (i == 0) ? padding: padding*2;
         return "translate(" + (width-5*padding) + ", " + (h) + ")";
       })
-    .attr("y", function(d) { return ys(d); })
-    .text(function(d, i) { return (i == 0) ? ("Max: " + d) : ("Min: " + d); });
+    .attr("y", function(d) { return ys(d); });
+    // .text(function(d, i) { return (i == 0) ? ("Max: " + d) : ("Min: " + d); });
 
   function click() {
     var selected = d3.selectAll(".selected").data();
@@ -177,6 +178,14 @@ export function draw_line_figure(source, container, xs, ys, y, li, flag)
       root.children.forEach(collapse); 
       draw_tree(root, 1);
     } 
-    else { comp = 0; }  
+    else { 
+      comp = 0; 
+      // root.each(function(d) {
+        // console.log(breakdown_times);
+        // var t = breakdown_times[d.data.id][proc][ts];
+        // d.data.time = (Number(t)*time_metics).toFixed(3); 
+        // draw_tree(root);
+      // })
+    }
   }
 }

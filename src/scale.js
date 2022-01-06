@@ -35,6 +35,9 @@ export function draw_scale(nodeid, inital=0) {
     draw_svg_dropdown(container_2_plot);
     drawYMetrics(container_2_plot);
 
+    d3.select(".yMetrics").attr("x", container_width - padding*6);
+    d3.select(".showMetricsText").attr("x", container_width - padding*6);
+
     focus = container_2_plot.append('g')
         .attr("class", "focus")
         .attr("transform", "translate(" + 0 + "," + padding*5 + ")");
@@ -52,13 +55,13 @@ export function draw_scale(nodeid, inital=0) {
     xAxis = focus.append('g')
       .call(d3.axisBottom(xScale))
       .attr("class", "axis")
-      .attr("transform", "translate(" + padding*1.5 + ", " + (container_height) + ")");
+      .attr("transform", "translate(" + padding*2 + ", " + (container_height) + ")");
 
     // draw y axis
     yAxis = focus.append('g')
       .call(d3.axisLeft(yScale))
       .attr("class", "axis")
-      .attr("transform", "translate(" + padding*1.5 + ", " + padding + ")"); 
+      .attr("transform", "translate(" + padding*2 + ", " + padding + ")"); 
 
     line = d3.line()
         .x(function(d) { return xScale(d.id); }) // set the x values for the line generator

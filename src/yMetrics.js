@@ -4,10 +4,14 @@ import { draw_scale } from './scale.js';
 
 export function drawYMetrics(cont) {
 
+  // var width = cont.node().getBoundingClientRect().width;
+  // console.log(width);
+
   var container = cont.append('g')
-  .attr('transform', `translate(${container_width-4*padding}, ${2})`);
+  .attr('transform', `translate(${padding}, ${padding/2})`);
 
   container.append("rect")
+    .attr('class', 'yMetrics')
     .attr("width", 32)
     .attr("height", 20)
     .style("stroke", "grey")

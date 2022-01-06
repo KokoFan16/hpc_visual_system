@@ -28,59 +28,60 @@ var bisect = d3.bisector(d => d.id).left;
 
 draw_statics();
 
+var last_nodeid, last_ts, times=[], new_time;
+
 export function draw_processes(ts, nodeid, is_loop, is_tag=null) {
 
   if (cleared == 1) { draw_statics(); }
-  
-  var curWidth = container_3_plot.node().getBoundingClientRect().width;
-  var width = (curWidth-padding*4);
-  clip.attr("width", width);
 
-  x_label.transition().duration(duration).attr("x", (curWidth)/2);
-  phase.transition().duration(duration).attr("x", (curWidth)/2);
-  if (is_tag == null ) { phase.text("Current Phase: " + nodeid); }
-  else { phase.text("Current Phase: " + is_tag); }
+    var curWidth = container_3_plot.node().getBoundingClientRect().width;
+    var width = (curWidth-padding*3);
 
-  var brush = d3.brushX()
-    .extent([[0, 0], [width, height2]])
-    .on("brush end", brushed);
+    clip.attr("width", width);
 
-  // var zoom = d3.zoom()
-  //   .scaleExtent([1, Infinity])
-  //   .translateExtent([[0, 0], [(curWidth-padding*5), height]])
-  //   .extent([[0, 0], [(curWidth-padding*5), height]])
-  //   .on("zoom", zoomed);
+    x_label.transition().duration(duration).attr("x", (curWidth)/2);
+    phase.transition().duration(duration).attr("x", (curWidth)/2);
+    if (is_tag == null ) { phase.text("Current Phase: " + nodeid); }
+    else { phase.text("Current Phase: " + is_tag); }
 
-  // get time data for all the processes
-  var times = [];
-  if (is_tag) {
-    var ptimes = new Array(procs_num).fill(0);
+    var brush = d3.brushX()
+      .extent([[0, 0], [width, height2]])
+      .on("brush end", brushed);
 
-    var tag_time = 0;
-    root.leaves().forEach(function(d) {
-      if (d.data.data.tag == is_tag) {
-        breakdown_times[d.data.id].forEach(function(d, i){
-          var t = Number(parseFloat(d3.sum(d[ts]))*time_metics).toFixed(3);
-          ptimes[i] += Number(t);
-        })
-      }
-    })
-    ptimes.forEach(function(d, i){ times.push({"id": i, "time": d.toFixed(3)}); });
-  }
-  else {
-    breakdown_times[nodeid].forEach(function(d, i) { 
-      var t = (is_loop == 0)? d[ts]: d3.sum(d[ts]);
-      times.push({"id": i, "time": Number(parseFloat(t)*time_metics).toFixed(3)}); 
-    }); 
-  }
+    // get time data for all the processes
+    times = [];
+    if (is_tag) {
+      var ptimes = new Array(procs_num).fill(0);
 
-  var new_time;
-  if (times.length > 512) {
-    var div = Math.ceil(times.length/512);
-    new_time = times.filter(t => t.id%div == 0);
-    render(new_time);
-  }
-  else { render(times); }
+      var tag_time = 0;
+      root.leaves().forEach(function(d) {
+        if (d.data.data.tag == is_tag) {
+          breakdown_times[procs_num][d.data.id].forEach(function(d, i){
+            var t = Number(parseFloat(d3.sum(d[ts]))*time_metics).toFixed(3);
+            ptimes[i] += Number(t);
+          })
+        }
+      })
+      ptimes.forEach(function(d, i){ times.push({"id": i, "time": d.toFixed(3)}); });
+    }
+    else {
+      breakdown_times[procs_num][nodeid].forEach(function(d, i) { 
+        var t = (is_loop == 0)? d[ts]: d3.sum(d[ts]);
+        times.push({"id": i, "time": Number(parseFloat(t)*time_metics).toFixed(3)}); 
+      }); 
+    }
+
+    if (times.length > 512) {
+      var div = Math.ceil(times.length/512);
+      new_time = times.filter(t => t.id%div == 0);
+      render(new_time);
+    }
+    else { render(times); }
+
+    line_chart.select("circle.y")
+      .transition().duration(duration)
+      .attr("transform", "translate(" + x(times[proc].id) + "," +y(times[proc].time) + ")");
+  // }
 
   function render(data) {
     var minMax = d3.extent(data, d=> Number(d.time));
@@ -92,8 +93,10 @@ export function draw_processes(ts, nodeid, is_loop, is_tag=null) {
     minValue.text("Min: " + minMax[0]);
     maxValue.text("Max: " + minMax[1]);
 
-    meanValue.transition().duration(duration).attr("x", width-padding).text("Mean: " + mean.toFixed(3));
-    medianValue.transition().duration(duration).attr("x", width-padding*6).text("Median: " + median.toFixed(3));
+    meanValue.transition().duration(duration).attr("x", width-padding)
+      .text("Mean: " + mean.toFixed(3));
+    medianValue.transition().duration(duration).attr("x", width-padding*6.5)
+      .text("Median: " + median.toFixed(3));
 
     x.domain([0, d3.max(data, d=>d.id)]).range([0, width]);
     y.domain([ymin, minMax[1]*1.05]);
@@ -118,6 +121,12 @@ export function draw_processes(ts, nodeid, is_loop, is_tag=null) {
     bushCall.call(brush).transition().duration(duration).call(brush.move, x.range());
 
     mainView(data);
+
+    // var zoom = d3.zoom()
+    //   .scaleExtent([1, Infinity])
+    //   .translateExtent([[0, 0], [(curWidth-padding*5), height]])
+    //   .extent([[0, 0], [(curWidth-padding*5), height]])
+    //   .on("zoom", zoomed);
 
     // container_3_plot.append("rect")
     //   .attr("class", "zoom")
@@ -149,7 +158,7 @@ export function draw_processes(ts, nodeid, is_loop, is_tag=null) {
       .style("pointer-events", "all")                   
       .on("mouseover", function() { tip.style("display", null); })
       .on("mouseout", function() { tip.style("display", "none"); })
-      .on("mousemove", mousemove); 
+      .on("mousemove", mousemove);
 
     function mousemove() {                                
       var x0 = x.invert(d3.mouse(this)[0]),
@@ -157,8 +166,6 @@ export function draw_processes(ts, nodeid, is_loop, is_tag=null) {
           d0 = data[i - 1],
           d1 = data[i],
           d = x0 - d0.id > d1.id - x0 ? d1 : d0;
-
-      tip.select("circle.y").attr("transform", "translate(" + x(d.id) + "," +y(d.time) + ")");
 
       tip.select(".x").attr("transform", "translate(" + x(d.id) + "," + y(d.time) + ")")
          .attr("y2", height - y(d.time));
@@ -209,6 +216,8 @@ export function draw_processes(ts, nodeid, is_loop, is_tag=null) {
   //   focus.select(".axis--x").call(d3.axisBottom(x));
   //   // context.select(".brush").call(brush.move, x.range().map(t.invertX, t));
   // }
+
+  last_ts = ts; last_nodeid = nodeid;
 }
 
 function draw_statics() {
@@ -223,24 +232,24 @@ function draw_statics() {
     .text("Total number of processes");
 
   minValue = container_3_plot.append('text')
-    .attr("font-size", "10px")
+    .attr("font-size", "12px")
     .attr("text-anchor", "start")
     .attr("x", padding*3)
     .attr("y", padding*1.2);
 
   maxValue = container_3_plot.append('text')
-    .attr("font-size", "10px")
+    .attr("font-size", "12px")
     .attr("text-anchor", "start")
     .attr("x", padding*8)
     .attr("y", padding*1.2);
 
   meanValue = container_3_plot.append('text')
-    .attr("font-size", "10px")
+    .attr("font-size", "12px")
     .attr("text-anchor", "end")
     .attr("y", padding*1.2);
 
   medianValue = container_3_plot.append('text')
-    .attr("font-size", "10px")
+    .attr("font-size", "12px")
     .attr("text-anchor", "end")
     .attr("y", padding*1.2);
 
@@ -253,33 +262,35 @@ function draw_statics() {
 
   focus = container_3_plot.append("g")
     .attr("class", "focus")
-    .attr("transform", "translate(" + padding*1.5 + "," + padding + ")");
+    .attr("transform", "translate(" + padding*2.5 + "," + padding + ")");
 
   context = container_3_plot.append("g")
     .attr("class", "context")
-    .attr("transform", "translate(" + padding*1.5 + "," + (height+padding*2.5) + ")");
+    .attr("transform", "translate(" + padding*2.5 + "," + (height+padding*2.5) + ")");
 
   line_chart = container_3_plot.append("g")
     .attr("class", "focus")
-    .attr("transform", "translate(" + padding*1.5 + "," + padding + ")")
+    .attr("transform", "translate(" + padding*2.5 + "," + padding + ")")
     .attr("clip-path", "url(#clip)");
 
   xAxis = focus.append("g").call(d3.axisBottom(x))
           .attr("class", "axis axis--x")
-          .attr("transform", "translate(0," + height + ")"),
-  yAxis = focus.append("g").call(d3.axisLeft(y)),
+          .attr("transform", "translate(" + 0 + "," + height + ")"),
+  yAxis = focus.append("g").call(d3.axisLeft(y))
+          .attr("transform", "translate(" + 0 + ",0)"),
   xAxis2 = context.append("g").call(d3.axisBottom(x2))
-          .attr("transform", "translate(0," + height2 + ")");
+          .attr("transform", "translate(" + 0 + "," + height2 + ")");
 
   tip = line_chart.append("g").style("display", "none");
 
   bushCall = context.append("g").attr("class", "brush");
 
-  tip.append("circle")
+  line_chart.append("circle")
      .attr("class", "y") 
-     .style("fill", "black")
-     .style("stroke", "black")
-     .attr("r", 3);
+     .style("fill", "red")
+     .style("stroke", "red")
+     .attr("r", 4)
+     .attr("transform", "translate(" + padding*2 + "," + padding*2 + ")");
 
   tip.append("text")
      .attr("class", "y2")

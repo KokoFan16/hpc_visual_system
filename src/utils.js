@@ -18,8 +18,10 @@ export function parseData(data) {
 
 export function treeData_update() {
   // assign the name to each node 
-  root.each(function(d) {
-    var t = breakdown_times[d.data.id][proc][ts];
+  root.children.forEach(uncollapse);
+  root.each(function(d) {;
+    // console.log(d);
+    var t = breakdown_times[procs_num][d.data.id][proc][ts];
     if (d.data.data.is_loop == "0"){
       d.data.time = (parseFloat(t)*time_metics).toFixed(3); }
     else {
@@ -27,6 +29,7 @@ export function treeData_update() {
       t.forEach(function(d){ total_time += parseFloat(d); })
       d.data.time = (total_time*time_metics).toFixed(3); }
   });
+  root.children.forEach(collapse);
 }
 
 export function findAllLoops(d) {
