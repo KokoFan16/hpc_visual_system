@@ -7,7 +7,7 @@ import { container_3_plot } from './container.js';
 
 var height = 170, height2 = 30;
 var phase, x_label, minValue, maxValue, meanValue, medianValue, clip;
-var line_chart, focus, context, xAxis, yAxis, xAxis2, tip, bushCall, linex, liney;
+var line_chart, focus, context, xAxis, yAxis, xAxis2, tip, brushCall, linex, liney;
 
 var x = d3.scaleLinear(),
     x2 = d3.scaleLinear(),
@@ -34,61 +34,66 @@ export function draw_processes(ts, nodeid, is_loop, is_tag=null) {
 
   if (cleared == 1) { draw_statics(); }
 
-    var curWidth = container_3_plot.node().getBoundingClientRect().width;
-    var width = (curWidth-padding*3);
+  var curWidth = container_3_plot.node().getBoundingClientRect().width;
+  var width = (curWidth-padding*3);
 
-    clip.attr("width", width);
+  clip.attr("width", width);
 
-    x_label.transition().duration(duration).attr("x", (curWidth)/2);
-    phase.transition().duration(duration).attr("x", (curWidth)/2);
-    if (is_tag == null ) { phase.text("Current Phase: " + nodeid); }
-    else { phase.text("Current Phase: " + is_tag); }
+  x_label.transition().duration(duration).attr("x", (curWidth)/2);
+  phase.transition().duration(duration).attr("x", (curWidth)/2);
+  if (is_tag == null ) { phase.text("Current Phase: " + nodeid); }
+  else { phase.text("Current Phase: " + is_tag); }
 
-    var brush = d3.brushX()
-      .extent([[0, 0], [width, height2]])
-      .on("brush end", brushed);
+  var brush = d3.brushX()
+    .extent([[0, 0], [width, height2]])
+    .on("brush end", brushed);
 
-    // get time data for all the processes
-    times = [];
-    if (is_tag) {
-      var ptimes = new Array(procs_num).fill(0);
+  // get time data for all the processes
+  times = [];
+  if (is_tag) {
+    var ptimes = new Array(procs_num).fill(0);
 
-      var tag_time = 0;
-      root.leaves().forEach(function(d) {
-        if (d.data.data.tag == is_tag) {
-          breakdown_times[procs_num][d.data.id].forEach(function(d, i){
-            var t = Number(parseFloat(d3.sum(d[ts]))*time_metics).toFixed(3);
-            ptimes[i] += Number(t);
-          })
-        }
-      })
-      ptimes.forEach(function(d, i){ times.push({"id": i, "time": d.toFixed(3)}); });
-    }
-    else {
-      breakdown_times[procs_num][nodeid].forEach(function(d, i) { 
-        var t = (is_loop == 0)? d[ts]: d3.sum(d[ts]);
-        times.push({"id": i, "time": Number(parseFloat(t)*time_metics).toFixed(3)}); 
-      }); 
-    }
+    var tag_time = 0;
+    root.leaves().forEach(function(d) {
+      if (d.data.data.tag == is_tag) {
+        breakdown_times[procs_num][d.data.id].forEach(function(d, i){
+          var t = Number(parseFloat(d3.sum(d[ts]))*time_metics).toFixed(3);
+          ptimes[i] += Number(t);
+        })
+      }
+    })
+    ptimes.forEach(function(d, i){ times.push({"id": i, "time": d.toFixed(3)}); });
+  }
+  else {
+    breakdown_times[procs_num][nodeid].forEach(function(d, i) { 
+      var t = (is_loop == 0)? d[ts]: d3.sum(d[ts]);
+      times.push({"id": i, "time": Number(parseFloat(t)*time_metics).toFixed(3)}); 
+    }); 
+  }
 
-    if (times.length > 512) {
-      var div = Math.ceil(times.length/512);
+  render();
+
+  line_chart.select("circle.y")
+    .transition().duration(duration)
+    .attr("transform", "translate(" + x(times[proc].id) + "," +y(times[proc].time) + ")");
+
+  function render() {
+
+    var brushLen = width;
+    var curData;
+    if (procs_num > 512) {
+      var div = Math.ceil(procs_num/512);
       new_time = times.filter(t => t.id%div == 0);
-      render(new_time);
+      brushLen = brushLen/div;
+      curData = times.slice(0, 512);
     }
-    else { render(times); }
+    else { curData = times; new_time = times;}
 
-    line_chart.select("circle.y")
-      .transition().duration(duration)
-      .attr("transform", "translate(" + x(times[proc].id) + "," +y(times[proc].time) + ")");
-  // }
-
-  function render(data) {
-    var minMax = d3.extent(data, d=> Number(d.time));
+    var minMax = d3.extent(new_time, d=> Number(d.time));
     var ymin = (is_abs == 1)? 0: minMax[0]*0.95;
 
-    var mean = d3.mean(data, d=> Number(d.time));
-    var median = d3.median(data, d=> Number(d.time));
+    var mean = d3.mean(new_time, d=> Number(d.time));
+    var median = d3.median(new_time, d=> Number(d.time));
 
     minValue.text("Min: " + minMax[0]);
     maxValue.text("Max: " + minMax[1]);
@@ -98,9 +103,10 @@ export function draw_processes(ts, nodeid, is_loop, is_tag=null) {
     medianValue.transition().duration(duration).attr("x", width-padding*6.5)
       .text("Median: " + median.toFixed(3));
 
-    x.domain([0, d3.max(data, d=>d.id)]).range([0, width]);
+
+    x.domain([0, d3.max(curData, d=>d.id)]).range([0, width]);
     y.domain([ymin, minMax[1]*1.05]);
-    x2.domain(x.domain()).range(x.range());
+    x2.domain([0, procs_num]).range([0, width]);
     y2.domain(y.domain());
 
     // xAxis.transition().duration(duration).call(d3.axisBottom(x));
@@ -108,7 +114,7 @@ export function draw_processes(ts, nodeid, is_loop, is_tag=null) {
     yAxis.transition().duration(duration).call(d3.axisLeft(y));
 
     var links = context.selectAll('.line')
-     .data([data], function(d){ return d.id; });
+     .data([new_time], function(d){ return d.id; });
 
     // Enter any new links at the parent's previous position.
     var linkEnter = links.enter().append("path")
@@ -118,9 +124,9 @@ export function draw_processes(ts, nodeid, is_loop, is_tag=null) {
     linkUpdate.transition().duration(duration).attr('d', line2);
     links.exit().transition().duration(duration).remove();
     
-    bushCall.call(brush).transition().duration(duration).call(brush.move, x.range());
+    brushCall.call(brush).transition().duration(0).call(brush.move, [0, brushLen]); //x.range()
 
-    mainView(data);
+    mainView(curData);
 
     // var zoom = d3.zoom()
     //   .scaleExtent([1, Infinity])
@@ -137,12 +143,14 @@ export function draw_processes(ts, nodeid, is_loop, is_tag=null) {
   }
 
   function mainView(data) {
+
     var links = line_chart.selectAll('.line')
        .data([data], function(d){ return d.id; });
 
     var linkEnter = links.enter().append("path").attr("class", "line");
 
     var linkUpdate = linkEnter.merge(links);
+
     linkUpdate.transition().duration(duration).attr('d', line);
 
     var linkExit = links.exit().transition().duration(duration).remove();
@@ -184,25 +192,38 @@ export function draw_processes(ts, nodeid, is_loop, is_tag=null) {
   var change = (times.length > 512)? 0: -1;
   function brushed() {
     if (d3.event.sourceEvent && d3.event.sourceEvent.type === "zoom") return; // ignore brush-by-zoom
+    
+    d3.selectAll('.brush>.handle').remove();
+    d3.selectAll('.brush>.overlay').remove();
+
     var s = d3.event.selection || x2.range();
-    x.domain(s.map(x2.invert, x2));
+    var curRange = s.map(x2.invert, x2);
 
-    var value = (s[1]-s[0])/(x.range()[1]) * times.length;
-    value = (value > times.length) ? times.length: value;
+    var curData = times.slice(Math.round(curRange[0]), Math.round(curRange[1]));
+    x.domain([d3.min(curData, d=>d.id), d3.max(curData, d=>d.id)]);
+    xAxis.call(d3.axisBottom(x));
 
-    if ( value < 512 && change == 0) {
-      line_chart.select(".line").datum(times).attr("d", line);
-      change = 1;
-    }
-    else if (value > 512 && change == 1) {
-      line_chart.select(".line").datum(new_time).attr("d", line);
-      change = 0;
-    }
-    else {
-      line_chart.select(".line").attr("d", line);
-    }
+    mainView(curData);
 
-    focus.select(".axis--x").call(d3.axisBottom(x));
+    // var s = d3.event.selection || x2.range();
+    // x.domain(s.map(x2.invert, x2));
+
+    // var value = (s[1]-s[0])/(x.range()[1]) * times.length;
+    // value = (value > times.length) ? times.length: value;
+
+    // if ( value < 512 && change == 0) {
+    //   line_chart.select(".line").datum(times).attr("d", line);
+    //   change = 1;
+    // }
+    // else if (value > 512 && change == 1) {
+    //   line_chart.select(".line").datum(new_time).attr("d", line);
+    //   change = 0;
+    // }
+    // else {
+    //   line_chart.select(".line").attr("d", line);
+    // }
+
+    // focus.select(".axis--x").call(d3.axisBottom(x));
     // container_3_plot.select(".zoom").call(zoom.transform, d3.zoomIdentity
     //     .scale(width / (s[1] - s[0]))
     //     .translate(-s[0], 0));
@@ -283,7 +304,7 @@ function draw_statics() {
 
   tip = line_chart.append("g").style("display", "none");
 
-  bushCall = context.append("g").attr("class", "brush");
+  brushCall = context.append("g").attr("class", "brush");
 
   line_chart.append("circle")
      .attr("class", "y") 

@@ -238,6 +238,10 @@ function render(data) {
 
       treeData_update();
 
+      // container_3_plot.select(".brush")
+
+      // .call(brush).transition().duration(0).call(brush.move, [0, brushLen]); //x.range()
+
       draw_tree(root); // draw tree 
       draw_treemap(root); // draw zoomable treemap
 
