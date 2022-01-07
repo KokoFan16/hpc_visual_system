@@ -51,9 +51,10 @@ export function draw_processes(ts, nodeid, is_loop, is_tag=null) {
 
   // get time data for all the processes
   times = [];
+  // console.log(breakdown_times[procs_num]);
+
   if (is_tag) {
     var ptimes = new Array(procs_num).fill(0);
-
     var tag_time = 0;
     root.leaves().forEach(function(d) {
       if (d.data.data.tag == is_tag) {
@@ -90,11 +91,13 @@ export function draw_processes(ts, nodeid, is_loop, is_tag=null) {
     }
     else { curData = times; new_time = times;}
 
-    var minMax = d3.extent(new_time, d=> Number(d.time));
+    var minMax = d3.extent(times, d=> Number(d.time));
     var ymin = (is_abs == 1)? 0: minMax[0]*0.95;
 
-    var mean = d3.mean(new_time, d=> Number(d.time));
-    var median = d3.median(new_time, d=> Number(d.time));
+    console.log(minMax);
+
+    var mean = d3.mean(times, d=> Number(d.time));
+    var median = d3.median(times, d=> Number(d.time));
 
     minValue.text("Min: " + minMax[0]);
     maxValue.text("Max: " + minMax[1]);
@@ -188,10 +191,23 @@ export function draw_processes(ts, nodeid, is_loop, is_tag=null) {
 
       tip.select("text.y2").attr("transform", "translate(" + x(d.id) + "," + y(d.time) + ")")
          .attr("dx", function() { return (width - x(d.id) > 100)? 8: -58; })
+         .attr("dy", function() { 
+            var dy = (y(d.time) < 20)? "1em" :"-.3em";
+            if (height - y(d.time) < 20) { dy = "-1.5em"; }
+            return dy;
+          }) 
          .text(d.time);
 
       tip.select("text.y4").attr("transform", "translate(" + x(d.id) + "," + y(d.time) + ")")
-         .attr("dx", function() { return (width - x(d.id) > 100)? 8: -38; })
+         .attr("dx", function() { 
+            var dx = (d.id.toString().length)*10 + 8;
+            return (width - x(d.id) > 100)? 8: -dx; 
+          })
+         .attr("dy", function() { 
+            var dy = (y(d.time) < 20)? "2em" :"1em";
+            if (height - y(d.time) < 20) { dy = "-.3em"; }
+            return dy;
+          })
          .text("P"+d.id);
     } 
   }
@@ -315,20 +331,20 @@ function draw_statics() {
 
   tip.append("circle")
      .attr("class", "y") 
-     .style("fill", "black")
+     .style("fill", "red")
      .style("stroke", "none")
      .attr("r", 4);
 
   tip.append("text")
      .attr("class", "y2")
-     .attr("font-size", "14px")
-     .attr("dy", "-.3em");
+     .attr("font-size", "14px");
+     // .attr("dy", "-.3em");
 
   tip.append("text")
      .attr("class", "y4")
-     .attr("font-size", "14px")
+     .attr("font-size", "14px");
      // .attr("dx", 8)
-     .attr("dy", "1em");
+     // .attr("dy", "1em");
 
   linex = tip.append("line")
      .attr("class", "x")
