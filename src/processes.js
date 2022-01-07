@@ -51,8 +51,6 @@ export function draw_processes(ts, nodeid, is_loop, is_tag=null) {
 
   // get time data for all the processes
   times = [];
-  // console.log(breakdown_times[procs_num]);
-
   if (is_tag) {
     var ptimes = new Array(procs_num).fill(0);
     var tag_time = 0;
@@ -68,9 +66,13 @@ export function draw_processes(ts, nodeid, is_loop, is_tag=null) {
   }
   else {
     breakdown_times[procs_num][nodeid].forEach(function(d, i) { 
-      var t = (is_loop == 0)? d[ts]: d3.sum(d[ts]);
-      times.push({"id": i, "time": Number(parseFloat(t)*time_metics).toFixed(3)}); 
-    }); 
+      var t, min, max;
+      if (is_loop == 0) { t = d[ts]; min = d3.min(d); max = d3.max(d);  }
+      else { t = d3.sum(d[ts]); min = t; max = t; }
+      times.push({"id": i, "time": Number(parseFloat(t)*time_metics).toFixed(3), 
+        "min": Number(parseFloat(min)*time_metics).toFixed(3), 
+        "max": Number(parseFloat(max)*time_metics).toFixed(3) }); 
+    })
   }
 
   render();
@@ -92,9 +94,12 @@ export function draw_processes(ts, nodeid, is_loop, is_tag=null) {
     else { curData = times; new_time = times;}
 
     var minMax = d3.extent(times, d=> Number(d.time));
-    var ymin = (is_abs == 1)? 0: minMax[0]*0.95;
+    // var ymin = (is_abs == 1)? 0: minMax[0]*0.95;
 
-    console.log(minMax);
+    // calculate the min and max value across all the processes and executions
+    var min = d3.min(times, d=> Number(d.min));
+    var max = d3.max(times, d=> Number(d.max));
+    var ymin = (is_abs == 1)? 0: min*0.95;
 
     var mean = d3.mean(times, d=> Number(d.time));
     var median = d3.median(times, d=> Number(d.time));
@@ -108,7 +113,9 @@ export function draw_processes(ts, nodeid, is_loop, is_tag=null) {
       .text("Median: " + median.toFixed(3));
 
     x.domain([0, d3.max(curData, d=>d.id)]).range([0, width]);
-    y.domain([ymin, minMax[1]*1.05]);
+    // y.domain([ymin, minMax[1]*1.05]);
+    y.domain([ymin, max*1.05]);
+
     x2.domain([0, procs_num]).range([0, width]);
     y2.domain(y.domain());
 
@@ -129,7 +136,7 @@ export function draw_processes(ts, nodeid, is_loop, is_tag=null) {
     
     brushCall.call(brush).transition().duration(0).call(brush.move, [0, brushLen]); //x.range()
 
-    mainView(curData);
+    // mainView(curData);
 
     // var zoom = d3.zoom()
     //   .scaleExtent([1, Infinity])
@@ -147,6 +154,19 @@ export function draw_processes(ts, nodeid, is_loop, is_tag=null) {
 
   function mainView(data) {
 
+    var area = line_chart.selectAll('.area')
+      .data([data], function(d){ return d.id; });
+
+    var areaEnter = area.enter().append("path").attr("class", "area");
+
+    areaEnter.merge(area).transition().duration(duration)
+    .attr('d', d3.area()
+      .x(function(d) { return x(d.id); })
+      .y0(function(d) { return y(d.max); })
+      .y1(function(d) { return y(d.min); })
+    )
+    area.exit().transition().duration(duration).remove();
+
     var links = line_chart.selectAll('.line')
        .data([data], function(d){ return d.id; });
 
@@ -161,6 +181,7 @@ export function draw_processes(ts, nodeid, is_loop, is_tag=null) {
     linex.attr("y2", height);
 
     liney.attr("x1", width).attr("x2", width);
+
 
     line_chart.append("rect")                                 
       .attr("width", width)                            
@@ -317,6 +338,8 @@ function draw_statics() {
     .attr("transform", "translate(" + padding*2.5 + "," + padding + ")")
     .attr("clip-path", "url(#clip)");
 
+  tip = line_chart.append("g").style("display", "none");
+
   xAxis = focus.append("g").call(d3.axisBottom(x))
           .attr("class", "axis axis--x")
           .attr("transform", "translate(" + 0 + "," + height + ")"),
@@ -324,8 +347,6 @@ function draw_statics() {
           .attr("transform", "translate(" + 0 + ",0)"),
   xAxis2 = context.append("g").call(d3.axisBottom(x2))
           .attr("transform", "translate(" + 0 + "," + height2 + ")");
-
-  tip = line_chart.append("g").style("display", "none");
 
   brushCall = context.append("g").attr("class", "brush");      
 
@@ -338,7 +359,6 @@ function draw_statics() {
   tip.append("text")
      .attr("class", "y2")
      .attr("font-size", "14px");
-     // .attr("dy", "-.3em");
 
   tip.append("text")
      .attr("class", "y4")
@@ -350,13 +370,13 @@ function draw_statics() {
      .attr("class", "x")
      .style("stroke", "black")
      .style("stroke-dasharray", "3,3")
-     .style("opacity", 0.5)
+     .style("opacity", 1)
      .attr("y1", 0);
 
   liney = tip.append("line")
      .attr("class", "y")
      .style("stroke", "black")
      .style("stroke-dasharray", "3,3")
-     .style("opacity", 0.5);
+     .style("opacity", 1);
 }
 
