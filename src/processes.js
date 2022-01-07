@@ -5,6 +5,7 @@ import { container_3_plot } from './container.js';
 // var timeLabel = "Time (";
 // timeLabel += (time_metics == 1)? "s)": "ms)";
 
+var threshold = 128;
 var height = 170, height2 = 30;
 var phase, x_label, minValue, maxValue, meanValue, medianValue, clip;
 var line_chart, focus, context, xAxis, yAxis, xAxis2, tip, brushCall, linex, liney;
@@ -73,19 +74,19 @@ export function draw_processes(ts, nodeid, is_loop, is_tag=null) {
 
   render();
 
-  line_chart.select("circle.y")
-    .transition().duration(duration)
-    .attr("transform", "translate(" + x(times[proc].id) + "," +y(times[proc].time) + ")");
+  // line_chart.select("circle.y")
+  //   .transition().duration(duration)
+  //   .attr("transform", "translate(" + x(times[proc].id) + "," +y(times[proc].time) + ")");
 
   function render() {
 
     var brushLen = width;
     var curData;
-    if (procs_num > 512) {
-      var div = Math.ceil(procs_num/512);
+    if (procs_num > threshold) {
+      var div = Math.ceil(procs_num/threshold);
       new_time = times.filter(t => t.id%div == 0);
       brushLen = brushLen/div;
-      curData = times.slice(0, 512);
+      curData = times.slice(0, threshold);
     }
     else { curData = times; new_time = times;}
 
@@ -102,7 +103,6 @@ export function draw_processes(ts, nodeid, is_loop, is_tag=null) {
       .text("Mean: " + mean.toFixed(3));
     medianValue.transition().duration(duration).attr("x", width-padding*6.5)
       .text("Median: " + median.toFixed(3));
-
 
     x.domain([0, d3.max(curData, d=>d.id)]).range([0, width]);
     y.domain([ymin, minMax[1]*1.05]);
@@ -166,7 +166,10 @@ export function draw_processes(ts, nodeid, is_loop, is_tag=null) {
       .style("pointer-events", "all")                   
       .on("mouseover", function() { tip.style("display", null); })
       .on("mouseout", function() { tip.style("display", "none"); })
-      .on("mousemove", mousemove);
+      .on("mousemove", mousemove)
+      // .on("click", function(d){
+      //   console.log(x.invert(d3.mouse(this)[0]));
+      // });
 
     function mousemove() {                                
       var x0 = x.invert(d3.mouse(this)[0]),
@@ -175,21 +178,25 @@ export function draw_processes(ts, nodeid, is_loop, is_tag=null) {
           d1 = data[i],
           d = x0 - d0.id > d1.id - x0 ? d1 : d0;
 
-      tip.select(".x").attr("transform", "translate(" + x(d.id) + "," + y(d.time) + ")")
+      tip.select("circle.y").attr("transform", "translate(" + x(d.id) + "," + y(d.time) + ")");
+
+      tip.select(".x").attr("transform", "translate(" + (x(d.id)) + "," + y(d.time) + ")" )
          .attr("y2", height - y(d.time));
 
       tip.select("line.y").attr("transform", "translate(" + width * -1 + "," + y(d.time) + ")")
          .attr("x2", width + width);
 
       tip.select("text.y2").attr("transform", "translate(" + x(d.id) + "," + y(d.time) + ")")
+         .attr("dx", function() { return (width - x(d.id) > 100)? 8: -58; })
          .text(d.time);
 
       tip.select("text.y4").attr("transform", "translate(" + x(d.id) + "," + y(d.time) + ")")
+         .attr("dx", function() { return (width - x(d.id) > 100)? 8: -38; })
          .text("P"+d.id);
     } 
   }
   
-  var change = (times.length > 512)? 0: -1;
+  // var change = (times.length > threshold)? 0: -1;
   function brushed() {
     if (d3.event.sourceEvent && d3.event.sourceEvent.type === "zoom") return; // ignore brush-by-zoom
     
@@ -304,25 +311,23 @@ function draw_statics() {
 
   tip = line_chart.append("g").style("display", "none");
 
-  brushCall = context.append("g").attr("class", "brush");
+  brushCall = context.append("g").attr("class", "brush");      
 
-  line_chart.append("circle")
+  tip.append("circle")
      .attr("class", "y") 
-     .style("fill", "red")
-     .style("stroke", "red")
-     .attr("r", 4)
-     .attr("transform", "translate(" + padding*2 + "," + padding*2 + ")");
+     .style("fill", "black")
+     .style("stroke", "none")
+     .attr("r", 4);
 
   tip.append("text")
      .attr("class", "y2")
      .attr("font-size", "14px")
-     .attr("dx", 8)
      .attr("dy", "-.3em");
 
   tip.append("text")
      .attr("class", "y4")
      .attr("font-size", "14px")
-     .attr("dx", 8)
+     // .attr("dx", 8)
      .attr("dy", "1em");
 
   linex = tip.append("line")
