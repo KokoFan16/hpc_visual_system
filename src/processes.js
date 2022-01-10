@@ -31,7 +31,7 @@ draw_statics();
 var times=[], new_time, curData;
 
 export function draw_processes(ts, nodeid, is_loop, is_tag=null) {
-
+  
   if (cleared == 1) { draw_statics(); }
 
   console.log("call draw_processe");
@@ -268,6 +268,7 @@ export function draw_processes(ts, nodeid, is_loop, is_tag=null) {
         var curp = proc - curData[0].id;
         var d = curData[curp];
         line_chart.select(".pointer").style("display", null)
+          .transition().duration(duration)
           .attr("transform", "translate(" + x(d.id) + "," + y(d.time) + ")");
       }
     }

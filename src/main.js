@@ -12,7 +12,6 @@ import { draw_scale } from './scale.js';
 import { draw_scale_stacked } from './scaleStack.js'
 
 var startTime = performance.now();
-
 // var iteValue = document.getElementById("phase");
 // iteValue.innerHTML = "Current Phase: " + nodeid ;
 
@@ -30,18 +29,15 @@ var splitobj = Split(["#one","#two"], {
 breakdown_times = {}; // divide times based on rank, ts and loops
 dataloads = {};
 
+
+var is_indi = 1;
+
 fetch("data/fileName.txt") // open file to get filename
   .then(res => res.text())
   .then(function(data) { 
     var readstart = performance.now();
-    
     var openFile = data.split("+"); 
-
     var ddOptions = openFile.slice();
-    if (openFile.length > 1) {
-      ddOptions.push("Ensemble-View");
-    }
-
     var options = d3.select('#selecFiles').selectAll("option")
                     .data(ddOptions).enter()
                     .append("option");
@@ -54,91 +50,99 @@ fetch("data/fileName.txt") // open file to get filename
     
     var file = d3.select("#selecFiles").property("value");
 
-    d3.csv("data/"+file).then(function(flatData) {
+    load_data(file); // load data
+    // draw_legends(); // draw tag legends
+
+    d3.select(".button").on("click", click);
+    d3.select("#selecFiles").on("change", change); 
+
+    function click() {
+      if (cleared == 1) {
+        d3.select(".button").text("Individual View");
+        individualView();
+        cleared = 0;
+      }
+      else {
+        d3.select(".button").text("Ensemble View");
+        ensembleView();
+        cleared = 1;
+      }
+    }
+
+    function change() {
+      file = d3.select("#selecFiles").property("value");
+      
+      if (cleared == 0) { load_data(file); }
+      else {
+        console.log("ensembleView: " + file);
+      }
+    }
+
+    function individualView() {
+      container_2_plot.selectAll("*").remove();
+      container_3_plot.selectAll("*").remove();
+      drawLoopsButt();
+      // if (show_loop == 1) {
+      //     show_loop = 0;
+      //     d3.select('.showLoops').style("fill", "#FFFFFF");
+      //     d3.select('.showLoopsText').text("Show Loops");
+      // }
+      // if (show_tag == 1) {
+      //   show_tag = 0;
+      //   d3.select(".tagLegend").style("fill", "none");
+      // }
+      render(dataloads[procs_num]);
+    }
+
+    function ensembleView() {
+
+      var filtedFiles = openFile.filter(function(f) {
+          var fileSplit = f.split(/[._]+/);
+          var nprocs = fileSplit[fileSplit.length-2];
+          return !breakdown_times[nprocs];
+      });
+
+      Promise.all(filtedFiles.map(f => d3.csv("data/"+f))).then(function(data) {
+        data.forEach(function(d) { 
+          var temp = parseData(d);
+          var p = temp["main"].length;
+          breakdown_times[p] = temp;
+          dataloads[p] = d;
+        })
+        draw_scale("main", 1);
+        draw_scale_stacked(1);
+      })
+
+      root.children.forEach(collapse);
+      draw_tree(root);
+
+      container_2_plot.selectAll("*").remove();
+      colorbar_plot.selectAll("*").remove();
+      container_3_plot.selectAll("*").remove();
+      container_4_plot.selectAll("*").remove();
+      loops_container.selectAll("*").remove();
+    }
+
+    
+    function load_data(file) {
       var fileSplit = file.split(/[._]+/);
       procs_num = fileSplit[fileSplit.length-2]; // total number of processes 
       ts_num = fileSplit[fileSplit.length-3]; // total number of timesteps
 
-      dataloads[procs_num] = flatData;
-
-      var temp = parseData(flatData); 
-      breakdown_times[procs_num] = temp;
-
-      render(flatData);
-      draw_legends(); // draw tag legends
-    });
-
-    d3.select("#selecFiles").on("change", change)
-    function change() {
-      if (cleared == 1) { 
-        container_2_plot.selectAll("*").remove();
-        container_3_plot.selectAll("*").remove();
-        drawLoopsButt();
-        // drawYMetrics(container_3_plot);
-      }
-      if (show_loop == 1) {
-          show_loop = 0;
-          d3.select('.showLoops').style("fill", "#FFFFFF");
-          d3.select('.showLoopsText').text("Show Loops");
-      }
-      if (show_tag == 1) {
-        show_tag = 0;
-        d3.select(".tagLegend").style("fill", "none");
-      }
-
-      file = d3.select("#selecFiles").property("value");
-      if (file != "Ensemble-View") {  
-
-        var fileSplit = file.split(/[._]+/);
-        procs_num = fileSplit[fileSplit.length-2];
-        ts_num = fileSplit[fileSplit.length-3];
-
-        if(!breakdown_times[procs_num]) {
-
-          d3.csv("data/"+file).then(function(flatData) {
-
-            dataloads[procs_num] = flatData;
-
-            var temp = parseData(flatData); 
-            breakdown_times[procs_num] = temp;
-
-            render(flatData);
-          });
-        }
-        else { render(dataloads[procs_num]); }
-      }
-      else {
-        var filtedFiles = openFile.filter(function(f) {
-          var fileSplit = f.split(/[._]+/);
-          var nprocs = fileSplit[fileSplit.length-2];
-          return !breakdown_times[nprocs];
+      if(!breakdown_times[procs_num]) {
+        d3.csv("data/"+file).then(function(flatData) {
+          dataloads[procs_num] = flatData;
+          var temp = parseData(flatData); 
+          breakdown_times[procs_num] = temp;
+          
+          render(flatData);
         });
-
-        Promise.all(filtedFiles.map(f => d3.csv("data/"+f))).then(function(data) {
-          cleared = 1;
-          data.forEach(function(d) { 
-            var temp = parseData(d);
-            var p = temp["main"].length;
-            breakdown_times[p] = temp;
-            dataloads[p] = d;
-          })
-          draw_scale("main", 1);
-          draw_scale_stacked(1);
-        })
-
-        root.children.forEach(collapse);
-        draw_tree(root);
-
-        container_2_plot.selectAll("*").remove();
-        colorbar_plot.selectAll("*").remove();
-        container_3_plot.selectAll("*").remove();
-        container_4_plot.selectAll("*").remove();
-        loops_container.selectAll("*").remove();
       }
+      else { render(dataloads[procs_num]); }
     }
+
     var readend = performance.now();
     console.log(`Read took ${readend - readstart} milliseconds`);
-
   });
 
 
@@ -180,6 +184,8 @@ function responsive() {
 }
 
 function render(data) {
+
+    console.log(cleared);
     var renderStart = performance.now();
 
     phase.text("Current event: " + nodeid);
@@ -242,22 +248,6 @@ function render(data) {
     // d3.select("#selec_ite").on("input", graph_display_1); // select timestep input box
     // d3.select("#selec_pro").on("input", graph_display_1); // select process input box
 
-    // function graph_display_1() {
-    //   // Obtained value from input box
-    //   ts = d3.select("#selec_ite").property("value");
-    //   proc = d3.select("#selec_pro").property("value");
-
-    //   treeData_update();
-
-    //   draw_tree(root); // draw tree 
-    //   draw_treemap(root); // draw zoomable treemap
-
-    //   // redraw figure
-    //   draw_processes(ts, nodeid, is_loop);
-    //   draw_ts_or_ite(nodeid);
-    // }
-
-    cleared = 0;
     var renderEnd = performance.now();
     console.log(`Render took ${renderEnd - renderStart} milliseconds`);
 }
