@@ -182,7 +182,7 @@ function responsive() {
 function render(data) {
     var renderStart = performance.now();
 
-    phase.text("Current phase: " + nodeid);
+    phase.text("Current event: " + nodeid);
     procInfo.text("Current rank: " + proc + "/" + procs_num);
     exeInfo.text("Current execution: " + ts + "/" + ts_num);
 
@@ -239,23 +239,23 @@ function render(data) {
     // draw zoomable treemap
     draw_treemap(root);
 
-    d3.select("#selec_ite").on("input", graph_display_1); // select timestep input box
-    d3.select("#selec_pro").on("input", graph_display_1); // select process input box
+    // d3.select("#selec_ite").on("input", graph_display_1); // select timestep input box
+    // d3.select("#selec_pro").on("input", graph_display_1); // select process input box
 
-    function graph_display_1() {
-      // Obtained value from input box
-      ts = d3.select("#selec_ite").property("value");
-      proc = d3.select("#selec_pro").property("value");
+    // function graph_display_1() {
+    //   // Obtained value from input box
+    //   ts = d3.select("#selec_ite").property("value");
+    //   proc = d3.select("#selec_pro").property("value");
 
-      treeData_update();
+    //   treeData_update();
 
-      draw_tree(root); // draw tree 
-      draw_treemap(root); // draw zoomable treemap
+    //   draw_tree(root); // draw tree 
+    //   draw_treemap(root); // draw zoomable treemap
 
-      // redraw figure
-      draw_processes(ts, nodeid, is_loop);
-      draw_ts_or_ite(nodeid);
-    }
+    //   // redraw figure
+    //   draw_processes(ts, nodeid, is_loop);
+    //   draw_ts_or_ite(nodeid);
+    // }
 
     cleared = 0;
     var renderEnd = performance.now();

@@ -191,6 +191,8 @@ export function clicktree(d) {
     is_loop = d.data.data.is_loop;
 
     phase.text("Current Phase: " + nodeid);
+    // if (is_tag == null ) { phase.text("Current Phase: " + nodeid); }
+    // else { phase.text("Current Phase: " + is_tag); }
 
     // var iteValue = document.getElementById("phase");
     // iteValue.innerHTML = "Current Phase: " + nodeid ;

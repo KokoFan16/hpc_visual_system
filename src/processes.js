@@ -1,9 +1,12 @@
 import { draw_line_figure } from './lineChart.js';
 import { container_3_plot, procInfo } from './container.js';
+import { treeData_update } from './utils.js';
+import { draw_tree } from './tree.js';
+import { draw_treemap } from './treemap.js';
 
-var threshold = 128;
+var threshold = 128, is_click = 0;
 var height = 180, height2 = 35;
-var phase, x_label, minValue, maxValue, meanValue, medianValue, clip;
+var phase, x_label, minValue, maxValue, meanValue, medianValue, clip, curData;
 var line_chart, focus, context, statistics, xAxis, yAxis, xAxis2, tip, brushCall, linex, liney;
 
 var x = d3.scaleLinear(),
@@ -37,9 +40,6 @@ export function draw_processes(ts, nodeid, is_loop, is_tag=null) {
   clip.attr("width", width);
 
   x_label.transition().duration(duration).attr("x", (curWidth)/2+padding);
-  // phase.transition().duration(duration).attr("x", (curWidth)/2);
-  // if (is_tag == null ) { phase.text("Current Phase: " + nodeid); }
-  // else { phase.text("Current Phase: " + is_tag); }
 
   var brush = d3.brushX()
     .extent([[0, 0], [width, height2]])
@@ -72,15 +72,10 @@ export function draw_processes(ts, nodeid, is_loop, is_tag=null) {
   }
 
   render();
-
-  // line_chart.select("circle.y")
-  //   .transition().duration(duration)
-  //   .attr("transform", "translate(" + x(times[proc].id) + "," +y(times[proc].time) + ")");
-
+  
   function render() {
 
     var brushLen = width;
-    var curData;
     if (procs_num > threshold) {
       var div = Math.ceil(procs_num/threshold);
       new_time = times.filter(t => t.id%div == 0);
@@ -195,11 +190,21 @@ export function draw_processes(ts, nodeid, is_loop, is_tag=null) {
       .on("click", click);
 
     function click() {
-      var indice = Math.round(x.invert(d3.mouse(this)[0]));
+      is_click = 1;
 
-      procInfo.text("Current rank: " + indice + "/" + procs_num);
+      proc = Math.round(x.invert(d3.mouse(this)[0]));
+      procInfo.text("Current rank: " + proc + "/" + procs_num);
 
-      console.log(indice);
+      treeData_update();
+
+      draw_tree(root); // draw tree 
+      draw_treemap(root); // draw zoomable treemap
+
+      var curp = proc - curData[0].id;
+      var d = curData[curp];
+
+      line_chart.select(".pointer").style("display", null)
+        .attr("transform", "translate(" + x(d.id) + "," + y(d.time) + ")");
     }
 
     function mousemove() {                                
@@ -250,9 +255,21 @@ export function draw_processes(ts, nodeid, is_loop, is_tag=null) {
     var s = d3.event.selection || x2.range();
     var curRange = s.map(x2.invert, x2);
 
-    var curData = times.slice(Math.round(curRange[0]), Math.round(curRange[1]));
+    curData = times.slice(Math.round(curRange[0]), Math.round(curRange[1]));
     x.domain([d3.min(curData, d=>d.id), d3.max(curData, d=>d.id)]);
     xAxis.call(d3.axisBottom(x));
+
+    if (is_click == 1) {
+      if (curData[0].id > proc) {
+        line_chart.select(".pointer").style("display", "none");
+      }
+      else {
+        var curp = proc - curData[0].id;
+        var d = curData[curp];
+        line_chart.select(".pointer").style("display", null)
+          .attr("transform", "translate(" + x(d.id) + "," + y(d.time) + ")");
+      }
+    }
 
     mainView(curData);
 
@@ -332,6 +349,13 @@ function draw_statics() {
     .attr("transform", "translate(" + padding*2.5 + "," + padding/2 + ")")
     .attr("clip-path", "url(#clip)");
 
+  line_chart.append("circle")
+     .attr("class", "pointer") 
+     .style("fill", "red")
+     .style("stroke", "none")
+     .attr("r", 5)
+     .style("display", "none");
+
   tip = line_chart.append("g").style("display", "none");
 
   xAxis = focus.append("g").call(d3.axisBottom(x))
@@ -346,7 +370,7 @@ function draw_statics() {
 
   tip.append("circle")
      .attr("class", "y") 
-     .style("fill", "red")
+     .style("fill", "black")
      .style("stroke", "none")
      .attr("r", 4);
 
