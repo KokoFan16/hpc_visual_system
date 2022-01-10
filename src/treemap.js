@@ -11,6 +11,8 @@ var colorbartext = ["0% to 5%", "5% to 10%", "10% to 15%", "15% to 20%", "20% to
 
 colorbarStatic();
 
+var svgWidth = container_width-padding/2;
+
 export function draw_treemap(source) {
 
   if (cleared == 1) {
@@ -19,7 +21,7 @@ export function draw_treemap(source) {
 
   // initial treemap
   var init_treemap = d3.treemap().tile(d3.treemapResquarify)
-    .size([(container_width), (container_height*1.5-3*padding)])
+    .size([(svgWidth), (container_height*1.5-3*padding)])
     .round(true)
     .paddingInner(4);
 
@@ -48,11 +50,11 @@ export function draw_treemap(source) {
   
   if (show_tag == 1) {
     for (var k = 0; k < tags.length; k++) { color_values.push(color(k));} 
-    legendlen = (container_width)/tags.length;
+    legendlen = (svgWidth)/tags.length;
   }
   else {
    for (var k = 0; k < 20; k++) { color_values.push(myColor(unit_value*(k+1)));} 
-   legendlen = (container_width)/20; 
+   legendlen = (svgWidth)/20; 
   }
 
   // draw rects
@@ -163,7 +165,7 @@ function colorbarStatic() {
 
   colorbar_plot.append("rect")
     .attr("transform","translate(" + 0 + ", " + (padding+14) + ")")
-    .attr("width", (container_width)+"px")
+    .attr("width", (container_width-padding/2)+"px")
     .attr("height", "12px")
     .attr("fill", "none")
     .attr('stroke', '#5D6D7E');

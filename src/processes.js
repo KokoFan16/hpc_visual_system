@@ -1,14 +1,10 @@
 import { draw_line_figure } from './lineChart.js';
-import { container_3_plot } from './container.js';
-// import { drawYMetrics } from './yMetrics.js';
-
-// var timeLabel = "Time (";
-// timeLabel += (time_metics == 1)? "s)": "ms)";
+import { container_3_plot, procInfo } from './container.js';
 
 var threshold = 128;
-var height = 170, height2 = 30;
+var height = 180, height2 = 35;
 var phase, x_label, minValue, maxValue, meanValue, medianValue, clip;
-var line_chart, focus, context, xAxis, yAxis, xAxis2, tip, brushCall, linex, liney;
+var line_chart, focus, context, statistics, xAxis, yAxis, xAxis2, tip, brushCall, linex, liney;
 
 var x = d3.scaleLinear(),
     x2 = d3.scaleLinear(),
@@ -40,10 +36,10 @@ export function draw_processes(ts, nodeid, is_loop, is_tag=null) {
 
   clip.attr("width", width);
 
-  x_label.transition().duration(duration).attr("x", (curWidth)/2);
-  phase.transition().duration(duration).attr("x", (curWidth)/2);
-  if (is_tag == null ) { phase.text("Current Phase: " + nodeid); }
-  else { phase.text("Current Phase: " + is_tag); }
+  x_label.transition().duration(duration).attr("x", (curWidth)/2+padding);
+  // phase.transition().duration(duration).attr("x", (curWidth)/2);
+  // if (is_tag == null ) { phase.text("Current Phase: " + nodeid); }
+  // else { phase.text("Current Phase: " + is_tag); }
 
   var brush = d3.brushX()
     .extent([[0, 0], [width, height2]])
@@ -93,24 +89,32 @@ export function draw_processes(ts, nodeid, is_loop, is_tag=null) {
     }
     else { curData = times; new_time = times;}
 
-    var minMax = d3.extent(times, d=> Number(d.time));
-    // var ymin = (is_abs == 1)? 0: minMax[0]*0.95;
-
     // calculate the min and max value across all the processes and executions
+    var filter_data = (times.map(d=> Number(d.time)));
+
     var min = d3.min(times, d=> Number(d.min));
     var max = d3.max(times, d=> Number(d.max));
     var ymin = (is_abs == 1)? 0: min*0.95;
 
-    var mean = d3.mean(times, d=> Number(d.time));
-    var median = d3.median(times, d=> Number(d.time));
+    var minMax = d3.extent(filter_data);
+    var mean = d3.mean(filter_data);
+    var median = d3.median(filter_data);
 
-    minValue.text("Min: " + minMax[0]);
-    maxValue.text("Max: " + minMax[1]);
+    var xpos = 0;
+    var minStr = "Min: " + minMax[0] + "(" + filter_data.indexOf(minMax[0]) + ")";
+    minValue.attr("x", xpos).text(minStr);
+    xpos += minStr.length*6+padding;
 
-    meanValue.transition().duration(duration).attr("x", width-padding)
-      .text("Mean: " + mean.toFixed(3));
-    medianValue.transition().duration(duration).attr("x", width-padding*6.5)
-      .text("Median: " + median.toFixed(3));
+    var maxStr = "Max: " + minMax[1] + "(" + filter_data.indexOf(minMax[1]) + ")";
+    maxValue.attr("x", xpos).text(maxStr);
+    xpos += maxStr.length*6+padding;
+
+    var medianStr = "Median: " + median.toFixed(3);
+    medianValue.attr("x", xpos).text(medianStr);
+    xpos += medianStr.length*6+padding;
+
+    var meanStr = "Mean: " + mean.toFixed(3);
+    meanValue.attr("x", xpos).text(meanStr);
 
     x.domain([0, d3.max(curData, d=>d.id)]).range([0, width]);
     // y.domain([ymin, minMax[1]*1.05]);
@@ -135,8 +139,6 @@ export function draw_processes(ts, nodeid, is_loop, is_tag=null) {
     links.exit().transition().duration(duration).remove();
     
     brushCall.call(brush).transition().duration(0).call(brush.move, [0, brushLen]); //x.range()
-
-    // mainView(curData);
 
     // var zoom = d3.zoom()
     //   .scaleExtent([1, Infinity])
@@ -182,7 +184,6 @@ export function draw_processes(ts, nodeid, is_loop, is_tag=null) {
 
     liney.attr("x1", width).attr("x2", width);
 
-
     line_chart.append("rect")                                 
       .attr("width", width)                            
       .attr("height", height)                           
@@ -191,9 +192,15 @@ export function draw_processes(ts, nodeid, is_loop, is_tag=null) {
       .on("mouseover", function() { tip.style("display", null); })
       .on("mouseout", function() { tip.style("display", "none"); })
       .on("mousemove", mousemove)
-      // .on("click", function(d){
-      //   console.log(x.invert(d3.mouse(this)[0]));
-      // });
+      .on("click", click);
+
+    function click() {
+      var indice = Math.round(x.invert(d3.mouse(this)[0]));
+
+      procInfo.text("Current rank: " + indice + "/" + procs_num);
+
+      console.log(indice);
+    }
 
     function mousemove() {                                
       var x0 = x.invert(d3.mouse(this)[0]),
@@ -249,9 +256,7 @@ export function draw_processes(ts, nodeid, is_loop, is_tag=null) {
 
     mainView(curData);
 
-    // var s = d3.event.selection || x2.range();
     // x.domain(s.map(x2.invert, x2));
-
     // var value = (s[1]-s[0])/(x.range()[1]) * times.length;
     // value = (value > times.length) ? times.length: value;
 
@@ -286,37 +291,26 @@ export function draw_processes(ts, nodeid, is_loop, is_tag=null) {
 }
 
 function draw_statics() {
-  phase = container_3_plot.append('text')
-      .attr("font-size", "15px")
-      .attr("text-anchor", "middle")
-      .attr("y", padding);
 
   x_label = container_3_plot.append('text')
     .attr("class", "labels")
-    .attr("transform", "translate(0," + 280 + ")")
-    .text("Total number of processes");
+    .attr("transform", "translate(0," + (divHeight-padding/2) + ")")
+    .text("Ranks");
 
-  minValue = container_3_plot.append('text')
-    .attr("font-size", "12px")
-    .attr("text-anchor", "start")
-    .attr("x", padding*3)
-    .attr("y", padding*1.2);
+  statistics = container_3_plot.append("g")
+    .attr("transform", "translate(" + padding*3 + "," + padding + ")");
 
-  maxValue = container_3_plot.append('text')
-    .attr("font-size", "12px")
-    .attr("text-anchor", "start")
-    .attr("x", padding*8)
-    .attr("y", padding*1.2);
+  minValue = statistics.append('text')
+    .attr("class", "statistics");
 
-  meanValue = container_3_plot.append('text')
-    .attr("font-size", "12px")
-    .attr("text-anchor", "end")
-    .attr("y", padding*1.2);
+  maxValue = statistics.append('text')
+    .attr("class", "statistics");
 
-  medianValue = container_3_plot.append('text')
-    .attr("font-size", "12px")
-    .attr("text-anchor", "end")
-    .attr("y", padding*1.2);
+  medianValue = statistics.append('text')
+    .attr("class", "statistics");
+
+  meanValue = statistics.append('text')
+    .attr("class", "statistics");
 
   clip = container_3_plot.append("defs").append("svg:clipPath")
     .attr("id", "clip")
@@ -327,15 +321,15 @@ function draw_statics() {
 
   focus = container_3_plot.append("g")
     .attr("class", "focus")
-    .attr("transform", "translate(" + padding*2.5 + "," + padding + ")");
+    .attr("transform", "translate(" + padding*2.5 + "," + padding/2 + ")");
 
   context = container_3_plot.append("g")
     .attr("class", "context")
-    .attr("transform", "translate(" + padding*2.5 + "," + (height+padding*2.5) + ")");
+    .attr("transform", "translate(" + padding*2.5 + "," + (height+padding*2) + ")");
 
   line_chart = container_3_plot.append("g")
     .attr("class", "focus")
-    .attr("transform", "translate(" + padding*2.5 + "," + padding + ")")
+    .attr("transform", "translate(" + padding*2.5 + "," + padding/2 + ")")
     .attr("clip-path", "url(#clip)");
 
   tip = line_chart.append("g").style("display", "none");
@@ -363,8 +357,6 @@ function draw_statics() {
   tip.append("text")
      .attr("class", "y4")
      .attr("font-size", "14px");
-     // .attr("dx", 8)
-     // .attr("dy", "1em");
 
   linex = tip.append("line")
      .attr("class", "x")

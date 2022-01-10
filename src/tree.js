@@ -1,5 +1,5 @@
 // import { color } from './env.js';
-import { container_1_plot } from './container.js';
+import { container_1_plot, phase} from './container.js';
 import { draw_treemap } from './treemap.js';
 import { draw_processes } from './processes.js';
 import { draw_ts_or_ite } from './tsIte.js';
@@ -189,6 +189,11 @@ export function clicktree(d) {
 
     nodeid = d.data.id;
     is_loop = d.data.data.is_loop;
+
+    phase.text("Current Phase: " + nodeid);
+
+    // var iteValue = document.getElementById("phase");
+    // iteValue.innerHTML = "Current Phase: " + nodeid ;
 
     if (d.children || d._children) {
       if (d.children) {

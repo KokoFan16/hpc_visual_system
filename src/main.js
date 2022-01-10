@@ -1,5 +1,6 @@
 import Split from './split.js'
-import { container_2_plot, colorbar_plot, container_3_plot, container_4_plot, loops_container } from './container.js';
+import { container_2_plot, colorbar_plot, container_3_plot, container_4_plot, loops_container, 
+  rect3, rect4, phase, procInfo, exeInfo} from './container.js';
 import { parseData, treeData_update, collapse, findtags } from './utils.js'; //, , findAllLoops, uncollapse, 
 import { drawLoopsButt } from './loops.js';
 import { draw_legends } from './tags.js';
@@ -11,6 +12,9 @@ import { draw_scale } from './scale.js';
 import { draw_scale_stacked } from './scaleStack.js'
 
 var startTime = performance.now();
+
+// var iteValue = document.getElementById("phase");
+// iteValue.innerHTML = "Current Phase: " + nodeid ;
 
 var splitobj = Split(["#one","#two"], {
     elementStyle: function (dimension, size, gutterSize) { 
@@ -63,8 +67,6 @@ fetch("data/fileName.txt") // open file to get filename
       render(flatData);
       draw_legends(); // draw tag legends
     });
-
-
 
     d3.select("#selecFiles").on("change", change)
     function change() {
@@ -142,21 +144,29 @@ fetch("data/fileName.txt") // open file to get filename
 
 function responsive() {
   var width = d3.select("div#one").node().getBoundingClientRect().width;
-  container_3_plot.attr('width', width).attr('height', 300);
+  container_3_plot.attr('width', width).attr('height', divHeight);
   draw_processes(ts, nodeid, '0');
 
+  rect3.attr('width', width-padding/2);
+
   var width2 = d3.select("div#two").node().getBoundingClientRect().width;
-  container_4_plot.attr('width', width2).attr('height', 300);
+  container_4_plot.attr('width', width2).attr('height', divHeight);
   draw_ts_or_ite(nodeid);
+
+  rect4.attr('width', width2-padding/2);
 
   d3.select(".gutter").on("click", resize); //mouseup
 
   function resize() {
     width = d3.select("div#one").node().getBoundingClientRect().width;
-    container_3_plot.attr('width', width).attr('height', 300);
+    container_3_plot.attr('width', width).attr('height', divHeight);
+
+    rect3.attr('width', width-padding/2);
 
     width2 = d3.select("div#two").node().getBoundingClientRect().width;
-    container_4_plot.attr('width', width2).attr('height', 300);
+    container_4_plot.attr('width', width2).attr('height', divHeight);
+
+    rect4.attr('width', width2-padding/2);
 
     if (cleared == 0) {
       draw_processes(ts, nodeid, '0');
@@ -171,6 +181,12 @@ function responsive() {
 
 function render(data) {
     var renderStart = performance.now();
+
+    phase.text("Current phase: " + nodeid);
+    procInfo.text("Current rank: " + proc + "/" + procs_num);
+    exeInfo.text("Current execution: " + ts + "/" + ts_num);
+
+
     d3.select("#selec_pro").attr("max", procs_num-1); // set input box based on this value
     d3.select("#selec_ite").attr("max", ts_num-1); // set input box based on this value 
 
@@ -226,21 +242,12 @@ function render(data) {
     d3.select("#selec_ite").on("input", graph_display_1); // select timestep input box
     d3.select("#selec_pro").on("input", graph_display_1); // select process input box
 
-    // // var iteValue = document.getElementById("demo");
-    // // iteValue.innerHTML = "(" + 0 + ")";
-
     function graph_display_1() {
       // Obtained value from input box
       ts = d3.select("#selec_ite").property("value");
       proc = d3.select("#selec_pro").property("value");
 
-      // iteValue.innerHTML = "(" + ts + ")";
-
       treeData_update();
-
-      // container_3_plot.select(".brush")
-
-      // .call(brush).transition().duration(0).call(brush.move, [0, brushLen]); //x.range()
 
       draw_tree(root); // draw tree 
       draw_treemap(root); // draw zoomable treemap

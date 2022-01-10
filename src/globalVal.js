@@ -7,6 +7,8 @@ var container_width = window.innerWidth/2 - padding;
 container_width = (container_width < 500)? 500: container_width;
 const container_height = winHeight/3;
 
+var divHeight = 300;
+
 var show_loop = 0,
     root,
     dataloads,
@@ -28,3 +30,4 @@ var show_loop = 0,
     selectedNodes = [];
 
 var color = d3.scaleOrdinal(d3.schemeAccent); 
+

@@ -1,5 +1,7 @@
 div {
 	text-align: center;
+  margin-bottom: 0;
+  margin-top: 0;
 }
 
 h1{
@@ -33,6 +35,11 @@ p{
   cursor: pointer;
 }
 
+.rectbox {
+  fill: none;
+  stroke: black;
+}
+
 .split {
   -webkit-box-sizing: border-box;
   -moz-box-sizing: border-box;
@@ -52,14 +59,6 @@ p{
   background-image: url(data/vertical.png);
 }
 
-/*#one {
-  background-color: #eee;
-}*/
-
-/*#two {
-  background-color: #dde;
-}*/
-
 .svg-container {
   display: inline-block;
   position: relative;
@@ -77,6 +76,10 @@ p{
   left: 0;
 }
 
+.statistics {
+  font-size: 12px;
+  text-anchor: start;
+}
 
 .line {
       fill: none;
@@ -155,8 +158,8 @@ div.tooltip2 {
   text-anchor: middle;
 }
 
-.xlabel{
-  font-size: 12px;
+.info{
+  font-size: 17px;
   text-anchor: middle;
 }
 

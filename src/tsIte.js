@@ -45,7 +45,9 @@ export function draw_ts_or_ite(nodeid) {
       }) 
       times.push({"id": c, "time": (d3.max(column)*time_metics).toFixed(3)}); //(d3.max(d.map(Number))*time_metics).toFixed(3)
     }
-    x_label.transition().duration(duration).attr("x", (curWidth)/2).text("Total number of timesteps");
+    x_label.transition().duration(duration).attr("x", (curWidth)/2+padding)
+           .text("Executions");
+           // .text("Total number of timesteps");
   }
   else {
     flag = 3;
