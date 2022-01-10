@@ -6,7 +6,7 @@ import { draw_treemap } from './treemap.js';
 
 var threshold = 128, is_click = 0;
 var height = 180, height2 = 35;
-var phase, x_label, minValue, maxValue, meanValue, medianValue, clip, curData;
+var phase, x_label, minValue, maxValue, meanValue, medianValue, clip;
 var line_chart, focus, context, statistics, xAxis, yAxis, xAxis2, tip, brushCall, linex, liney;
 
 var x = d3.scaleLinear(),
@@ -28,11 +28,13 @@ var bisect = d3.bisector(d => d.id).left;
 
 draw_statics();
 
-var last_nodeid, last_ts, times=[], new_time;
+var times=[], new_time, curData;
 
 export function draw_processes(ts, nodeid, is_loop, is_tag=null) {
 
   if (cleared == 1) { draw_statics(); }
+
+  console.log("call draw_processe");
 
   var curWidth = container_3_plot.node().getBoundingClientRect().width;
   var width = (curWidth-padding*3);
@@ -72,7 +74,7 @@ export function draw_processes(ts, nodeid, is_loop, is_tag=null) {
   }
 
   render();
-  
+
   function render() {
 
     var brushLen = width;
@@ -245,7 +247,6 @@ export function draw_processes(ts, nodeid, is_loop, is_tag=null) {
     } 
   }
   
-  // var change = (times.length > threshold)? 0: -1;
   function brushed() {
     if (d3.event.sourceEvent && d3.event.sourceEvent.type === "zoom") return; // ignore brush-by-zoom
     
@@ -260,7 +261,7 @@ export function draw_processes(ts, nodeid, is_loop, is_tag=null) {
     xAxis.call(d3.axisBottom(x));
 
     if (is_click == 1) {
-      if (curData[0].id > proc) {
+      if (curData[0].id > proc || curData[threshold-1].id < proc) {
         line_chart.select(".pointer").style("display", "none");
       }
       else {
@@ -303,8 +304,6 @@ export function draw_processes(ts, nodeid, is_loop, is_tag=null) {
   //   focus.select(".axis--x").call(d3.axisBottom(x));
   //   // context.select(".brush").call(brush.move, x.range().map(t.invertX, t));
   // }
-
-  last_ts = ts; last_nodeid = nodeid;
 }
 
 function draw_statics() {
