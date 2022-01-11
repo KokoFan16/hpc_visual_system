@@ -34,8 +34,6 @@ export function draw_processes(ts, nodeid, is_loop, is_tag=null) {
   
   if (cleared == 1) { draw_statics(); }
 
-  console.log("call draw_processe");
-
   var curWidth = container_3_plot.node().getBoundingClientRect().width;
   var width = (curWidth-padding*3);
 

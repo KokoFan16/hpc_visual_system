@@ -12,8 +12,6 @@ import { draw_scale } from './scale.js';
 import { draw_scale_stacked } from './scaleStack.js'
 
 var startTime = performance.now();
-// var iteValue = document.getElementById("phase");
-// iteValue.innerHTML = "Current Phase: " + nodeid ;
 
 var splitobj = Split(["#one","#two"], {
     elementStyle: function (dimension, size, gutterSize) { 
@@ -27,10 +25,8 @@ var splitobj = Split(["#one","#two"], {
 });
 
 breakdown_times = {}; // divide times based on rank, ts and loops
-dataloads = {};
-
-
-var is_indi = 1;
+dataloads = {}; 
+tags = [];
 
 fetch("data/fileName.txt") // open file to get filename
   .then(res => res.text())
@@ -50,8 +46,20 @@ fetch("data/fileName.txt") // open file to get filename
     
     var file = d3.select("#selecFiles").property("value");
 
-    load_data(file); // load data
-    // draw_legends(); // draw tag legends
+    var fileSplit = file.split(/[._]+/);
+    procs_num = fileSplit[fileSplit.length-2]; // total number of processes 
+    ts_num = fileSplit[fileSplit.length-3]; // total number of timesteps
+
+    d3.csv("data/"+file).then(function(flatData) {
+      dataloads[procs_num] = flatData;
+      var temp = parseData(flatData); 
+      breakdown_times[procs_num] = temp;
+
+      render(flatData);
+
+      root.children.forEach(function(d){ findtags(d, tags); })
+      draw_legends(); // draw tag legends  
+    });
 
     d3.select(".button").on("click", click);
     d3.select("#selecFiles").on("change", change); 
@@ -71,6 +79,16 @@ fetch("data/fileName.txt") // open file to get filename
 
     function change() {
       file = d3.select("#selecFiles").property("value");
+
+      if (show_loop == 1) {
+          show_loop = 0;
+          d3.select('.showLoops').style("fill", "#FFFFFF");
+          d3.select('.showLoopsText').text("Show Loops");
+      }
+      if (show_tag == 1) {
+        show_tag = 0;
+        d3.select(".tagLegend").style("fill", "none");
+      }
       
       if (cleared == 0) { load_data(file); }
       else {
@@ -82,22 +100,13 @@ fetch("data/fileName.txt") // open file to get filename
       container_2_plot.selectAll("*").remove();
       container_3_plot.selectAll("*").remove();
       drawLoopsButt();
-      // if (show_loop == 1) {
-      //     show_loop = 0;
-      //     d3.select('.showLoops').style("fill", "#FFFFFF");
-      //     d3.select('.showLoopsText').text("Show Loops");
-      // }
-      // if (show_tag == 1) {
-      //   show_tag = 0;
-      //   d3.select(".tagLegend").style("fill", "none");
-      // }
       render(dataloads[procs_num]);
     }
 
     function ensembleView() {
 
       var filtedFiles = openFile.filter(function(f) {
-          var fileSplit = f.split(/[._]+/);
+          fileSplit = f.split(/[._]+/);
           var nprocs = fileSplit[fileSplit.length-2];
           return !breakdown_times[nprocs];
       });
@@ -134,7 +143,7 @@ fetch("data/fileName.txt") // open file to get filename
           dataloads[procs_num] = flatData;
           var temp = parseData(flatData); 
           breakdown_times[procs_num] = temp;
-          
+
           render(flatData);
         });
       }
@@ -184,8 +193,6 @@ function responsive() {
 }
 
 function render(data) {
-
-    console.log(cleared);
     var renderStart = performance.now();
 
     phase.text("Current event: " + nodeid);
@@ -233,11 +240,14 @@ function render(data) {
         d.has_loop = sum; })
 
     // set time for each node (need to be updated based on current rank and ts)
-    treeData_update(); 
+    treeData_update();
 
-    // recursively find out all the tags
-    tags = [];
-    root.children.forEach(function(d){ findtags(d, tags); })
+    // tags = [];
+    // if (cleared == 1) {
+    //   console.log("cal tags");
+    //   root.children.forEach(function(d){ findtags(d, tags); }) // recursively find out all the tags
+    //   draw_legends(); // draw tag legends
+    // } 
 
     // draw tree
     draw_tree(root);

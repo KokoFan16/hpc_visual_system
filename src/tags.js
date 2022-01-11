@@ -7,6 +7,11 @@ import { draw_ts_or_ite } from './tsIte.js';
 
 // draw legends of tags
 export function draw_legends() {
+
+  // recursively find out all the tags
+  // console.log(dataloads, Number(procs_num), dataloads[512]);
+  // root.children.forEach(function(d){ findtags(d, tags); })
+
   container_1_plot.append("rect")
     .attr("class", "tagLegend")
     .attr("transform", "translate(0," + padding*0.8 + ")")
