@@ -35,24 +35,9 @@ export function draw_tree(source, selectedtag=null)
 
   // Enter any new modes at the parent's previous position.
   var nodeEnter = node.enter().append("g")
-      .attr('class', 'node')
-      .attr("transform", function(d) { return "translate(" + source.y2 + "," + source.x2 + ")"; })
-      .on('mouseover', function(d) { 
-        var_div.transition().duration(200).style('opacity', 0.9);
-        var_div.html(d.data.name + '<br/>' + "(" + d.data.time + ")")
-          .style('width', Math.max(100, Math.max(d.data.name.length, d.data.time.length)*9) + 'px')
-          .style('left', d3.event.pageX + 'px')
-          .style('top', d3.event.pageY - 10 + 'px'); 
-        })
-      .on('mouseout', () => {
-        var_div.transition().duration(500).style('opacity', 0); 
-      })
-      .on('click', function(d) {
-          if (show_loop == 0 && show_tag == 0) { return clicktree(d); }
-          else if (show_tag == 1) { if (d.data.data.tag) { return clicktree(d);} }
-          else { if (d.data.data.is_loop == "1") { return clicktree(d); } }
-        });
-
+    .attr('class', 'node')
+    .attr("transform", function(d) { return "translate(" + source.y2 + "," + source.x2 + ")"; })
+      
   nodeEnter.append("circle")
     .attr('class', 'node')
     .attr("r", 10);
@@ -89,63 +74,78 @@ export function draw_tree(source, selectedtag=null)
     })
     .style('fill-opacity', opacity)
     .style('stroke-opacity', opacity)
-    .attr('cursor', 'pointer');
+    .attr('cursor', 'pointer')
+    .on('mouseover', mouseover)
+    .on('mouseout', () => { var_div.transition().duration(500).style('opacity', 0); })
+    .on('click', function(d) {
+      if (show_loop == 0 && show_tag == 0) { return clicktree(d); }
+      else if (show_tag == 1) { 
+        if ((d.data.data.tag && (!selectedtag)) || (selectedtag && (d.data.data.tag == selectedtag))) { 
+          return clicktree(d); 
+        } 
+      }
+      else { if (d.data.data.is_loop == "1") { return clicktree(d); } }
+    });
 
   nodeUpdate.select('.nodename')
     .style('fill-opacity', opacity);
 
   // Remove any exiting nodes
   var nodeExit = node.exit().transition()
-        .duration(duration)
-        .attr("transform", function(d) {
-          return "translate(" + source.y + "," + source.x + ")";
-            // return "translate(" + source.x + "," + source.y + ")";
-          })
-        .remove();
+    .duration(duration)
+    .attr("transform", function(d) {
+      return "translate(" + source.y + "," + source.x + ")";
+    })
+    .remove();
 
-  nodeExit.select('circle')
-          .attr('r', 10);
+  nodeExit.select('circle').attr('r', 10);
 
-  nodeExit.select('text')
-        .style('fill-opacity', 0);
+  nodeExit.select('text').style('fill-opacity', 0);
 
   var link = container_1_plot.selectAll('path.link')
      .data(root.descendants().slice(1), function(d) { return d.id; });
 
   // Enter any new links at the parent's previous position.
   var linkEnter = link.enter().insert("path", "g")
-        .attr("class", "link")
-        .attr("d", function(d) {
-          var o = {y: source.y2, x: source.x2}
-          return diagonal(o, o)
-        });
+    .attr("class", "link")
+    .attr("d", function(d) {
+      var o = {y: source.y2, x: source.x2}
+      return diagonal(o, o)
+    });
 
   var linkUpdate = linkEnter.merge(link)
-      .style('stroke-opacity', function(d){
-        if (show_loop == 1) { return (d.data.data.is_loop == "1") ? 1: 0.2; }
-        else if (show_tag == 1) { return d.data.data.tag ? 1: 0.2; }
-        else { return 1; }
-      });
+    .style('stroke-opacity', function(d){
+      if (show_loop == 1) { return (d.data.data.is_loop == "1") ? 1: 0.2; }
+      else if (show_tag == 1) { return d.data.data.tag ? 1: 0.2; }
+      else { return 1; }
+    });
 
   // Transition back to the parent element position
   linkUpdate.transition()
     .duration(duration)
     .attr('d', function(d){ return diagonal(d, d.parent) });
 
-
   // Remove any exiting links
   var linkExit = link.exit().transition()
-        .duration(duration)
-        .attr('d', function(d) {
-          var o = {y: source.y, x: source.x}
-          return diagonal(o, o)
-        })
-        .remove();
+    .duration(duration)
+    .attr('d', function(d) {
+      var o = {y: source.y, x: source.x}
+      return diagonal(o, o)
+    })
+    .remove();
 
   nodes.forEach(function(d, i){
     d.x2 = d.x;
     d.y2 = d.y;
   });
+
+  function mouseover(d) {
+    var_div.transition().duration(200).style('opacity', 0.9);
+    var_div.html(d.data.name + '<br/>' + "(" + d.data.time + ")")
+      .style('width', Math.max(100, Math.max(d.data.name.length, d.data.time.length)*9) + 'px')
+      .style('left', d3.event.pageX + 'px')
+      .style('top', d3.event.pageY - 10 + 'px'); 
+  }
 
   function opacity(d) {
     var opacity = 0.7; 

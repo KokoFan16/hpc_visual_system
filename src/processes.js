@@ -33,7 +33,7 @@ var times=[], new_time, curData;
 export function draw_processes(ts, nodeid, is_loop, is_tag=null) {
 
   if (is_tag == null ) { phase.text("Current event: " + nodeid); }
-  else { phase.text("Current event: " + is_tag); }
+  else { phase.text("Show sum of tag: " + is_tag); }
   
   if (cleared == 1) { draw_statics(); }
 

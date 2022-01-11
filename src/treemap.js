@@ -128,6 +128,12 @@ export function draw_treemap(source, selectedtag=null) {
 
   colorbar.exit().remove();
 
+  if (selectedtag) {
+    var trans_dis = -legendlen/2 -tags.indexOf(selectedtag)*legendlen;  
+    d3.select(".trianglepointer").transition(200).delay(100)
+      .attr("transform", "translate(" + trans_dis + ", " + (-padding-5) + ")" );
+  }
+
   function mouseover(d){
     var trans_dis = 0;
     var label;

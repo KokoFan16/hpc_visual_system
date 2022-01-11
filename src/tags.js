@@ -1,4 +1,4 @@
-import { container_1_plot } from './container.js';
+import { container_1_plot, phase } from './container.js';
 import { uncollapse, collapse } from './utils.js'; 
 import { draw_tree } from './tree.js';
 import { draw_treemap } from './treemap.js';
@@ -53,30 +53,49 @@ export function draw_legends() {
       .text(item)
       .attr("x", 55)
       .attr("y", 12)
-      .attr("text-anchor", "middle")
       .attr("class", "mybuttext")
-      .style("font-size", "15px")
+      .style("font-size", "14px")
   });
+
+  legend_group.append("rect")
+    .attr("width", 85)
+    .attr("height", 15)
+    .attr("x", 2)
+    .attr("y", tags.length * 20)
+    .attr("rx", 4)
+    .attr("class", "mybutton")
+    .on('click', function() {
+        draw_processes(ts, nodeid, is_loop);
+        draw_tree(root);
+        draw_treemap(root);
+    })
+
+  legend_group.append("text")
+    .attr("x", 45)
+    .attr("y", tags.length * 24)
+    .attr("class", "mybuttext")
+    .style("font-size", "14px")
+    .text("Show all")
 }
 
 
 function showTags() {
   if (cleared == 0 && show_loop == 0) {
     if (show_tag == 0) {
-      show_tag = 1;
       d3.select('.tagButt').text("Back");
       legend_group.style("display", null);
-
+      
       root.children.forEach(uncollapse); 
+      show_tag = 1;
     }
     else {
-      show_tag = 0;
       legend_group.style("display", "none");
       d3.select('.tagButt').text("Show Tags");
 
       root.children.forEach(collapse); 
       draw_processes(ts, "main", is_loop); 
       draw_ts_or_ite("main");
+      show_tag = 0;
     }
     draw_tree(root);
     draw_treemap(root);
