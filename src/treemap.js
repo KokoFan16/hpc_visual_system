@@ -1,4 +1,3 @@
-// import { color } from './env.js';
 import { container_2_plot, colorbar_plot } from './container.js';
 import { wraptext } from './utils.js';
 
@@ -12,6 +11,9 @@ var colorbartext = ["0% to 5%", "5% to 10%", "10% to 15%", "15% to 20%", "20% to
 colorbarStatic();
 
 var svgWidth = container_width-padding/2;
+var var_div = d3.select('body').append('div')
+  .attr('class', 'tooltip')
+  .style('opacity', 0);
 
 export function draw_treemap(source, selectedtag=null) {
 
@@ -27,7 +29,8 @@ export function draw_treemap(source, selectedtag=null) {
   var mydata = source.eachBefore(function(d) { 
       d.data.value = (d.children ? 0: d.data.time); 
       if (show_tag == 1) {
-        if ((!d.data.data.tag) || (selectedtag && (d.data.data.tag != selectedtag) )) { d.data.value = 0; }
+        if ((!d.data.data.tag) || (selectedtag && (d.data.data.tag != selectedtag) )) { 
+          d.data.value = 0; }
       }
     })
     .sum(function(d) { return d.value ? d.value : 0 });
@@ -37,12 +40,6 @@ export function draw_treemap(source, selectedtag=null) {
   // generate gradient color scheme
   var max_leaf_value = Math.ceil(mydata.data.time); 
   var myColor = d3.scaleLinear().range(["white", "#103783"]).domain([0, max_leaf_value]) // "#ebf4f5", "#69b3a2"  
-
-  var var_div = d3
-    .select('body')
-    .append('div')
-    .attr('class', 'tooltip2')
-    .style('opacity', 0);
 
   //Legend Rectangels
   var color_values = [];
@@ -86,38 +83,13 @@ export function draw_treemap(source, selectedtag=null) {
     .attr("height", function(d) { if (d.value > 0) { return d.y1 - d.y0; } })
     .attr('stroke', '#5D6D7E')
     .attr("fill", function(d) { 
-      if (show_tag == 1) { if (d.data.data.tag) { return color(tags.indexOf(d.data.data.tag)); } }
+      if (show_tag == 1) { if (d.data.data.tag) { 
+        return color(tags.indexOf(d.data.data.tag)); } }
       else { return myColor(d.data.time); } }) 
-    .on('mouseover', function(d) { 
-      var trans_dis = 0;
-      var label;
-      if (show_tag == 0) {
-        trans_dis = -legendlen/2 -(Math.floor(d.data.time/unit_value)*legendlen); 
-        label = colorbartext[Math.floor(d.data.time/unit_value)];
-      }
-      else {
-        trans_dis = -legendlen/2 -tags.indexOf(d.data.data.tag)*legendlen; 
-        label = "TAG: " + d.data.data.tag;
-      }
-      d3.select(this).style("stroke-width","4px")
-      d3.select(".trianglepointer").transition(200)
-        .delay(100)
-        .attr("transform", "translate(" + trans_dis + ", " + (-padding-5) + ")" );
-      d3.select(".LegText").select("text").text(label)
-      var_div.transition()
-        .duration(200)
-        .style('opacity', 0.9)
-      var_div
-        .html(d.data.id + '<br/>' + "(" + d.data.time + ")")
-        .style('width', Math.max(d.data.id.length, d.data.time.length)*8 + 'px')
-        .style('left', d3.event.pageX + 'px')
-        .style('top', d3.event.pageY - 10 + 'px'); 
-      })
+    .on('mouseover', mouseover)
     .on('mouseout', function(d) {
-      d3.select(this)
-        .style("stroke-width","2px")
-      var_div.transition()
-        .duration(500)
+      d3.select(this).style("stroke-width","2px")
+      var_div.transition().duration(500)
         .style('opacity', 0); 
       })
   
@@ -155,6 +127,30 @@ export function draw_treemap(source, selectedtag=null) {
     .attr("x",function(d,i){ return i*legendlen; })
 
   colorbar.exit().remove();
+
+  function mouseover(d){
+    var trans_dis = 0;
+    var label;
+    if (show_tag == 0) {
+      trans_dis = -legendlen/2 -(Math.floor(d.data.time/unit_value)*legendlen); 
+      label = colorbartext[Math.floor(d.data.time/unit_value)];
+    }
+    else {
+      trans_dis = -legendlen/2 -tags.indexOf(d.data.data.tag)*legendlen; 
+      label = "TAG: " + d.data.data.tag;
+    }
+    d3.select(this).style("stroke-width","4px");
+    d3.select(".trianglepointer").transition(200).delay(100)
+      .attr("transform", "translate(" + trans_dis + ", " + (-padding-5) + ")" );
+    d3.select(".LegText").select("text").text(label);
+
+    var left = (winWidth - d3.event.pageX > 100)? d3.event.pageX: (d3.event.pageX-100);
+    var_div.transition().duration(200).style('opacity', 0.9);
+    var_div.html(d.data.id + '<br/>' + "(" + d.data.time + ")")
+      .style('width', Math.max(120, Math.max(d.data.id.length, d.data.time.length)*8) + 'px')
+      .style('left', left + 'px')
+      .style('top', d3.event.pageY - 10 + 'px'); 
+  }
 }
 
 function colorbarStatic() {

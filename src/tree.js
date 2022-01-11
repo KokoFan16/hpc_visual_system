@@ -11,10 +11,8 @@ let nodes;
 var treemap = d3.tree().size([container_height*1.5-padding, container_width - padding*3]);
 var i = 0;
 
-var var_div = d3
-  .select('body')
-  .append('div')
-  .attr('class', 'tooltip2')
+var var_div = d3.select('body').append('div')
+  .attr('class', 'tooltip')
   .style('opacity', 0);
 
 export function draw_tree(source, selectedtag=null)
@@ -38,23 +36,17 @@ export function draw_tree(source, selectedtag=null)
   // Enter any new modes at the parent's previous position.
   var nodeEnter = node.enter().append("g")
       .attr('class', 'node')
-      .attr("transform", function(d) {
-        return "translate(" + source.y2 + "," + source.x2 + ")"; })
+      .attr("transform", function(d) { return "translate(" + source.y2 + "," + source.x2 + ")"; })
       .on('mouseover', function(d) { 
-        var_div
-          .transition()
-          .duration(200)
-          .style('opacity', 0.9);
-        var_div
-          .html(d.data.name + '<br/>' + "(" + d.data.time + ")")
-          .style('width', Math.max(d.data.name.length, d.data.time.length)*9 + 'px')
+        var_div.transition().duration(200).style('opacity', 0.9);
+        var_div.html(d.data.name + '<br/>' + "(" + d.data.time + ")")
+          .style('width', Math.max(100, Math.max(d.data.name.length, d.data.time.length)*9) + 'px')
           .style('left', d3.event.pageX + 'px')
-          .style('top', d3.event.pageY - 10 + 'px'); })
+          .style('top', d3.event.pageY - 10 + 'px'); 
+        })
       .on('mouseout', () => {
-        var_div
-          .transition()
-          .duration(500)
-          .style('opacity', 0); })
+        var_div.transition().duration(500).style('opacity', 0); 
+      })
       .on('click', function(d) {
           if (show_loop == 0 && show_tag == 0) { return clicktree(d); }
           else if (show_tag == 1) { if (d.data.data.tag) { return clicktree(d);} }

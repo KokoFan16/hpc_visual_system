@@ -1,6 +1,6 @@
 import { draw_line_figure } from './lineChart.js';
 import { container_3_plot, procInfo, phase } from './container.js';
-import { treeData_update } from './utils.js';
+import { treeData_update, uncollapse } from './utils.js';
 import { draw_tree } from './tree.js';
 import { draw_treemap } from './treemap.js';
 
@@ -32,7 +32,6 @@ var times=[], new_time, curData;
 
 export function draw_processes(ts, nodeid, is_loop, is_tag=null) {
 
-  // phase.text("Current Phase: " + nodeid);
   if (is_tag == null ) { phase.text("Current event: " + nodeid); }
   else { phase.text("Current event: " + is_tag); }
   
@@ -204,6 +203,8 @@ export function draw_processes(ts, nodeid, is_loop, is_tag=null) {
       procInfo.text("Current rank: " + proc + "/" + procs_num);
 
       treeData_update();
+
+      if (show_tag == 1) { root.children.forEach(uncollapse); }
 
       draw_tree(root); // draw tree 
       draw_treemap(root); // draw zoomable treemap

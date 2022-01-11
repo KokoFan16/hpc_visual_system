@@ -4,7 +4,7 @@ import { uncollapse, collapse} from './utils.js';
 
 var var_div = d3.select('body')
   .append('div')
-  .attr('class', 'tooltip2')
+  .attr('class', 'tooltip')
   .style('opacity', 0);
 
 // draw line chart

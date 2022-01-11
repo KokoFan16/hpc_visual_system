@@ -19,8 +19,7 @@ export function parseData(data) {
 export function treeData_update() {
   // assign the name to each node 
   root.children.forEach(uncollapse);
-  root.each(function(d) {;
-    // console.log(d);
+  root.each(function(d) {
     var t = breakdown_times[procs_num][d.data.id][proc][ts];
     if (d.data.data.is_loop == "0"){
       d.data.time = (parseFloat(t)*time_metics).toFixed(3); }

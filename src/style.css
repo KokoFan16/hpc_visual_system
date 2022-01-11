@@ -106,7 +106,6 @@ p{
       stroke-width: 2px;
   }
 
-
 .area {
       fill: #cce5df;
       fill-opacity: 0.35;
@@ -118,8 +117,6 @@ p{
   fill: none;
   pointer-events: all;
 }
-
-
 
 .dot {
     /*fill: black;*/
@@ -151,23 +148,9 @@ div.tooltip {
   color: white;
   position: absolute;
   text-align: center;
-  width: 100px;
-  height: 30px;
   padding: 2px;
   font: 12px sans-serif;
-  background: rgba(0,0,0,.8);
-  border: 2px solid black;
-  pointer-events: none;
-}
-
-div.tooltip2 {
-  color: white;
-  position: absolute;
-  text-align: center;
-  /*height: 22px;*/
-  padding: 2px;
-  font: 12px sans-serif;
-  background: rgba(0,0,0,.8);
+  background: rgba(0,0,0,.6);
   border: 2px solid black;
   pointer-events: none;
 }
