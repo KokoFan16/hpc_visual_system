@@ -1,12 +1,12 @@
 import { draw_line_figure } from './lineChart.js';
-import { container_3_plot, procInfo } from './container.js';
+import { container_3_plot, procInfo, phase } from './container.js';
 import { treeData_update } from './utils.js';
 import { draw_tree } from './tree.js';
 import { draw_treemap } from './treemap.js';
 
 var threshold = 128, is_click = 0;
 var height = 180, height2 = 35;
-var phase, x_label, minValue, maxValue, meanValue, medianValue, clip;
+var x_label, minValue, maxValue, meanValue, medianValue, clip;
 var line_chart, focus, context, statistics, xAxis, yAxis, xAxis2, tip, brushCall, linex, liney;
 
 var x = d3.scaleLinear(),
@@ -31,6 +31,10 @@ draw_statics();
 var times=[], new_time, curData;
 
 export function draw_processes(ts, nodeid, is_loop, is_tag=null) {
+
+  // phase.text("Current Phase: " + nodeid);
+  if (is_tag == null ) { phase.text("Current event: " + nodeid); }
+  else { phase.text("Current event: " + is_tag); }
   
   if (cleared == 1) { draw_statics(); }
 
@@ -48,17 +52,21 @@ export function draw_processes(ts, nodeid, is_loop, is_tag=null) {
   // get time data for all the processes
   times = [];
   if (is_tag) {
+
     var ptimes = new Array(procs_num).fill(0);
     var tag_time = 0;
     root.leaves().forEach(function(d) {
       if (d.data.data.tag == is_tag) {
         breakdown_times[procs_num][d.data.id].forEach(function(d, i){
-          var t = Number(parseFloat(d3.sum(d[ts]))*time_metics).toFixed(3);
+          var t = Number(d3.sum(d[ts]))*time_metics;
           ptimes[i] += Number(t);
         })
       }
     })
-    ptimes.forEach(function(d, i){ times.push({"id": i, "time": d.toFixed(3)}); });
+    ptimes.forEach(function(d, i){ 
+      var curt = d.toFixed(3);
+      times.push({"id": i, "time": curt, "min": curt, "max": curt }); 
+    });
   }
   else {
     breakdown_times[procs_num][nodeid].forEach(function(d, i) { 

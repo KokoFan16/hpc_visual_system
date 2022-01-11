@@ -28,7 +28,10 @@ export function draw_treemap(source) {
   // add value for each node
   var mydata = source
     // .eachBefore(function(d) { d.data.id = (d.parent ? d.parent.data.id + "." : "") + d.data.name; });
-    .eachBefore(function(d) { d.data.value = (d.children ? 0: d.data.time); })
+    .eachBefore(function(d) { 
+      d.data.value = (d.children ? 0: d.data.time); 
+      if (show_tag == 1 && d.data.data.tag == null) { d.data.value = 0; }
+    })
     .sum(function(d) { return d.value ? d.value : 0 });
 
   init_treemap(mydata); // generate a treemap 
@@ -86,7 +89,7 @@ export function draw_treemap(source) {
     .attr("height", function(d) { return d.y1 - d.y0; })
     .attr('stroke', '#5D6D7E')
     .attr("fill", function(d) { 
-      if (show_tag == 1) { return color(tags.indexOf(d.data.data.tag)); }
+      if (show_tag == 1) { if (d.data.data.tag) { return color(tags.indexOf(d.data.data.tag)); } }
       else { return myColor(d.data.time); } }) 
     .on('mouseover', function(d) { 
       var trans_dis = 0;

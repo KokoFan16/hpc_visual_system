@@ -6,64 +6,56 @@ import { draw_processes } from './processes.js';
 import { draw_ts_or_ite } from './tsIte.js';
 
 // draw legends of tags
+var width = 960, height = 500, legend_group; 
 export function draw_legends() {
 
-  // recursively find out all the tags
-  // console.log(dataloads, Number(procs_num), dataloads[512]);
-  // root.children.forEach(function(d){ findtags(d, tags); })
-
   container_1_plot.append("rect")
-    .attr("class", "tagLegend")
-    .attr("transform", "translate(0," + padding*0.8 + ")")
-    .attr("width", 80)
-    .attr("height", tags.length*22)
-    .style("stroke", "grey")
-    .style("stroke-width", 2)
-    .style("fill", "white")
-    .on('mouseover', function(d) {
-      d3.select(this).style("stroke-width","4px"); })
-    .on('mouseout', function(d) {
-      d3.select(this).style("stroke-width","2px"); })
+    .attr('class', 'mybutton tagLegend')
+    .attr("width", 100)
+    .attr("height", 30)
+    .attr("rx", 8)
     .on('click', showTags);
 
-  container_1_plot.append("text")
-    .text("Tags")
-    .attr("x", 23)
-    .attr("y", 8)
-    .attr("text-anchor", "start")
-    .style("text-transform", "capitalize")
-    .style("font-size", "16px")
-
   // legend 
-  var legend_group_1 = container_1_plot.append("g")
-    .attr("transform", "translate(5, " + padding + ")");
+  legend_group = container_1_plot.append("g")
+    .attr("transform", "translate(5, " + padding*2 + ")")
+    .style("display", "none");
+
+  container_1_plot.append("text")
+    .attr("x", 50)
+    .attr("y", 20)
+    .attr("text-anchor", "middle")
+    .attr("class", "mybuttext tagButt")
+    .style("font-size", "16px")
+    .text("Show Tags")
 
   tags.forEach(function(item, index) {
-    var legends = legend_group_1.append("g")
+    
+    var legends = legend_group.append("g")
       .attr("transform", "translate(0, " + (index * 20) + ")");
-
-    legends.append("text")
-      .text(item)
-      .attr("x", 20)
-      .attr("y", 12)
-      .attr("text-anchor", "start")
-      .style("text-transform", "capitalize")
-      .style("font-size", "15px")
 
     legends.append("rect")
       .attr("width", 15)
       .attr("height", 15)
-      .attr("fill", color(index))
-      .on('mouseover', function(d) {
-        d3.select(this)
-          .style("stroke", "grey")
-          .style("stroke-width","2px"); })
-      .on('mouseout', function(d) {
-        d3.select(this)
-          .style("stroke", "none") })
-      .on('click', function(d) {
-            if (show_tag == 1) { draw_processes(ts, "", is_loop, item); }
-        });
+      .attr("fill", color(index));
+
+    legends.append("rect")
+      .attr("width", 65)
+      .attr("height", 15)
+      .attr("x", 22)
+      .attr("rx", 4)
+      .attr("class", "mybutton")
+      .on('click', function() {
+        if (show_tag == 1) { draw_processes(ts, "", is_loop, item); }
+      })
+
+    legends.append("text")
+      .text(item)
+      .attr("x", 55)
+      .attr("y", 12)
+      .attr("text-anchor", "middle")
+      .attr("class", "mybuttext")
+      .style("font-size", "15px")
   });
 }
 
@@ -72,13 +64,16 @@ function showTags() {
   if (cleared == 0 && show_loop == 0) {
     if (show_tag == 0) {
       show_tag = 1;
-      d3.select(".tagLegend").style("fill", "#AED6F1")
-        .style('fill-opacity', 0.5);
+      d3.select('.tagButt').text("Back");
+      legend_group.style("display", null);
+
       root.children.forEach(uncollapse); 
     }
     else {
       show_tag = 0;
-      d3.select(".tagLegend").style("fill", "none");
+      legend_group.style("display", "none");
+      d3.select('.tagButt').text("Show Tags");
+
       root.children.forEach(collapse); 
       draw_processes(ts, "main", is_loop); 
       draw_ts_or_ite("main");

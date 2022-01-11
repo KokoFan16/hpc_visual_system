@@ -94,8 +94,11 @@ export function draw_tree(source)
         else if (d.data.time > 0) { return "green"; }
         else { return "white"; }
       }
-      if (!tags.includes(d.data.data.tag)) { return d._children ? "lightsteelblue" : "#fff"; }
-      else {var index = tags.indexOf(d.data.data.tag); return color(index);}
+      if (show_tag == 1) { var index = tags.indexOf(d.data.data.tag); return color(index); }
+      else { return d._children ? "lightsteelblue" : "#fff"; }
+
+      // if (!tags.includes(d.data.data.tag)) { return d._children ? "lightsteelblue" : "#fff"; }
+      // else {var index = tags.indexOf(d.data.data.tag); return color(index);}
     })
     .style('fill-opacity', function(d) {
       if (show_loop == 1 ) { return (d.data.data.is_loop == "1") ? 1: 0.1; }
@@ -189,10 +192,6 @@ export function clicktree(d) {
 
     nodeid = d.data.id;
     is_loop = d.data.data.is_loop;
-
-    phase.text("Current Phase: " + nodeid);
-    // if (is_tag == null ) { phase.text("Current Phase: " + nodeid); }
-    // else { phase.text("Current Phase: " + is_tag); }
 
     // var iteValue = document.getElementById("phase");
     // iteValue.innerHTML = "Current Phase: " + nodeid ;

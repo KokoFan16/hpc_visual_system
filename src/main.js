@@ -47,8 +47,8 @@ fetch("data/fileName.txt") // open file to get filename
     var file = d3.select("#selecFiles").property("value");
 
     var fileSplit = file.split(/[._]+/);
-    procs_num = fileSplit[fileSplit.length-2]; // total number of processes 
-    ts_num = fileSplit[fileSplit.length-3]; // total number of timesteps
+    procs_num = Number(fileSplit[fileSplit.length-2]); // total number of processes 
+    ts_num = Number(fileSplit[fileSplit.length-3]); // total number of timesteps
 
     d3.csv("data/"+file).then(function(flatData) {
       dataloads[procs_num] = flatData;
@@ -135,8 +135,8 @@ fetch("data/fileName.txt") // open file to get filename
     
     function load_data(file) {
       var fileSplit = file.split(/[._]+/);
-      procs_num = fileSplit[fileSplit.length-2]; // total number of processes 
-      ts_num = fileSplit[fileSplit.length-3]; // total number of timesteps
+      procs_num = Number(fileSplit[fileSplit.length-2]); // total number of processes 
+      ts_num = Number(fileSplit[fileSplit.length-3]); // total number of timesteps
 
       if(!breakdown_times[procs_num]) {
         d3.csv("data/"+file).then(function(flatData) {
@@ -241,13 +241,6 @@ function render(data) {
 
     // set time for each node (need to be updated based on current rank and ts)
     treeData_update();
-
-    // tags = [];
-    // if (cleared == 1) {
-    //   console.log("cal tags");
-    //   root.children.forEach(function(d){ findtags(d, tags); }) // recursively find out all the tags
-    //   draw_legends(); // draw tag legends
-    // } 
 
     // draw tree
     draw_tree(root);
