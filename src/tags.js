@@ -24,6 +24,7 @@ export function draw_legends() {
     .attr("x", 50)
     .attr("y", 20)
     .attr("class", "mybuttext tagButt")
+    .style("font-size", "16px")
     .text("Show Tags")
 
   tags.forEach(function(item, index) {
@@ -43,7 +44,9 @@ export function draw_legends() {
       .attr("rx", 4)
       .attr("class", "mybutton")
       .on('click', function() {
-        if (show_tag == 1) { draw_processes(ts, "", is_loop, item); }
+        draw_processes(ts, "", is_loop, item);
+        draw_tree(root, item);
+        draw_treemap(root, item);
       })
 
     legends.append("text")

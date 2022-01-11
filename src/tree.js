@@ -17,7 +17,7 @@ var var_div = d3
   .attr('class', 'tooltip2')
   .style('opacity', 0);
 
-export function draw_tree(source)
+export function draw_tree(source, selectedtag=null)
 {
   // draw the links between the nodes
   var tree = treemap(root);
@@ -40,7 +40,6 @@ export function draw_tree(source)
       .attr('class', 'node')
       .attr("transform", function(d) {
         return "translate(" + source.y2 + "," + source.x2 + ")"; })
-        // return "translate(" + source.x2 + "," + source.y2 + ")"; })
       .on('mouseover', function(d) { 
         var_div
           .transition()
@@ -82,7 +81,6 @@ export function draw_tree(source)
     .duration(duration)
     .attr("transform", function(d) {
       return "translate(" + d.y + "," + d.x + ")";
-      // return "translate(" + d.x + "," + d.y + ")";
     });
 
   // Update the node attributes and styl
@@ -96,28 +94,13 @@ export function draw_tree(source)
       }
       if (show_tag == 1) { var index = tags.indexOf(d.data.data.tag); return color(index); }
       else { return d._children ? "lightsteelblue" : "#fff"; }
-
-      // if (!tags.includes(d.data.data.tag)) { return d._children ? "lightsteelblue" : "#fff"; }
-      // else {var index = tags.indexOf(d.data.data.tag); return color(index);}
     })
-    .style('fill-opacity', function(d) {
-      if (show_loop == 1 ) { return (d.data.data.is_loop == "1") ? 1: 0.1; }
-      else if (show_tag == 1) { return d.data.data.tag ? 1: 0.1; }
-      else { return 1; }
-    }) 
-    .style('stroke-opacity', function(d){
-      if (show_loop == 1) { return (d.data.data.is_loop == "1") ? 1: 0.1; }
-      else if (show_tag == 1) { return d.data.data.tag ? 1: 0.1; }
-      else { return 1; }
-    })
+    .style('fill-opacity', opacity)
+    .style('stroke-opacity', opacity)
     .attr('cursor', 'pointer');
 
   nodeUpdate.select('.nodename')
-    .style('fill-opacity', function(d){
-      if (show_loop == 1) { return (d.data.data.is_loop == "1") ? 0.6: 0.1; }
-      else if (show_tag == 1) { return d.data.data.tag ? 0.6: 0.1; }
-      else { return 1; }
-    });
+    .style('fill-opacity', opacity);
 
   // Remove any exiting nodes
   var nodeExit = node.exit().transition()
@@ -171,18 +154,21 @@ export function draw_tree(source)
     d.x2 = d.x;
     d.y2 = d.y;
   });
+
+  function opacity(d) {
+    var opacity = 0.7; 
+    if (show_loop == 1 ) { opacity = (d.data.data.is_loop == "1") ? 0.6: 0.1; }
+    if (show_tag == 1) { opacity = d.data.data.tag ? 0.6: 0.1; }
+    if (selectedtag) { opacity = (d.data.data.tag == selectedtag)? 0.6: 0.1;  }
+    return opacity;
+  }
 }
 
 function diagonal(s, d) {
-  // var path = `M ${s.x} ${s.y}
-  //         C ${(s.x + d.x) / 2} ${s.y},
-  //           ${(s.x + d.x) / 2} ${d.y},
-  //           ${d.x} ${d.y}`
   var path = `M ${s.y} ${s.x}
           C ${(s.y + d.y) / 2} ${s.x},
             ${(s.y + d.y) / 2} ${d.x},
             ${d.y} ${d.x}`
-
   return path
 }
 
@@ -192,9 +178,6 @@ export function clicktree(d) {
 
     nodeid = d.data.id;
     is_loop = d.data.data.is_loop;
-
-    // var iteValue = document.getElementById("phase");
-    // iteValue.innerHTML = "Current Phase: " + nodeid ;
 
     if (d.children || d._children) {
       if (d.children) {

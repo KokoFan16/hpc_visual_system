@@ -13,11 +13,9 @@ colorbarStatic();
 
 var svgWidth = container_width-padding/2;
 
-export function draw_treemap(source) {
+export function draw_treemap(source, selectedtag=null) {
 
-  if (cleared == 1) {
-    colorbarStatic();
-  }
+  if (cleared == 1) { colorbarStatic(); }
 
   // initial treemap
   var init_treemap = d3.treemap().tile(d3.treemapResquarify)
@@ -26,19 +24,18 @@ export function draw_treemap(source) {
     .paddingInner(4);
 
   // add value for each node
-  var mydata = source
-    // .eachBefore(function(d) { d.data.id = (d.parent ? d.parent.data.id + "." : "") + d.data.name; });
-    .eachBefore(function(d) { 
+  var mydata = source.eachBefore(function(d) { 
       d.data.value = (d.children ? 0: d.data.time); 
-      if (show_tag == 1 && d.data.data.tag == null) { d.data.value = 0; }
+      if (show_tag == 1) {
+        if ((!d.data.data.tag) || (selectedtag && (d.data.data.tag != selectedtag) )) { d.data.value = 0; }
+      }
     })
     .sum(function(d) { return d.value ? d.value : 0 });
 
   init_treemap(mydata); // generate a treemap 
 
   // generate gradient color scheme
-  var max_leaf_value = Math.ceil(mydata.data.time);
-  // Math.ceil(d3.max(mydata.leaves(), function(d){ return d.value; })); 
+  var max_leaf_value = Math.ceil(mydata.data.time); 
   var myColor = d3.scaleLinear().range(["white", "#103783"]).domain([0, max_leaf_value]) // "#ebf4f5", "#69b3a2"  
 
   var var_div = d3
@@ -61,12 +58,10 @@ export function draw_treemap(source) {
   }
 
   // draw rects
-  var cell = container_2_plot.selectAll('g')
-    .data(mydata.leaves());
+  var cell = container_2_plot.selectAll('g').data(mydata.leaves());
 
   // rect enter
   var cellEnter = cell.enter().append("g");
-    // .on('click', update_linechart);
 
   cellEnter.append("rect")
     .attr("id", function(d) { return d.data.id; })
@@ -82,11 +77,13 @@ export function draw_treemap(source) {
   // Transition to the proper position for the rect
   cellUpdate.transition()
     .duration(duration)
-    .attr("transform", function(d) { return "translate(" + d.x0 + "," + d.y0 + ")"; });  
+    .attr("transform", function(d) { 
+      if (d.value > 0) { return "translate(" + d.x0 + "," + d.y0 + ")"; }
+    });  
 
   cellUpdate.select('rect')
-    .attr("width", function(d) { return d.x1 - d.x0; })
-    .attr("height", function(d) { return d.y1 - d.y0; })
+    .attr("width", function(d) { if (d.value > 0) { return d.x1 - d.x0; } })
+    .attr("height", function(d) { if (d.value > 0) { return d.y1 - d.y0; } })
     .attr('stroke', '#5D6D7E')
     .attr("fill", function(d) { 
       if (show_tag == 1) { if (d.data.data.tag) { return color(tags.indexOf(d.data.data.tag)); } }
@@ -95,11 +92,11 @@ export function draw_treemap(source) {
       var trans_dis = 0;
       var label;
       if (show_tag == 0) {
-        trans_dis = -legendlen/2 -(Math.floor(d.data.time/unit_value)*legendlen); //
+        trans_dis = -legendlen/2 -(Math.floor(d.data.time/unit_value)*legendlen); 
         label = colorbartext[Math.floor(d.data.time/unit_value)];
       }
       else {
-        trans_dis = -legendlen/2 -tags.indexOf(d.data.data.tag)*legendlen; // -legendlen/2
+        trans_dis = -legendlen/2 -tags.indexOf(d.data.data.tag)*legendlen; 
         label = "TAG: " + d.data.data.tag;
       }
       d3.select(this).style("stroke-width","4px")
@@ -126,8 +123,11 @@ export function draw_treemap(source) {
   
    cellUpdate.select('text')
     .text(function(d) {
-      if ( (d.x1 - d.x0) < 60 || (d.y1 - d.y0) < 60 ) { return " "; }
-      else { return (d.data.name + " (" + d.data.time + ")"); } })
+      if (d.value > 0) {
+        if ( (d.x1 - d.x0) < 60 || (d.y1 - d.y0) < 60 ) { return " "; }
+        else { return (d.data.name + " (" + d.data.time + ")"); }
+      }
+    })
     .style('fill', function(d) { return (d.data.time/unit_value > 11)? "white": "black"; })
     .call(wraptext);
  
