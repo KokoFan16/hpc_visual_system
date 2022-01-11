@@ -35,6 +35,7 @@ p{
   stroke: grey; 
   stroke-width: 2px;
   fill: #FFFFFF;
+  rx: 8px;
 }
 
 .mybutton:hover {
@@ -43,6 +44,9 @@ p{
 }
 
 .mybuttext {
+  text-anchor: middle;
+  font-size: 16px;
+  fill-opacity: .8;
   pointer-events: none;
   -moz-user-select: none;
   -webkit-user-select: none;

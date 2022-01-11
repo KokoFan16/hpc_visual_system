@@ -13,7 +13,6 @@ export function draw_legends() {
     .attr('class', 'mybutton tagLegend')
     .attr("width", 100)
     .attr("height", 30)
-    .attr("rx", 8)
     .on('click', showTags);
 
   // legend 
@@ -24,9 +23,7 @@ export function draw_legends() {
   container_1_plot.append("text")
     .attr("x", 50)
     .attr("y", 20)
-    .attr("text-anchor", "middle")
     .attr("class", "mybuttext tagButt")
-    .style("font-size", "16px")
     .text("Show Tags")
 
   tags.forEach(function(item, index) {

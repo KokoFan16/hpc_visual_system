@@ -114,8 +114,8 @@ export function draw_tree(source)
 
   nodeUpdate.select('.nodename')
     .style('fill-opacity', function(d){
-      if (show_loop == 1) { return (d.data.data.is_loop == "1") ? 1: 0.1; }
-      else if (show_tag == 1) { return d.data.data.tag ? 1: 0.1; }
+      if (show_loop == 1) { return (d.data.data.is_loop == "1") ? 0.6: 0.1; }
+      else if (show_tag == 1) { return d.data.data.tag ? 0.6: 0.1; }
       else { return 1; }
     });
 
