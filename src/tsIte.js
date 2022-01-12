@@ -2,7 +2,7 @@ import { container_4_plot } from './container.js';
 import { draw_line_figure } from './lineChart.js';
 import { drawYMetrics } from './yMetrics.js';
 
-var height = 230;
+var height = divHeight - padding*2.2;
 var xAxis, yAxis, x_label, container;
 
 var xScale = d3.scaleLinear();
@@ -45,9 +45,8 @@ export function draw_ts_or_ite(nodeid) {
       }) 
       times.push({"id": c, "time": (d3.max(column)*time_metics).toFixed(3)}); //(d3.max(d.map(Number))*time_metics).toFixed(3)
     }
-    x_label.transition().duration(duration).attr("x", (curWidth)/2+padding)
-           .text("Executions");
-           // .text("Total number of timesteps");
+    x_label.transition().duration(duration)
+      .attr("x", (curWidth)/2).text("Executions");
   }
   else {
     flag = 3;
@@ -69,19 +68,18 @@ function draw_statics() {
   xAxis = container_4_plot.append('g')
     .call(d3.axisBottom(xScale))
     .attr("class", "axis")
-    .attr("transform", "translate(" + padding*2 + ", " + (height+padding) + ")");
+    .attr("transform", "translate(" + padding*2 + ", " + (height) + ")");
 
   // draw y axis
   yAxis = container_4_plot.append('g')
     .call(d3.axisLeft(yScale))
     .attr("class", "axis")
-    .attr("transform", "translate(" + padding*2 + ", " + padding + ")"); 
+    .attr("transform", "translate(" + padding*2 + ", " + padding/2 + ")"); 
 
   // labels
   x_label = container_4_plot.append('text')
-    .attr("class", "xlabel")
-    .attr("y", 280);
-    // .text("Total number of timesteps");
+    .attr("class", "label")
+    .attr("y", divHeight - padding/2);
 
   // container_4_plot.append('text')
   //   .attr("class", "labels")
