@@ -1,10 +1,11 @@
-import { find_max_value_per_ite } from './utils.js';
 import { draw_tree } from './tree.js';
-import { treeData_update, uncollapse, collapse} from './utils.js'; 
+import { find_max_value_per_ite, treeData_update, uncollapse, collapse} from './utils.js'; 
 import { exeInfo } from './container.js';
 import { draw_treemap } from './treemap.js';
 
 // draw line chart
+var is_click = 0;
+var showmin, showmax, showmean, showmedian;
 export function draw_line_figure(source, container, xs, ys, y, li, flag){
   
   var width = container.node().getBoundingClientRect().width;
@@ -13,11 +14,18 @@ export function draw_line_figure(source, container, xs, ys, y, li, flag){
   // update y axis
   var min_time = d3.min(source, function(d){ return Number(d.time); });
   var max_time = d3.max(source, function(d){ return Number(d.time); });
+  var mean = d3.mean(source, function(d){ return Number(d.time); });
+  var median = d3.median(source, function(d){ return Number(d.time); });
 
   var ymin = (is_abs == 1)? 0: min_time*0.95;
   
   ys.domain([ymin, max_time*1.05]).range([height, 0]);
   y.transition().duration(duration).call(d3.axisLeft(ys));
+
+  if (is_click == 1) {    
+    container.select(".pointer").transition().duration(duration)
+      .attr("transform", "translate(" + (xs(source[ts].id)+padding*2) + "," + (ys(source[ts].time)+padding/2) + ")");
+  }
 
   // draw line graph
   var links = container.selectAll('.line')
@@ -31,15 +39,40 @@ export function draw_line_figure(source, container, xs, ys, y, li, flag){
   var linkUpdate = linkEnter.merge(links);
 
   // Transition back to the parent element position
-  linkUpdate.transition()
-    .duration(duration)
-    .attr('d', li);
+  linkUpdate.transition().duration(duration).attr('d', li);
 
   // Remove any exiting paths
   var linkExit = links.exit().transition()
     .duration(duration)
     .attr('d', li)
     .remove();
+
+  var statistics = container.append("g")
+    .attr("transform", "translate(" + padding*3 + "," + padding + ")");
+
+  if (!showmin || cleared == 1) {
+    showmin = statistics.append('text').attr("class", "statistics");
+    showmax = statistics.append('text').attr("class", "statistics");
+    showmean = statistics.append('text').attr("class", "statistics");
+    showmedian = statistics.append('text').attr("class", "statistics");
+  }
+
+  var filter_data = (source.map(d=> Number(d.time)));
+  var xpos = 0;
+  var minStr = "Min: " + min_time + "(" + filter_data.indexOf(min_time) + ")";
+  showmin.attr("x", xpos).text(minStr);
+  xpos += minStr.length*6+padding;
+
+  var maxStr = "Max: " + max_time + "(" + filter_data.indexOf(max_time) + ")";
+  showmax.attr("x", xpos).text(maxStr);
+  xpos += maxStr.length*6+padding;
+
+  var medianStr = "Median: " + median.toFixed(3);
+  showmedian.attr("x", xpos).text(medianStr);
+  xpos += medianStr.length*6+padding;
+
+  var meanStr = "Mean: " + mean.toFixed(3);
+  showmean.attr("x", xpos).text(meanStr);
 
   container.append("rect")  
     .attr("x", padding*2)
@@ -79,11 +112,12 @@ export function draw_line_figure(source, container, xs, ys, y, li, flag){
 
     tip.select("text.y2").attr("transform", "translate(" + xs(d.id) + "," + ys(d.time) + ")")
      .attr("dx", function() { return (width - xs(d.id) > 130)? 8: -78; })
-     .attr("dy", "-.3em")
+     .attr("dy", () => (ys(d.time) < 20)? "1em" :"-.3em" )
      .text(d.time + "(" + d.id + ")");
   }
 
   function click() {
+    is_click = 1;
     ts = Math.round(xs.invert(d3.mouse(this)[0]-padding*2));
     exeInfo.text("Current execution: " + ts + "/" + ts_num);
 

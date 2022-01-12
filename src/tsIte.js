@@ -1,6 +1,6 @@
 import { container_4_plot } from './container.js';
 import { draw_line_figure } from './lineChart.js';
-import { drawYMetrics } from './yMetrics.js';
+// import { drawYMetrics } from './yMetrics.js';
 
 var height = divHeight - padding*2.2;
 var xAxis, yAxis, x_label, container;
@@ -18,19 +18,19 @@ var line = d3.line()
     .curve(d3.curveMonotoneX); // apply smoothing to the line
 
 draw_statics();
-drawYMetrics(container_4_plot);
+// drawYMetrics(container_4_plot);
 
 export function draw_ts_or_ite(nodeid) {
 
   var curWidth = container_4_plot.node().getBoundingClientRect().width;
   var width = (curWidth-padding*3);
 
-  d3.select(".yMetrics").transition().duration(duration).attr("x", width);
-  d3.select(".showMetricsText").transition().duration(duration).attr("x", width);
+  // d3.select(".yMetrics").transition().duration(duration).attr("x", width);
+  // d3.select(".showMetricsText").transition().duration(duration).attr("x", width);
 
   if (cleared == 1) { 
     draw_statics(); 
-    drawYMetrics(container_4_plot);
+    // drawYMetrics(container_4_plot);
   }
 
   // get time data

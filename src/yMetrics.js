@@ -4,46 +4,27 @@ import { draw_scale } from './scale.js';
 
 export function drawYMetrics(cont) {
 
-  // var width = cont.node().getBoundingClientRect().width;
-  // console.log(width);
+  cont.append("rect")
+    .attr('class', 'mybutton yMetrics')
+    .attr("y", 1)
+    .attr("width", 100)
+    .attr("height", 25)
+    .on("click", click);
 
-  var container = cont.append('g')
-  .attr('transform', `translate(${padding}, ${padding/2})`);
-
-  container.append("rect")
-    .attr('class', 'yMetrics')
-    .attr("width", 32)
-    .attr("height", 20)
-    .style("stroke", "grey")
-    .style("stroke-width", 2)
-    .style("fill", "#FFFFFF")
-    .on('mouseover', function(d) {
-      d3.select(this)
-        .style("fill", "#AED6F1");
-    })
-    .on('mouseout', function(d) {
-      d3.select(this)
-        .style("fill", "#FFFFFF")
-      // .style("stroke-width","2px"); 
-    })
-    .on('click', click);
-
-  container.append("text")
-    .attr('class', 'showMetricsText')
-    .attr("transform", "translate(" + (16) + ", " + (16) + ")")
-    .attr('text-anchor', 'middle')
-    .style('fill-opacity', 0.8)
-    .text("re"); 
+  cont.append("text")
+    .attr('class', 'mybuttext metricsText')
+    .attr("transform", "translate(" + (50) + ", " + (20) + ")")
+    .text("Relative"); 
 }
 
 function click() {
   if (is_abs == 0) {
     is_abs = 1;
-    d3.select('.showMetricsText').text("re");
+    d3.select('.metricsText').text("Absolute");
   }
   else {
     is_abs = 0;
-    d3.select('.showMetricsText').text("abs");
+    d3.select('.metricsText').text("Relative");
   }
 
   if (cleared == 0) {

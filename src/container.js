@@ -9,21 +9,21 @@ var svg2 = d3.select('#area12').append('svg')
            .attr('height', top_height)
            // .style("background", "#F1EFEE"); //#F1EFEE
 
-var info = d3.select('#divInfo').append('svg') 
+export var info = d3.select('#divInfo').append('svg') 
   .attr('width', winWidth)
   .attr('height', padding*1.5);
 
 export var phase = info.append('text')
     .attr("class", "info")
-    .attr("transform", "translate(" + winWidth/2 + "," + padding + ")");
+    .attr("transform", "translate(" + winWidth*2/5 + "," + padding + ")");
 
 export var procInfo = info.append('text')
     .attr("class", "info")
-    .attr("transform", "translate(" + winWidth/4 + "," + padding + ")");
+    .attr("transform", "translate(" + winWidth*1/5 + "," + padding + ")");
 
 export var exeInfo = info.append('text')
     .attr("class", "info")
-    .attr("transform", "translate(" + winWidth*3/4 + "," + padding + ")");
+    .attr("transform", "translate(" + winWidth*3/5 + "," + padding + ")");
 
 var div = d3.select("div#one").append("div").classed("svg-container", true);
 export var container_3_plot = div.append("svg")

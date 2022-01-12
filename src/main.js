@@ -1,6 +1,6 @@
 import Split from './split.js'
 import { container_2_plot, colorbar_plot, container_3_plot, container_4_plot, loops_container, 
-  rect3, rect4, phase, procInfo, exeInfo} from './container.js';
+  rect3, rect4, info, phase, procInfo, exeInfo} from './container.js';
 import { parseData, treeData_update, collapse, findtags } from './utils.js'; //, , findAllLoops, uncollapse, 
 import { drawLoopsButt } from './loops.js';
 import { draw_legends } from './tags.js';
@@ -10,6 +10,7 @@ import { draw_processes } from './processes.js';
 import { draw_ts_or_ite } from './tsIte.js';
 import { draw_scale } from './scale.js';
 import { draw_scale_stacked } from './scaleStack.js'
+import { drawYMetrics } from './yMetrics.js';
 
 var startTime = performance.now();
 
@@ -27,6 +28,10 @@ var splitobj = Split(["#one","#two"], {
 breakdown_times = {}; // divide times based on rank, ts and loops
 dataloads = {}; 
 tags = [];
+
+drawYMetrics(info);
+info.select(".yMetrics").attr("x", winWidth*4/5);
+info.select(".metricsText").attr("x", winWidth*4/5);
 
 fetch("data/fileName.txt") // open file to get filename
   .then(res => res.text())
