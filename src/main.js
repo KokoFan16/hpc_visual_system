@@ -14,6 +14,23 @@ import { drawYMetrics } from './yMetrics.js';
 
 var startTime = performance.now();
 
+var fileSecTex = document.getElementById("filespan");
+fileSecTex.innerHTML = "Select File: ";
+
+var exeSecTex = document.getElementById("exespan");
+exeSecTex.innerHTML = "Select Execution: ";
+
+var meas_options = ["Min", "Max", "Mean", "Meadian"];
+var opts = d3.select('#selecExe').selectAll("option")
+  .data(meas_options).enter().append("option");
+
+opts.text(function(d) { return d;})
+     .attr("value", function(d) { return d.replace(); })
+     .style('font-size', '1em')
+
+d3.select('#selecExe').style("visibility", "hidden");
+d3.select('#exespan').style("visibility", "hidden");
+
 var splitobj = Split(["#one","#two"], {
     elementStyle: function (dimension, size, gutterSize) { 
         $(window).trigger('resize'); // Optional
@@ -33,12 +50,13 @@ drawYMetrics(info);
 info.select(".yMetrics").attr("x", winWidth*4/5);
 info.select(".metricsText").attr("x", winWidth*4/5);
 
+var ddOptions;
 fetch("data/fileName.txt") // open file to get filename
   .then(res => res.text())
   .then(function(data) { 
     var readstart = performance.now();
     var openFile = data.split("+"); 
-    var ddOptions = openFile.slice();
+    ddOptions = openFile.slice();
     var options = d3.select('#selecFiles').selectAll("option")
                     .data(ddOptions).enter()
                     .append("option");
@@ -54,6 +72,7 @@ fetch("data/fileName.txt") // open file to get filename
     var fileSplit = file.split(/[._]+/);
     procs_num = Number(fileSplit[fileSplit.length-2]); // total number of processes 
     ts_num = Number(fileSplit[fileSplit.length-3]); // total number of timesteps
+    comp_proc = procs_num;
 
     d3.csv("data/"+file).then(function(flatData) {
       dataloads[procs_num] = flatData;
@@ -83,8 +102,6 @@ fetch("data/fileName.txt") // open file to get filename
     }
 
     function change() {
-      file = d3.select("#selecFiles").property("value");
-
       if (show_loop == 1) {
           show_loop = 0;
           d3.select('.showLoops').style("fill", "#FFFFFF");
@@ -95,18 +112,28 @@ fetch("data/fileName.txt") // open file to get filename
         d3.select(".tagLegend").style("fill", "none");
       }
       
-      if (cleared == 0) { load_data(file); }
-      else {
-        console.log("ensembleView: " + file);
+      if (cleared == 0) { 
+        file = d3.select("#selecFiles").property("value");
+        load_data(file); 
       }
     }
 
     function individualView() {
+
+      d3.select('#selecExe').style("visibility", "hidden");
+      d3.select('#exespan').style("visibility", "hidden");
+
+      d3.select('#selecFiles').style("visibility", "visible");
+      d3.select('#filespan').style("visibility", "visible");
+
       // container_2_plot.selectAll("*").remove();
-      // container_3_plot.selectAll("*").remove();
+      container_3_plot.selectAll("*").remove();
       drawLoopsButt();
-      render(dataloads[procs_num]);
+      draw_ts_or_ite(nodeid);
+      draw_processes(ts, nodeid, '0');
+      // render(dataloads[procs_num]);
     }
+
 
     function ensembleView() {
 
@@ -125,23 +152,31 @@ fetch("data/fileName.txt") // open file to get filename
         })
 
         draw_ts_or_ite(nodeid, 1);
+        exeInfo.text("Compare: " + procs_num + " vs. " + comp_proc);
+
         // draw_scale("main", 1);
-        // draw_scale_stacked(1);
+        draw_scale_stacked(1);
       })
 
-      root.children.forEach(collapse);
-      draw_tree(root);
+      d3.select('#selecExe').style("visibility", "visible");
+      d3.select('#exespan').style("visibility", "visible");
+
+      d3.select('#selecFiles').style("visibility", "hidden");
+      d3.select('#filespan').style("visibility", "hidden");
+
+      // root.children.forEach(collapse);
+      // draw_tree(root);
 
       // container_2_plot.selectAll("*").remove();
       // colorbar_plot.selectAll("*").remove();
-      // container_3_plot.selectAll("*").remove();
+      container_3_plot.selectAll("*").remove();
       // container_4_plot.selectAll("*").remove();
       // loops_container.selectAll("*").remove();
     }
 
     
     function load_data(file) {
-      var fileSplit = file.split(/[._]+/);
+      fileSplit = file.split(/[._]+/);
       procs_num = Number(fileSplit[fileSplit.length-2]); // total number of processes 
       ts_num = Number(fileSplit[fileSplit.length-3]); // total number of timesteps
 
@@ -163,15 +198,24 @@ fetch("data/fileName.txt") // open file to get filename
 
 
 function responsive() {
+
+  // console.log(cleared);
+
   var width = d3.select("div#one").node().getBoundingClientRect().width;
   container_3_plot.attr('width', width).attr('height', divHeight);
-  draw_processes(ts, nodeid, '0');
+  // draw_processes(ts, nodeid, '0');
 
   rect3.attr('width', width-padding/2);
 
   var width2 = d3.select("div#two").node().getBoundingClientRect().width;
   container_4_plot.attr('width', width2).attr('height', divHeight);
-  draw_ts_or_ite(nodeid);
+
+  if (cleared == 0) { 
+    draw_ts_or_ite(nodeid); 
+    draw_processes(ts, nodeid, '0');
+  }
+  // else { draw_ts_or_ite(nodeid); }
+
 
   rect4.attr('width', width2-padding/2);
 
@@ -204,8 +248,9 @@ function render(data) {
 
     phase.text("Current event: " + nodeid);
     procInfo.text("Current rank: " + proc + "/" + procs_num);
-    exeInfo.text("Current execution: " + ts + "/" + ts_num);
 
+    if (cleared == 0) { exeInfo.text("Current execution: " + ts + "/" + ts_num); } 
+    else { exeInfo.text("Compare: " + procs_num + " vs. " + comp_proc); }
 
     d3.select("#selec_pro").attr("max", procs_num-1); // set input box based on this value
     d3.select("#selec_ite").attr("max", ts_num-1); // set input box based on this value 

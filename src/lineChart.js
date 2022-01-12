@@ -2,12 +2,13 @@ import { draw_tree } from './tree.js';
 import { find_max_value_per_ite, treeData_update, uncollapse, collapse} from './utils.js'; 
 import { exeInfo } from './container.js';
 import { draw_treemap } from './treemap.js';
+// import { draw_svg_dropdown } from './dropdown.js';
 
 // draw line chart
-var is_click = 0;
+var is_click = 0, dp_width = 80;
 var showmin, showmax, showmean, showmedian, statistics;
 export function draw_line_figure(source, container, xs, ys, y, li, flag){
-  
+
   var width = container.node().getBoundingClientRect().width;
   var height = (flag == 2)? (container_height-padding): (divHeight - padding*2.7);
 
@@ -48,14 +49,17 @@ export function draw_line_figure(source, container, xs, ys, y, li, flag){
     .remove();
 
   if (flag == 0) {
-    statistics.style("display", "none")
-    console.log("flag 0 ");
+    // if (!dropdown) {
+    //   dropdown = container.append("g")
+    //     .attr("transform", "translate(" + (width-dp_width-padding*2.5) + "," + 0 + ")");
+    // }
+
+    statistics.style("display", "none");
+    // dropdown.style("display", 'inline-block');
+    // draw_svg_dropdown(dropdown, dp_width);
   }
   else {
-
-    console.log("flag 1 ");
-
-    if (!showmin) {
+    if (!statistics) {
       statistics = container.append("g")
         .attr("transform", "translate(" + padding*3 + "," + padding + ")");
 
@@ -65,7 +69,8 @@ export function draw_line_figure(source, container, xs, ys, y, li, flag){
       showmedian = statistics.append('text').attr("class", "statistics");
     }
 
-    statistics.style("display", null)
+    statistics.style("display", null);
+    // if (dropdown) { dropdown.style("display", "none"); }
 
     var filter_data = (source.map(d=> Number(d.time)));
     var xpos = 0;
@@ -85,13 +90,13 @@ export function draw_line_figure(source, container, xs, ys, y, li, flag){
     showmean.attr("x", xpos).text(meanStr);
   }
 
-  container.append("rect")  
+  var pointer_rect = container.append("rect")  
     .attr("x", padding*2)
     .attr("y", padding/2)                                    
     .attr("width", width - padding*3)                
-    .attr("height", height)                           
-    .style("fill", "none")                            
-    .style("pointer-events", "all")                   
+    .attr("height", height)
+    .style("fill", "none")
+    .style("pointer-events", "all")
     .on("mouseover", function() { tip.style("display", null); })
     .on("mouseout", function() { tip.style("display", "none"); })
     .on("mousemove", mousemove)
@@ -121,8 +126,8 @@ export function draw_line_figure(source, container, xs, ys, y, li, flag){
   function mousemove() {
 
     var x0 = xs.invert(d3.mouse(this)[0]-padding*2), 
-         i = xs.domain().indexOf(x0),
-         d = source[i];
+       i = xs.domain().indexOf(x0),
+       d = source[i];
     
     tip.select("circle.y").attr("transform", "translate(" + xs(d.id) + "," + ys(d.time) + ")");
 
@@ -139,11 +144,19 @@ export function draw_line_figure(source, container, xs, ys, y, li, flag){
   }
 
   function click() {
-    if (flag == 1) {
-      is_click = 1;
+    is_click = 1;
+    var d;
+
+    if (flag == 0) {
+      comp_proc = xs.invert(d3.mouse(this)[0]-padding*2);
+      var i = xs.domain().indexOf(comp_proc);
+      exeInfo.text("Compare: " + procs_num + " vs. " + comp_proc);
+
+      d = source[i];
+    }
+    else {
       ts = xs.invert(d3.mouse(this)[0]-padding*2);
       exeInfo.text("Current execution: " + ts + "/" + ts_num);
-
       treeData_update();
 
       if (show_tag == 1) { root.children.forEach(uncollapse); }
@@ -151,10 +164,12 @@ export function draw_line_figure(source, container, xs, ys, y, li, flag){
       draw_tree(root); // draw tree 
       draw_treemap(root); // draw zoomable treemap
 
-      var d = source[ts];
-      container.select(".pointer").style("display", null)
-        .attr("transform", "translate(" + (xs(d.id)+padding*2) + "," + (ys(d.time)+padding/2) + ")");
+      d = source[ts];
     }
+
+    
+    container.select(".pointer").style("display", null)
+      .attr("transform", "translate(" + (xs(d.id)+padding*2) + "," + (ys(d.time)+padding/2) + ")");
   }
 
   // function click() {

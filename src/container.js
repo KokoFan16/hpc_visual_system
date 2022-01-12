@@ -48,7 +48,7 @@ export var rect4 = container_4_plot.append('rect')
 
 export var container_1_plot = svg1.append('g')
   .attr('class', 'container_1_plot')
-  .attr('transform', `translate(${padding}, ${padding})`);
+  .attr('transform', `translate(${padding}, ${padding/2})`);
 
 svg1.append('rect')
   .attr("class", "rectbox")

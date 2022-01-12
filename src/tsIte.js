@@ -1,14 +1,11 @@
 import { container_4_plot } from './container.js';
 import { draw_line_figure } from './lineChart.js';
-// import { drawYMetrics } from './yMetrics.js';
+import { draw_svg_dropdown } from './dropdown.js';
 
 var height = divHeight - padding*2.2;
 var xAxis, yAxis, x_label, container;
 
-// var xScale = d3.scaleLinear();
 var xScale = d3.scalePoint();
-
-// y scale (change values based on the real data)
 var yScale = d3.scaleLinear().domain([0, 100]).range([height, 0]);
 
 var line = d3.line()
@@ -17,9 +14,6 @@ var line = d3.line()
     .curve(d3.curveMonotoneX); // apply smoothing to the line
 
 draw_statics();
-
-
-var meas = "Min";
 
 export function draw_ts_or_ite(nodeid, scale=null) {
 

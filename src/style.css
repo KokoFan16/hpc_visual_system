@@ -4,16 +4,29 @@ div {
   margin-top: 0;
 }
 
-h1{
+h1 {
     font-size: 33px;
 }
 
-p{
+p {
   font-size: 22px;
-  margin-left: 50px;
 }
 
-.button {
+span {
+  font-size:18px; 
+  margin-right: 5px; 
+  margin-top: 10px; 
+}
+
+select {
+  line-height: 1; 
+  border: 2px solid #eee; 
+  padding: 5px 5px 5px 10px; 
+  font-size: 15px;
+  margin-top: 5px; 
+}
+
+button {
   background-color: rgba(181,198,224,.2); /* Green */
   border: 2px solid grey;
   color: black;
@@ -25,9 +38,10 @@ p{
   cursor: pointer;
   border-radius: 10px;
   padding: 5px 20px;
+  margin-right: 140px;
 }
 
-.button:hover {
+button:hover {
   border: 2px solid steelblue;
   background-color: rgba(181,198,224,.5); 
 }

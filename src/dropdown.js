@@ -2,12 +2,12 @@
 import { draw_scale } from './scale.js';
 import { draw_scale_stacked } from './scaleStack.js'
 
-export function draw_svg_dropdown(svg) {
+export function draw_svg_dropdown(svg, wid) {
 
   var members = [{label: "Median"}, {label: "Mean"}, {label: "Min"}, { label: "Max"}];
 
   var config = {
-    width: 200,
+    width: wid,
     container: svg,
     members,
     fontSize: 14,
@@ -17,8 +17,8 @@ export function draw_svg_dropdown(svg) {
     y: 0,
     changeHandler: function(option) {
       meas = option.label;
-      draw_scale(nodeid);
-      draw_scale_stacked();
+      // draw_scale(nodeid);
+      // draw_scale_stacked();
     }
   };
 
