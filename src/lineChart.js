@@ -1,15 +1,12 @@
 import { find_max_value_per_ite } from './utils.js';
 import { draw_tree } from './tree.js';
-import { uncollapse, collapse} from './utils.js'; 
-
-var var_div = d3.select('body')
-  .append('div')
-  .attr('class', 'tooltip')
-  .style('opacity', 0);
+import { treeData_update, uncollapse, collapse} from './utils.js'; 
+import { exeInfo } from './container.js';
+import { draw_treemap } from './treemap.js';
 
 // draw line chart
-export function draw_line_figure(source, container, xs, ys, y, li, flag)
-{
+export function draw_line_figure(source, container, xs, ys, y, li, flag){
+  
   var width = container.node().getBoundingClientRect().width;
   var height = (flag == 2)? (container_height-padding): (divHeight - padding*2.7);
 
@@ -44,148 +41,100 @@ export function draw_line_figure(source, container, xs, ys, y, li, flag)
     .attr('d', li)
     .remove();
 
-  // // add dots for line graph
-  // var node = container.selectAll(".dot")
-  //   .data(source, function(d){ return d.time; });
+  container.append("rect")  
+    .attr("x", padding*2)
+    .attr("y", padding/2)                                    
+    .attr("width", width - padding*3)                
+    .attr("height", height)                           
+    .style("fill", "none")                            
+    .style("pointer-events", "all")                   
+    .on("mouseover", function() { tip.style("display", null); })
+    .on("mouseout", function() { tip.style("display", "none"); })
+    .on("mousemove", mousemove)
+    .on("click", click);
 
-  // var idName;
-  // if (flag == 1) { idName = "ts: "; }
-  // if (flag == 2) { idName = "pc: "; }
-  // if (flag == 3) { idName = "ite: "; }
+  container.append("circle").attr("class", "pointer") 
+     .style("display", "none");
 
-  // // enter nodes
-  // var nodeEnter = node.enter().append("circle") // Uses the enter().append() method
-  //   .attr("class", "dot") // Assign a class for styling
-  //   .attr("cx", function(d) { return xs(d.id); })
-  //   .attr("cy", function(d) { return ys(d.time); })
-  //   .attr("r", function(d){ return selectedNodes.length? 5: 3; })
-  //   .attr("transform", "translate(" + padding*2 + ", " + (padding*1.5-6) + ")")
-  //   .style('fill-opacity', 0)
-  //   .on('mouseover', function(d) { 
-  //     var_div.transition().duration(200).style('opacity', 0.9);
-  //     var_div.html(idName + d.id+ '<br/>' + d.time)
-  //       .style('left', d3.event.pageX + 'px')
-  //       .style('top', d3.event.pageY - 28 + 'px'); })
-  //   .on('mouseout', function(d) {
-  //     var_div.transition().duration(500).style('opacity', 0); })
-  //   .on('click', function(d) {
-  //     if (flag == 2) { 
-  //       if (d.click == 1) { 
-  //         d.click = 0; 
-  //         d3.select(this).attr("r", 3).style('fill', 'black').classed('selected', false);
-  //         selectedNodes = selectedNodes.filter(item => item !== d.id);
-  //       }
-  //       else { 
-  //         d.click = 1; 
-  //         d3.select(this).attr("r", 5).style('fill', 'red').classed('selected', true);
-  //         selectedNodes.push(d.id);
-  //       } 
-  //       click();  
-  //     }
+  var tip = container.append("g")
+    .style("display", "none")
+    .attr("transform", "translate(" + padding*2 + ", " + (padding/2) + ")");
 
-  //   });
+  tip.append("circle").attr("class", "tipcircle y");
+  tip.append("text").attr("class", "tiptext y2");
+  tip.append("line").attr("class", "horline x").attr("y1", 0);
+  tip.append("line").attr("class", "horline y");
 
-  // // update nodes
-  // var nodeUpdate = nodeEnter.merge(node);
-  
-  // nodeUpdate.transition()
-  //   .duration(duration)
-  //   .attr("cx", function(d) { return xs(d.id); })
-  //   .attr("cy", function(d) { return ys(d.time); })
-  //   .attr("fill", function(d) { 
-  //     if (flag == 1) {return (d.id == ts)? "red": "black";}
-  //     if (selectedNodes.includes(d.id)) { d.click = 1;  return "red"; }
-  //     else { d.click = 0; return "black"; }
-  //    })
-  //   .attr("r", function(d){ 
-  //     if (flag == 1) { return (d.id == ts)? 5: 3; }
-  //     if (flag == 2) { return selectedNodes.includes(d.id)? 5: 3; }
-  //     else {return 3; }
-  //   })
-  //   // .attr("r", 3)
-  //   .style('fill-opacity', 1);
+  function mousemove() {
+    var x0 = xs.invert(d3.mouse(this)[0]-padding*2), 
+         d = source[Math.round(x0)];
+    
+    tip.select("circle.y").attr("transform", "translate(" + xs(d.id) + "," + ys(d.time) + ")");
 
-  // var nodeExit = node.exit().transition()
-  //   .duration(duration)
-  //   .style('fill-opacity', 0)
-  //   .remove();
+    tip.select(".x").attr("transform", "translate(" + (xs(d.id)) + "," + ys(d.time) + ")" )
+         .attr("y2", height - ys(d.time));
 
+    tip.select("line.y").attr("transform", "translate(" + 0 + "," + ys(d.time) + ")")
+         .attr("x2", (width - padding*3));
 
-  // var hor_lines = container.selectAll('.hor_line')
-  //    .data([max_time, min_time]);
-
-  // // Enter any new links at the parent's previous position.
-  // var lineEnter = hor_lines.enter().append("line")
-  //     .attr("class", "hor_line")
-  //     .attr("transform", "translate(" + padding*2 + ", " + (padding*1.5-6) + ")");
-
-  // var lineUpdate = lineEnter.merge(hor_lines);
-
-  // // Transition back to the parent element position
-  // lineUpdate.transition()
-  //   .duration(duration)
-  //   .attr('y1', function(d) {return ys(d); })
-  //   .attr("x2", width-3*padding)
-  //   .attr('y2', function(d) {return ys(d); });
-
-  // // Remove any exiting paths
-  // hor_lines.exit().transition()
-  //   .duration(duration)
-  //   .remove();
-
-  // var texts = container.selectAll('.timeLable')
-  //   .data([max_time, min_time]);
-
-  // var textsEnter = texts.enter().append("text")
-  //   .attr("class", "timeLable")
-  //   .attr("transform", "translate(" + (width-4*padding) + ", " + padding + ")");
-
-  // textsEnter.merge(texts)
-  //   .transition()
-  //   .duration(duration)
-  //   .attr("transform", function(d, i) {
-  //       var h = (i == 0) ? padding: padding*2;
-  //       return "translate(" + (width-5*padding) + ", " + (h) + ")";
-  //     })
-  //   .attr("y", function(d) { return ys(d); });
-  //   // .text(function(d, i) { return (i == 0) ? ("Max: " + d) : ("Min: " + d); });
+    tip.select("text.y2").attr("transform", "translate(" + xs(d.id) + "," + ys(d.time) + ")")
+     .attr("dx", function() { return (width - xs(d.id) > 130)? 8: -78; })
+     .attr("dy", "-.3em")
+     .text(d.time + "(" + d.id + ")");
+  }
 
   function click() {
-    var selected = d3.selectAll(".selected").data();
+    ts = Math.round(xs.invert(d3.mouse(this)[0]-padding*2));
+    exeInfo.text("Current execution: " + ts + "/" + ts_num);
 
-    if (selected.length == 2) {
-      comp = 1;
-      var data = {};
-      selected.forEach(function(d) {
-        for (var [key, value] of Object.entries(breakdown_times[d.id])) {
-          var ites = [];
-          find_max_value_per_ite(value, ites);
+    treeData_update();
 
-          var value;
-          if (meas == "Median") { value = Number(Number(d3.median(ites))*time_metics).toFixed(3); }
-          else if (meas == "Mean") { value = Number(Number(d3.mean(ites))*time_metics).toFixed(3); }
-          else if (meas == "Min") { value = Number(Number(d3.min(ites))*time_metics).toFixed(3); }
-          else { value = Number(Number(d3.max(ites))*time_metics).toFixed(3); }
+    if (show_tag == 1) { root.children.forEach(uncollapse); }
 
-          if (data[key] == null) { data[key] = value; }
-          else { data[key] -= value; }
-        }
-      })
+    draw_tree(root); // draw tree 
+    draw_treemap(root); // draw zoomable treemap
 
-      root.children.forEach(uncollapse); 
-      root.each(function(d) { d.data.time = Number(data[d.data.id].toFixed(3)); });
-
-      root.children.forEach(collapse); 
-      draw_tree(root, 1);
-    } 
-    else { 
-      comp = 0; 
-      // root.each(function(d) {
-        // console.log(breakdown_times);
-        // var t = breakdown_times[d.data.id][proc][ts];
-        // d.data.time = (Number(t)*time_metics).toFixed(3); 
-        // draw_tree(root);
-      // })
-    }
+    var d = source[ts];
+    container.select(".pointer").style("display", null)
+      .attr("transform", "translate(" + (xs(d.id)+padding*2) + "," + (ys(d.time)+padding/2) + ")");
   }
+
+  // function click() {
+  //   var selected = d3.selectAll(".selected").data();
+
+  //   if (selected.length == 2) {
+  //     comp = 1;
+  //     var data = {};
+  //     selected.forEach(function(d) {
+  //       for (var [key, value] of Object.entries(breakdown_times[d.id])) {
+  //         var ites = [];
+  //         find_max_value_per_ite(value, ites);
+
+  //         var value;
+  //         if (meas == "Median") { value = Number(Number(d3.median(ites))*time_metics).toFixed(3); }
+  //         else if (meas == "Mean") { value = Number(Number(d3.mean(ites))*time_metics).toFixed(3); }
+  //         else if (meas == "Min") { value = Number(Number(d3.min(ites))*time_metics).toFixed(3); }
+  //         else { value = Number(Number(d3.max(ites))*time_metics).toFixed(3); }
+
+  //         if (data[key] == null) { data[key] = value; }
+  //         else { data[key] -= value; }
+  //       }
+  //     })
+
+  //     root.children.forEach(uncollapse); 
+  //     root.each(function(d) { d.data.time = Number(data[d.data.id].toFixed(3)); });
+
+  //     root.children.forEach(collapse); 
+  //     draw_tree(root, 1);
+  //   } 
+  //   else { 
+  //     comp = 0; 
+  //     // root.each(function(d) {
+  //       // console.log(breakdown_times);
+  //       // var t = breakdown_times[d.data.id][proc][ts];
+  //       // d.data.time = (Number(t)*time_metics).toFixed(3); 
+  //       // draw_tree(root);
+  //     // })
+  //   }
+  // }
 }

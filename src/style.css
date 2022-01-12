@@ -166,10 +166,26 @@ div.tooltip {
 }
 
 
-.hor_line{
-  stroke: #ccc;
-  stroke-width: 1px;
-  stroke-dasharray: 5
+.horline{
+  stroke: black;
+  stroke-dasharray: 3,3;
+  opacity: 1;
+}
+
+.tiptext {
+  font-size: 14px;
+}
+
+.tipcircle {
+  fill: black;
+  stroke: none;
+  r: 4px;
+}
+
+.pointer {
+  fill: red;
+  stroke: none;
+  r: 5px;
 }
 
 .timeLable{

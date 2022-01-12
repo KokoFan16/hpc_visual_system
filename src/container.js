@@ -42,7 +42,7 @@ export var container_4_plot = div2.append("svg")
 
 export var rect4 = container_4_plot.append('rect')
   .attr("class", "rectbox")
-  .attr('x', padding/2)
+  .attr('x', 0)
   .attr('y', 0)
   .attr('height', divHeight);
 

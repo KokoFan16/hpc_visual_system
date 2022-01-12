@@ -10,21 +10,6 @@ export function drawLoopsButt() {
     .attr('class', 'mybutton showLoops')
     .attr("width", 100)
     .attr("height", 30)
-    // .attr("rx", 4)
-    // .style("stroke", "grey")
-    // .style("stroke-width", 2)
-    // .style("fill", "#FFFFFF")
-    // .style('fill-opacity', 0.5)
-    // .on('mouseover', function(d) {
-    //   d3.select(this)
-    //   .style('fill-opacity', 1.0)
-    //   .style("stroke-width","4px"); 
-    // })
-    // .on('mouseout', function(d) {
-    //   d3.select(this)
-    //   .style('fill-opacity', 0.5)
-    //   .style("stroke-width","2px"); 
-    // })
     .on('click', showloops);
 
   loops_container.append("text")

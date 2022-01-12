@@ -324,17 +324,13 @@ function draw_statics() {
   statistics = container_3_plot.append("g")
     .attr("transform", "translate(" + padding*3 + "," + padding + ")");
 
-  minValue = statistics.append('text')
-    .attr("class", "statistics");
+  minValue = statistics.append('text').attr("class", "statistics");
 
-  maxValue = statistics.append('text')
-    .attr("class", "statistics");
+  maxValue = statistics.append('text').attr("class", "statistics");
 
-  medianValue = statistics.append('text')
-    .attr("class", "statistics");
+  medianValue = statistics.append('text').attr("class", "statistics");
 
-  meanValue = statistics.append('text')
-    .attr("class", "statistics");
+  meanValue = statistics.append('text').attr("class", "statistics");
 
   clip = container_3_plot.append("defs").append("svg:clipPath")
     .attr("id", "clip")
@@ -358,9 +354,6 @@ function draw_statics() {
 
   line_chart.append("circle")
      .attr("class", "pointer") 
-     .style("fill", "red")
-     .style("stroke", "none")
-     .attr("r", 5)
      .style("display", "none");
 
   tip = line_chart.append("g").style("display", "none");
@@ -375,31 +368,10 @@ function draw_statics() {
 
   brushCall = context.append("g").attr("class", "brush");      
 
-  tip.append("circle")
-     .attr("class", "y") 
-     .style("fill", "black")
-     .style("stroke", "none")
-     .attr("r", 4);
-
-  tip.append("text")
-     .attr("class", "y2")
-     .attr("font-size", "14px");
-
-  tip.append("text")
-     .attr("class", "y4")
-     .attr("font-size", "14px");
-
-  linex = tip.append("line")
-     .attr("class", "x")
-     .style("stroke", "black")
-     .style("stroke-dasharray", "3,3")
-     .style("opacity", 1)
-     .attr("y1", 0);
-
-  liney = tip.append("line")
-     .attr("class", "y")
-     .style("stroke", "black")
-     .style("stroke-dasharray", "3,3")
-     .style("opacity", 1);
+  tip.append("circle").attr("class", "tipcircle y");
+  tip.append("text").attr("class", "tiptext y2");
+  tip.append("text").attr("class", "tiptext y4");
+  linex = tip.append("line").attr("class", "horline x").attr("y1", 0);
+  liney = tip.append("line").attr("class", "horline y");
 }
 
