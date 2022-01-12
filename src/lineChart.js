@@ -5,7 +5,7 @@ import { draw_treemap } from './treemap.js';
 
 // draw line chart
 var is_click = 0;
-var showmin, showmax, showmean, showmedian;
+var showmin, showmax, showmean, showmedian, statistics;
 export function draw_line_figure(source, container, xs, ys, y, li, flag){
   
   var width = container.node().getBoundingClientRect().width;
@@ -47,32 +47,43 @@ export function draw_line_figure(source, container, xs, ys, y, li, flag){
     .attr('d', li)
     .remove();
 
-  var statistics = container.append("g")
-    .attr("transform", "translate(" + padding*3 + "," + padding + ")");
-
-  if (!showmin || cleared == 1) {
-    showmin = statistics.append('text').attr("class", "statistics");
-    showmax = statistics.append('text').attr("class", "statistics");
-    showmean = statistics.append('text').attr("class", "statistics");
-    showmedian = statistics.append('text').attr("class", "statistics");
+  if (flag == 0) {
+    statistics.style("display", "none")
+    console.log("flag 0 ");
   }
+  else {
 
-  var filter_data = (source.map(d=> Number(d.time)));
-  var xpos = 0;
-  var minStr = "Min: " + min_time + "(" + filter_data.indexOf(min_time) + ")";
-  showmin.attr("x", xpos).text(minStr);
-  xpos += minStr.length*6+padding;
+    console.log("flag 1 ");
 
-  var maxStr = "Max: " + max_time + "(" + filter_data.indexOf(max_time) + ")";
-  showmax.attr("x", xpos).text(maxStr);
-  xpos += maxStr.length*6+padding;
+    if (!showmin) {
+      statistics = container.append("g")
+        .attr("transform", "translate(" + padding*3 + "," + padding + ")");
 
-  var medianStr = "Median: " + median.toFixed(3);
-  showmedian.attr("x", xpos).text(medianStr);
-  xpos += medianStr.length*6+padding;
+      showmin = statistics.append('text').attr("class", "statistics");
+      showmax = statistics.append('text').attr("class", "statistics");
+      showmean = statistics.append('text').attr("class", "statistics");
+      showmedian = statistics.append('text').attr("class", "statistics");
+    }
 
-  var meanStr = "Mean: " + mean.toFixed(3);
-  showmean.attr("x", xpos).text(meanStr);
+    statistics.style("display", null)
+
+    var filter_data = (source.map(d=> Number(d.time)));
+    var xpos = 0;
+    var minStr = "Min: " + min_time + "(" + filter_data.indexOf(min_time) + ")";
+    showmin.attr("x", xpos).text(minStr);
+    xpos += minStr.length*6+padding;
+
+    var maxStr = "Max: " + max_time + "(" + filter_data.indexOf(max_time) + ")";
+    showmax.attr("x", xpos).text(maxStr);
+    xpos += maxStr.length*6+padding;
+
+    var medianStr = "Median: " + median.toFixed(3);
+    showmedian.attr("x", xpos).text(medianStr);
+    xpos += medianStr.length*6+padding;
+
+    var meanStr = "Mean: " + mean.toFixed(3);
+    showmean.attr("x", xpos).text(meanStr);
+  }
 
   container.append("rect")  
     .attr("x", padding*2)
@@ -98,9 +109,20 @@ export function draw_line_figure(source, container, xs, ys, y, li, flag){
   tip.append("line").attr("class", "horline x").attr("y1", 0);
   tip.append("line").attr("class", "horline y");
 
+  // custom invert function
+  xs.invert = (function(){
+    var domain = xs.domain()
+    var range = xs.range()
+    var scale = d3.scaleQuantize().domain(range).range(domain)
+
+    return function(x){ return scale(x) }
+  })()
+
   function mousemove() {
+
     var x0 = xs.invert(d3.mouse(this)[0]-padding*2), 
-         d = source[Math.round(x0)];
+         i = xs.domain().indexOf(x0),
+         d = source[i];
     
     tip.select("circle.y").attr("transform", "translate(" + xs(d.id) + "," + ys(d.time) + ")");
 
@@ -112,25 +134,27 @@ export function draw_line_figure(source, container, xs, ys, y, li, flag){
 
     tip.select("text.y2").attr("transform", "translate(" + xs(d.id) + "," + ys(d.time) + ")")
      .attr("dx", function() { return (width - xs(d.id) > 130)? 8: -78; })
-     .attr("dy", () => (ys(d.time) < 20)? "1em" :"-.3em" )
+     .attr("dy", () => (ys(d.time) < 25)? "1em" :"-.3em" )
      .text(d.time + "(" + d.id + ")");
   }
 
   function click() {
-    is_click = 1;
-    ts = Math.round(xs.invert(d3.mouse(this)[0]-padding*2));
-    exeInfo.text("Current execution: " + ts + "/" + ts_num);
+    if (flag == 1) {
+      is_click = 1;
+      ts = xs.invert(d3.mouse(this)[0]-padding*2);
+      exeInfo.text("Current execution: " + ts + "/" + ts_num);
 
-    treeData_update();
+      treeData_update();
 
-    if (show_tag == 1) { root.children.forEach(uncollapse); }
+      if (show_tag == 1) { root.children.forEach(uncollapse); }
 
-    draw_tree(root); // draw tree 
-    draw_treemap(root); // draw zoomable treemap
+      draw_tree(root); // draw tree 
+      draw_treemap(root); // draw zoomable treemap
 
-    var d = source[ts];
-    container.select(".pointer").style("display", null)
-      .attr("transform", "translate(" + (xs(d.id)+padding*2) + "," + (ys(d.time)+padding/2) + ")");
+      var d = source[ts];
+      container.select(".pointer").style("display", null)
+        .attr("transform", "translate(" + (xs(d.id)+padding*2) + "," + (ys(d.time)+padding/2) + ")");
+    }
   }
 
   // function click() {

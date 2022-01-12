@@ -32,7 +32,8 @@ function click() {
     draw_ts_or_ite(nodeid);
   }
   else {
-    draw_scale(nodeid);
+    draw_ts_or_ite(nodeid, 1);
+    // draw_scale(nodeid);
   }
 }
 

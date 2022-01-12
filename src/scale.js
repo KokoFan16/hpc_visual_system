@@ -1,4 +1,4 @@
-import { container_2_plot } from './container.js';
+import { container_4_plot } from './container.js';
 import { draw_line_figure } from './lineChart.js';
 import { drawYMetrics } from './yMetrics.js';
 import { draw_svg_dropdown } from './dropdown.js';
@@ -32,13 +32,13 @@ export function draw_scale(nodeid, inital=0) {
 
   if (inital == 1) {
 
-    draw_svg_dropdown(container_2_plot);
-    drawYMetrics(container_2_plot);
+    draw_svg_dropdown(container_4_plot);
+    drawYMetrics(container_4_plot);
 
     d3.select(".yMetrics").attr("x", container_width - padding*6);
     d3.select(".showMetricsText").attr("x", container_width - padding*6);
 
-    focus = container_2_plot.append('g')
+    focus = container_4_plot.append('g')
         .attr("class", "focus")
         .attr("transform", "translate(" + 0 + "," + padding*5 + ")");
 

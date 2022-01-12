@@ -102,8 +102,8 @@ fetch("data/fileName.txt") // open file to get filename
     }
 
     function individualView() {
-      container_2_plot.selectAll("*").remove();
-      container_3_plot.selectAll("*").remove();
+      // container_2_plot.selectAll("*").remove();
+      // container_3_plot.selectAll("*").remove();
       drawLoopsButt();
       render(dataloads[procs_num]);
     }
@@ -123,18 +123,20 @@ fetch("data/fileName.txt") // open file to get filename
           breakdown_times[p] = temp;
           dataloads[p] = d;
         })
-        draw_scale("main", 1);
-        draw_scale_stacked(1);
+
+        draw_ts_or_ite(nodeid, 1);
+        // draw_scale("main", 1);
+        // draw_scale_stacked(1);
       })
 
       root.children.forEach(collapse);
       draw_tree(root);
 
-      container_2_plot.selectAll("*").remove();
-      colorbar_plot.selectAll("*").remove();
-      container_3_plot.selectAll("*").remove();
-      container_4_plot.selectAll("*").remove();
-      loops_container.selectAll("*").remove();
+      // container_2_plot.selectAll("*").remove();
+      // colorbar_plot.selectAll("*").remove();
+      // container_3_plot.selectAll("*").remove();
+      // container_4_plot.selectAll("*").remove();
+      // loops_container.selectAll("*").remove();
     }
 
     
@@ -191,8 +193,8 @@ function responsive() {
       draw_ts_or_ite(nodeid);
     }
     else {
-      draw_scale("main", 0);
-      draw_scale_stacked(0);
+      // draw_scale("main", 0);
+      // draw_scale_stacked(0);
     }
   }
 }
