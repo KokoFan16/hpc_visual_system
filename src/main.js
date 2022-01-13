@@ -1,7 +1,7 @@
 import Split from './split.js'
 import { container_2_plot, colorbar_plot, container_3_plot, container_4_plot, loops_container, 
   rect3, rect4, info, phase, procInfo, exeInfo} from './container.js';
-import { parseData, treeData_update, collapse, findtags } from './utils.js'; //, , findAllLoops, uncollapse, 
+import { parseData, treeData_update, collapse, findtags, find_exe_stats } from './utils.js'; //, , findAllLoops, uncollapse, 
 import { drawLoopsButt } from './loops.js';
 import { draw_legends } from './tags.js';
 import { draw_tree } from './tree.js';
@@ -14,13 +14,19 @@ import { drawYMetrics } from './yMetrics.js';
 
 var startTime = performance.now();
 
+breakdown_times = {};
+dataloads = {};
+exe_statistics = {}; 
+tags = [];
+exe_avgData = {};
+
 var fileSecTex = document.getElementById("filespan");
 fileSecTex.innerHTML = "Select File: ";
 
 var exeSecTex = document.getElementById("exespan");
 exeSecTex.innerHTML = "Select Execution: ";
 
-var meas_options = ["Min", "Max", "Mean", "Meadian"];
+var meas_options = ["Global min", "Global max", "Global median", "Global mean"];
 var opts = d3.select('#selecExe').selectAll("option")
   .data(meas_options).enter().append("option");
 
@@ -28,8 +34,8 @@ opts.text(function(d) { return d;})
      .attr("value", function(d) { return d.replace(); })
      .style('font-size', '1em')
 
-d3.select('#selecExe').style("visibility", "hidden");
-d3.select('#exespan').style("visibility", "hidden");
+// d3.select('#selecExe').style("visibility", "hidden");
+// d3.select('#exespan').style("visibility", "hidden");
 
 var splitobj = Split(["#one","#two"], {
     elementStyle: function (dimension, size, gutterSize) { 
@@ -41,10 +47,6 @@ var splitobj = Split(["#one","#two"], {
     minSize: [500, 50],
     gutterSize: 20
 });
-
-breakdown_times = {}; // divide times based on rank, ts and loops
-dataloads = {}; 
-tags = [];
 
 drawYMetrics(info);
 info.select(".yMetrics").attr("x", winWidth*4/5);
@@ -79,6 +81,9 @@ fetch("data/fileName.txt") // open file to get filename
       var temp = parseData(flatData); 
       breakdown_times[procs_num] = temp;
 
+      find_exe_stats("main");
+      ts = exe_statistics[procs_num][meas].id;
+
       render(flatData);
 
       root.children.forEach(function(d){ findtags(d, tags); })
@@ -86,7 +91,8 @@ fetch("data/fileName.txt") // open file to get filename
     });
 
     d3.select(".button").on("click", click);
-    d3.select("#selecFiles").on("change", change); 
+    d3.select("#selecFiles").on("change", change);
+    d3.select("#selecExe").on("change", changeExe); 
 
     function click() {
       if (cleared == 1) {
@@ -118,13 +124,45 @@ fetch("data/fileName.txt") // open file to get filename
       }
     }
 
+    function changeExe() {
+      if (cleared == 0) {
+        meas = d3.select("#selecExe").property("value").split(' ')[1];
+
+        if ( meas != "mean" ) {
+          ts = exe_statistics[procs_num][meas].id;
+
+          exeInfo.text("Current execution: " + ts + "/" + ts_num);
+          treeData_update();
+
+          draw_tree(root); // draw tree 
+          draw_treemap(root); // draw zoomable treemap
+          draw_processes(ts, nodeid, '0');
+          draw_ts_or_ite(nodeid);
+        }
+        else {
+          exeInfo.text("Current execution: " + meas);
+        }
+      }
+
+        // var pitems = Object.keys(breakdown_times);
+        // // console.log(pitems);
+
+        // pitems.forEach(function(d) {
+        //    console.log(breakdown_times[d]["main"]);
+        // })
+        // draw_ts_or_ite(nodeid, 1);
+        // console.log(breakdown_times);
+        // console.log(meas);
+      // }
+    }
+
     function individualView() {
 
-      d3.select('#selecExe').style("visibility", "hidden");
-      d3.select('#exespan').style("visibility", "hidden");
+      // d3.select('#selecExe').style("visibility", "hidden");
+      // d3.select('#exespan').style("visibility", "hidden");
 
-      d3.select('#selecFiles').style("visibility", "visible");
-      d3.select('#filespan').style("visibility", "visible");
+      // d3.select('#selecFiles').style("visibility", "visible");
+      // d3.select('#filespan').style("visibility", "visible");
 
       // container_2_plot.selectAll("*").remove();
       container_3_plot.selectAll("*").remove();
@@ -155,14 +193,14 @@ fetch("data/fileName.txt") // open file to get filename
         exeInfo.text("Compare: " + procs_num + " vs. " + comp_proc);
 
         // draw_scale("main", 1);
-        draw_scale_stacked(1);
+        // draw_scale_stacked(1);
       })
 
-      d3.select('#selecExe').style("visibility", "visible");
-      d3.select('#exespan').style("visibility", "visible");
+      // d3.select('#selecExe').style("visibility", "visible");
+      // d3.select('#exespan').style("visibility", "visible");
 
-      d3.select('#selecFiles').style("visibility", "hidden");
-      d3.select('#filespan').style("visibility", "hidden");
+      // d3.select('#selecFiles').style("visibility", "hidden");
+      // d3.select('#filespan').style("visibility", "hidden");
 
       // root.children.forEach(collapse);
       // draw_tree(root);
@@ -185,6 +223,9 @@ fetch("data/fileName.txt") // open file to get filename
           dataloads[procs_num] = flatData;
           var temp = parseData(flatData); 
           breakdown_times[procs_num] = temp;
+
+          find_exe_stats("main");
+          ts = exe_statistics[procs_num][meas].id;
 
           render(flatData);
         });
@@ -299,9 +340,6 @@ function render(data) {
 
     // draw zoomable treemap
     draw_treemap(root);
-
-    // d3.select("#selec_ite").on("input", graph_display_1); // select timestep input box
-    // d3.select("#selec_pro").on("input", graph_display_1); // select process input box
 
     var renderEnd = performance.now();
     console.log(`Render took ${renderEnd - renderStart} milliseconds`);

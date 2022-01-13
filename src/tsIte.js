@@ -1,6 +1,6 @@
 import { container_4_plot } from './container.js';
 import { draw_line_figure } from './lineChart.js';
-import { draw_svg_dropdown } from './dropdown.js';
+import { find_max_value_per_ite } from './utils.js';
 
 var height = divHeight - padding*2.2;
 var xAxis, yAxis, x_label, container;
@@ -39,9 +39,9 @@ export function draw_ts_or_ite(nodeid, scale=null) {
       nprocs_counts.push(breakdown_times[d][nodeid].length);
       
       var value;
-      if (meas == "Median") { value = Number(Number(d3.median(ites))*time_metics).toFixed(3); }
-      else if (meas == "Mean") { value = Number(Number(d3.mean(ites))*time_metics).toFixed(3); }
-      else if (meas == "Min") { value = Number(Number(d3.min(ites))*time_metics).toFixed(3); }
+      if (meas == "median") { value = Number(Number(d3.median(ites))*time_metics).toFixed(3); }
+      else if (meas == "mean") { value = Number(Number(d3.mean(ites))*time_metics).toFixed(3); }
+      else if (meas == "min") { value = Number(Number(d3.min(ites))*time_metics).toFixed(3); }
       else { value = Number(Number(d3.max(ites))*time_metics).toFixed(3); }
 
       times.push({"id": breakdown_times[d][nodeid].length, "time": value});
@@ -52,14 +52,14 @@ export function draw_ts_or_ite(nodeid, scale=null) {
   else {
     if (show_loop == 0) {
       flag = 1;
-      for (var c = 0; c < ts_num; c++) {
-        var column = [];
-        breakdown_times[procs_num][nodeid].forEach( function(d) { 
-          column.push(d3.sum(d[c])); 
-        }) 
-        times.push({"id": c, "time": (d3.max(column)*time_metics).toFixed(3)}); 
-      }
-
+      find_max_value_per_ite(breakdown_times[procs_num][nodeid], times);
+      // for (var c = 0; c < ts_num; c++) {
+      //   var column = [];
+      //   breakdown_times[procs_num][nodeid].forEach( function(d) { 
+      //     column.push(d3.sum(d[c])); 
+      //   }) 
+      //   times.push({"id": c, "time": (d3.max(column)*time_metics).toFixed(3)}); 
+      // }
       xLabelText = "Executions";
       // x_label.transition().duration(duration).attr("x", (curWidth)/2+padding).text("Executions");
     }

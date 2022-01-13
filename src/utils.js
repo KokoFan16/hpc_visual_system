@@ -5,14 +5,15 @@ export function parseData(data) {
       var filter_time = d.times.split("|"); // split times based on rank
       filter_time.forEach(function(d) {
         var ttimes = d.split("-"); // split times based on ts
-        if (d.is_loop == "0") { list.push(ttimes); } // not loop
+        if (d.is_loop == "0") { list.push(ttimes.map(x=>Number(x))); } // not loop
         else {  // is loop
           var loops = [];
           ttimes.forEach(function(d){ loops.push(d.split("+")); }); // split times based on loop iterations
-          list.push(loops); }
+          list.push(loops); 
+        }
       })
       times[d.id] = list; // id: times
-    });  
+    }); 
     return times;
 }
 
@@ -101,13 +102,38 @@ export function wraptext(text, width=0, flag=0) {
 }
 
 export function find_max_value_per_ite(data, ites) {
-
-    for (var t = 0; t < data[0].length; t++) {
-      var column = [];
-      for (var p = 0; p < data.length; p++) {
-        column.push(d3.sum(data[p][t]));
-      }
-      ites.push(d3.max(column));
+  for (var t = 0; t < data[0].length; t++) {
+    var column = [];
+    for (var p = 0; p < data.length; p++) {
+      column.push(d3.sum(data[p][t]));
     }
+    ites.push( {"id": t, "time": Number((d3.max(column)*time_metics).toFixed(3)) });
+  }
 }
 
+export function find_exe_stats(e) {
+  var ites = [];
+  find_max_value_per_ite(breakdown_times[procs_num][e], ites);
+  ites.sort(function(a, b) {return a.time - b.time; });
+
+  // var temp = {};
+  // temp["min"] = ites[0];
+  // temp["max"] = ites[ites.length-1];
+  // temp["median"] = ites[Math.round(ites.length/2)];
+  // temp["mean"] =  Number(d3.mean(ites, d=>d.time).toFixed(3))
+
+  exe_statistics[procs_num] = { "min": ites[0], "max": ites[ites.length-1], 
+    "median": ites[Math.round(ites.length/2)], 
+    "mean": Number(d3.mean(ites, d=>d.time).toFixed(3)) };
+}
+
+export function cal_exeAvgData() {
+  console.log(breakdown_times[procs_num])
+  // var ites = [];
+  // find_max_value_per_ite(breakdown_times[procs_num][e], ites);
+  // ites.sort(function(a, b) {return a.time - b.time; });
+  // exe_statistics["min"] = ites[0];
+  // exe_statistics["max"] = ites[ites.length-1];
+  // exe_statistics["median"] = ites[Math.round(ites.length/2)];
+  // exe_statistics["mean"] =  Number(d3.mean(ites, d=>d.time).toFixed(3))
+}

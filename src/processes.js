@@ -51,7 +51,6 @@ export function draw_processes(ts, nodeid, is_loop, is_tag=null) {
   // get time data for all the processes
   times = [];
   if (is_tag) {
-
     var ptimes = new Array(procs_num).fill(0);
     var tag_time = 0;
     root.leaves().forEach(function(d) {

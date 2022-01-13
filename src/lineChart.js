@@ -2,11 +2,11 @@ import { draw_tree } from './tree.js';
 import { find_max_value_per_ite, treeData_update, uncollapse, collapse} from './utils.js'; 
 import { exeInfo } from './container.js';
 import { draw_treemap } from './treemap.js';
-// import { draw_svg_dropdown } from './dropdown.js';
+import { draw_processes } from './processes.js';
 
 // draw line chart
-var is_click = 0, dp_width = 80;
-var showmin, showmax, showmean, showmedian, statistics;
+var dp_width = 80;
+var showmin, showmax, showmean, showmedian, statistics, pointDot;
 export function draw_line_figure(source, container, xs, ys, y, li, flag){
 
   var width = container.node().getBoundingClientRect().width;
@@ -21,12 +21,7 @@ export function draw_line_figure(source, container, xs, ys, y, li, flag){
   var ymin = (is_abs == 1)? 0: min_time*0.95;
   
   ys.domain([ymin, max_time*1.05]).range([height, 0]);
-  y.transition().duration(duration).call(d3.axisLeft(ys));
-
-  if (is_click == 1) {    
-    container.select(".pointer").transition().duration(duration)
-      .attr("transform", "translate(" + (xs(source[ts].id)+padding*2) + "," + (ys(source[ts].time)+padding/2) + ")");
-  }
+  y.transition().duration(duration).call(d3.axisLeft(ys)); 
 
   // draw line graph
   var links = container.selectAll('.line')
@@ -48,16 +43,7 @@ export function draw_line_figure(source, container, xs, ys, y, li, flag){
     .attr('d', li)
     .remove();
 
-  if (flag == 0) {
-    // if (!dropdown) {
-    //   dropdown = container.append("g")
-    //     .attr("transform", "translate(" + (width-dp_width-padding*2.5) + "," + 0 + ")");
-    // }
-
-    statistics.style("display", "none");
-    // dropdown.style("display", 'inline-block');
-    // draw_svg_dropdown(dropdown, dp_width);
-  }
+  if (flag == 0) { statistics.style("display", "none"); }
   else {
     if (!statistics) {
       statistics = container.append("g")
@@ -67,10 +53,11 @@ export function draw_line_figure(source, container, xs, ys, y, li, flag){
       showmax = statistics.append('text').attr("class", "statistics");
       showmean = statistics.append('text').attr("class", "statistics");
       showmedian = statistics.append('text').attr("class", "statistics");
+
+      pointDot = container.append("circle").attr("class", "pointer");
     }
 
     statistics.style("display", null);
-    // if (dropdown) { dropdown.style("display", "none"); }
 
     var filter_data = (source.map(d=> Number(d.time)));
     var xpos = 0;
@@ -90,6 +77,11 @@ export function draw_line_figure(source, container, xs, ys, y, li, flag){
     showmean.attr("x", xpos).text(meanStr);
   }
 
+  if (flag == 1) {
+    pointDot.transition().duration(duration)
+      .attr("transform", "translate(" + (xs(source[ts].id)+padding*2) + "," + (ys(source[ts].time)+padding/2) + ")");
+  }
+
   var pointer_rect = container.append("rect")  
     .attr("x", padding*2)
     .attr("y", padding/2)                                    
@@ -102,8 +94,7 @@ export function draw_line_figure(source, container, xs, ys, y, li, flag){
     .on("mousemove", mousemove)
     .on("click", click);
 
-  container.append("circle").attr("class", "pointer") 
-     .style("display", "none");
+     // .style("display", "none");
 
   var tip = container.append("g")
     .style("display", "none")
@@ -144,9 +135,7 @@ export function draw_line_figure(source, container, xs, ys, y, li, flag){
   }
 
   function click() {
-    is_click = 1;
     var d;
-
     if (flag == 0) {
       comp_proc = xs.invert(d3.mouse(this)[0]-padding*2);
       var i = xs.domain().indexOf(comp_proc);
@@ -163,12 +152,12 @@ export function draw_line_figure(source, container, xs, ys, y, li, flag){
 
       draw_tree(root); // draw tree 
       draw_treemap(root); // draw zoomable treemap
+      draw_processes(ts, nodeid, '0');
 
       d = source[ts];
     }
-
-    
-    container.select(".pointer").style("display", null)
+  
+    pointDot.transition().duration(duration)
       .attr("transform", "translate(" + (xs(d.id)+padding*2) + "," + (ys(d.time)+padding/2) + ")");
   }
 

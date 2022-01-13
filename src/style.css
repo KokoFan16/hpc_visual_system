@@ -10,6 +10,7 @@ h1 {
 
 p {
   font-size: 22px;
+  text-align: center;  
 }
 
 span {
@@ -27,18 +28,18 @@ select {
 }
 
 button {
-  background-color: rgba(181,198,224,.2); /* Green */
+  background-color: rgba(181,198,224,.2); 
   border: 2px solid grey;
   color: black;
   text-align: center;
   text-decoration: none;
-  display: inline-block;
+  text-anchor: middle;
+  /*display: inline-block;*/
   font-size: 18px;
   margin: 4px 2px;
   cursor: pointer;
   border-radius: 10px;
   padding: 5px 20px;
-  margin-right: 140px;
 }
 
 button:hover {
