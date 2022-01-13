@@ -6,7 +6,7 @@ import { draw_treemap } from './treemap.js';
 
 var threshold = 128, is_click = 0;
 var height = 180, height2 = 35;
-var x_label, minValue, maxValue, meanValue, medianValue, clip;
+var container, x_label, minValue, maxValue, meanValue, medianValue, clip;
 var line_chart, focus, context, statistics, xAxis, yAxis, xAxis2, tip, brushCall, linex, liney;
 
 var x = d3.scaleLinear(),
@@ -319,40 +319,41 @@ export function draw_processes(ts, nodeid, is_loop, is_tag=null) {
 
 function draw_statics() {
 
-  x_label = container_3_plot.append('text')
+  container = container_3_plot.append("g")
+    .attr("class", "container")
+    .attr("transform", "translate(" + 0 + "," + padding/2 + ")");
+
+  x_label = container.append('text')
     .attr("class", "labels")
-    .attr("transform", "translate(0," + (divHeight-padding/2) + ")")
+    .attr("transform", "translate(0," + (divHeight-padding) + ")")
     .text("Ranks");
 
-  statistics = container_3_plot.append("g")
-    .attr("transform", "translate(" + padding*3 + "," + padding + ")");
+  statistics = container.append("g")
+    .attr("transform", "translate(" + padding*3 + "," + padding/2 + ")");
 
   minValue = statistics.append('text').attr("class", "statistics");
-
   maxValue = statistics.append('text').attr("class", "statistics");
-
   medianValue = statistics.append('text').attr("class", "statistics");
-
   meanValue = statistics.append('text').attr("class", "statistics");
 
-  clip = container_3_plot.append("defs").append("svg:clipPath")
+  clip = container.append("defs").append("svg:clipPath")
     .attr("id", "clip")
     .append("svg:rect")
     .attr("height", height)
     .attr("x", 0)
     .attr("y", 0); 
 
-  focus = container_3_plot.append("g")
+  focus = container.append("g")
     .attr("class", "focus")
-    .attr("transform", "translate(" + padding*2.5 + "," + padding/2 + ")");
+    .attr("transform", "translate(" + padding*2.5 + "," + 0 + ")");
 
-  context = container_3_plot.append("g")
+  context = container.append("g")
     .attr("class", "context")
-    .attr("transform", "translate(" + padding*2.5 + "," + (height+padding*2) + ")");
+    .attr("transform", "translate(" + padding*2.5 + "," + (height+padding*1.5) + ")");
 
-  line_chart = container_3_plot.append("g")
+  line_chart = container.append("g")
     .attr("class", "focus")
-    .attr("transform", "translate(" + padding*2.5 + "," + padding/2 + ")")
+    .attr("transform", "translate(" + padding*2.5 + "," + 0 + ")")
     .attr("clip-path", "url(#clip)");
 
   line_chart.append("circle")

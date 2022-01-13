@@ -158,7 +158,7 @@ fetch("data/fileName.txt") // open file to get filename
 
     function individualView() {
       // container_2_plot.selectAll("*").remove();
-      container_3_plot.selectAll("*").remove();
+      container_3_plot.select(".container").remove();
       // drawLoopsButt();
       draw_ts_or_ite(nodeid);
       draw_processes(ts, nodeid, '0');
@@ -199,7 +199,7 @@ fetch("data/fileName.txt") // open file to get filename
 
       // container_2_plot.selectAll("*").remove();
       // colorbar_plot.selectAll("*").remove();
-      container_3_plot.selectAll("*").remove();
+      container_3_plot.select(".container").remove();
       // container_4_plot.selectAll("*").remove();
       // loops_container.selectAll("*").remove();
     }
