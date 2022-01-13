@@ -17,8 +17,6 @@ var var_div = d3.select('body').append('div')
 
 export function draw_treemap(source, selectedtag=null) {
 
-  if (cleared == 1) { colorbarStatic(); }
-
   // initial treemap
   var init_treemap = d3.treemap().tile(d3.treemapResquarify)
     .size([(svgWidth), (container_height*1.5-3*padding)])
