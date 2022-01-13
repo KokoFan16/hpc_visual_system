@@ -1,7 +1,8 @@
 import Split from './split.js'
 import { container_3_plot, container_4_plot, rect3, rect4, 
   info, phase, procInfo, exeInfo, compInfo} from './container.js';
-import { parseData, treeData_update, collapse, findtags, find_exe_stats, cal_exeAvgData } from './utils.js'; //, , findAllLoops, uncollapse, 
+import { parseData, treeData_update, collapse, findtags, find_exe_stats, 
+  cal_exeAvgData, find_maxp_stats } from './utils.js'; //, , findAllLoops, uncollapse, 
 import { drawLoopsButt } from './loops.js';
 import { draw_legends } from './tags.js';
 import { draw_tree } from './tree.js';
@@ -17,6 +18,7 @@ breakdown_times = {};
 exe_statistics = {}; 
 tags = [];
 exe_avgData = {};
+maxp_stats = {};
 
 var treeData, width, width2;
 
@@ -110,6 +112,7 @@ fetch("data/fileName.txt") // open file to get filename
         compInfo.attr("x", winWidth*2/3)
           .style("display", null)
           .text("Compare: " + procs_num + " vs. " + comp_proc);
+        procInfo.text("Max rank: " + proc + "/" + procs_num);
         cleared = 1;
       }
 
@@ -131,8 +134,8 @@ fetch("data/fileName.txt") // open file to get filename
         d3.select(".tagLegend").style("fill", "none");
       }
       
-        file = d3.select("#selecFiles").property("value");
-        load_data(file); 
+      file = d3.select("#selecFiles").property("value");
+      load_data(file); 
       
       if (cleared == 1) {
         compInfo.text("Compare: " + procs_num + " vs. " + comp_proc);
@@ -165,6 +168,7 @@ fetch("data/fileName.txt") // open file to get filename
       var filtedFiles = openFile.filter(function(f) {
           fileSplit = f.split(/[._]+/);
           var nprocs = fileSplit[fileSplit.length-2];
+          find_maxp_stats(nprocs);
           return !breakdown_times[nprocs];
       });
 
@@ -176,10 +180,14 @@ fetch("data/fileName.txt") // open file to get filename
           
           find_exe_stats("main", p);
           cal_exeAvgData(p);
-
         })
-        draw_ts_or_ite(nodeid, 1);
-        draw_scale_stacked(1);
+        render(1);
+
+        if (procs_num == comp_proc) {
+           console.log(maxp_stats)
+         }
+        // draw_ts_or_ite(nodeid, 1);
+        // draw_scale_stacked(1);
       })
 
       // d3.select('#selecExe').style("visibility", "visible");
@@ -209,9 +217,16 @@ fetch("data/fileName.txt") // open file to get filename
           ts = exe_statistics[procs_num][meas].id;
 
           cal_exeAvgData(procs_num);
+
+          ts = exe_statistics[procs_num][meas].id;
+          exeInfo.text("Current execution: " + ts + "/" + ts_num);
           render();
         });
-      } else { render(); }
+      } else { 
+        ts = exe_statistics[procs_num][meas].id;
+        exeInfo.text("Current execution: " + ts + "/" + ts_num);
+        render(); 
+      }
     }
 
     var readend = performance.now();
@@ -298,7 +313,7 @@ function intial(data) {
   responsive();
 }
 
-function render() {
+function render(g=0) {
     var renderStart = performance.now();
 
     // set time for each node (need to be updated based on current rank and ts)
@@ -312,6 +327,7 @@ function render() {
     }
     else {
       draw_ts_or_ite(nodeid, 1);
+      draw_scale_stacked(g);
     }
 
     var renderEnd = performance.now();

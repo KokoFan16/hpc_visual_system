@@ -15,6 +15,7 @@ var show_loop = 0,
     exe_statistics,
     exe_avgData,
     all_events,
+    maxp_stats,
     time_metics = 1000,
     duration = 750,
     tags,
@@ -29,7 +30,7 @@ var show_loop = 0,
     is_abs = 0,
     meas = "min",
     comp = 0,
-    selectedNodes = [],
+    // selectedNodes = [],
     comp_proc = null;
 
 var color = d3.scaleOrdinal(d3.schemeAccent); 

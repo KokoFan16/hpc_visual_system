@@ -122,6 +122,13 @@ export function find_exe_stats(e, p) {
     "mean": { "id": null, "time": Number(d3.mean(ites, d=>d.time).toFixed(3)) } };
 }
 
+export function find_maxp_stats(p) {
+  var secolumn = breakdown_times[procs_num]["main"].map(d=>d3.sum(d[ts]));
+  var maxpv = d3.max(secolumn);
+  var maxp = secolumn.indexOf(maxpv);
+  maxp_stats[p] = maxp;
+}
+
 export function cal_exeAvgData(p) {
   var avgs = {};
   all_events.forEach(function(e) {

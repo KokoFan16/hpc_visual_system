@@ -7,7 +7,7 @@ var height = divHeight-padding*3, width, bar_width=60;
 var focus, xScale, yScale, xAxis, yAxis, line;
 
 // draw_intial();
-export function draw_scale_stacked(inital=null) {
+export function draw_scale_stacked(inital=0) {
 
   var curWidth = container_3_plot.node().getBoundingClientRect().width;
   width = (curWidth-padding*5);
@@ -27,6 +27,7 @@ export function draw_scale_stacked(inital=null) {
       breakdown_times[pc][e].forEach(function(d) {
         selec_column.push(d3.sum(d[t]));
       });
+      // console.log(e, d3.max(selec_column))
       item["nprocs"] = Number(pc);
       item[e] = Number((d3.max(selec_column)*time_metics).toFixed(3));
     });

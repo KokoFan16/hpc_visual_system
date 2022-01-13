@@ -42,7 +42,6 @@ export function draw_ts_or_ite(nodeid, scale=null) {
       flag = 1;
       find_max_value_per_ite(breakdown_times[procs_num][nodeid], times);
       xLabelText = "Executions";
-      // x_label.transition().duration(duration).attr("x", (curWidth)/2+padding).text("Executions");
     }
   }
   // else {
