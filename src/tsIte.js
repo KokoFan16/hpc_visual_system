@@ -16,9 +16,7 @@ var line = d3.line()
 draw_statics();
 
 export function draw_ts_or_ite(nodeid, scale=null) {
-
-  console.log(meas);
-
+  
   var curWidth = container_4_plot.node().getBoundingClientRect().width;
   var width = (curWidth-padding*3);
 

@@ -185,7 +185,7 @@ fetch("data/fileName.txt") // open file to get filename
 
         draw_ts_or_ite(nodeid, 1);
         // draw_scale("main", 1);
-        // draw_scale_stacked(1);
+        draw_scale_stacked();
       })
 
       // d3.select('#selecExe').style("visibility", "visible");
