@@ -26,26 +26,27 @@ export function draw_ts_or_ite(nodeid, scale=null) {
   var xLabelText;
 
   if (scale){
-    var nprocs_counts = [];
-    Object.keys(breakdown_times).forEach(function(d) {
-      var ites = [];
-      for (var t = 0; t < ts_num; t++) {
-        var column = [];
-        breakdown_times[d][nodeid].forEach(function(d) {
-          column.push(d3.sum(d[t]));
-        });
-        ites.push(d3.max(column));
-      }
-      nprocs_counts.push(breakdown_times[d][nodeid].length);
+    console.log(exe_statistics);
+    // var nprocs_counts = [];
+    // Object.keys(breakdown_times).forEach(function(d) {
+    //   var ites = [];
+    //   for (var t = 0; t < ts_num; t++) {
+    //     var column = [];
+    //     breakdown_times[d][nodeid].forEach(function(d) {
+    //       column.push(d3.sum(d[t]));
+    //     });
+    //     ites.push(d3.max(column));
+    //   }
+    //   nprocs_counts.push(breakdown_times[d][nodeid].length);
       
-      var value;
-      if (meas == "median") { value = Number(Number(d3.median(ites))*time_metics).toFixed(3); }
-      else if (meas == "mean") { value = Number(Number(d3.mean(ites))*time_metics).toFixed(3); }
-      else if (meas == "min") { value = Number(Number(d3.min(ites))*time_metics).toFixed(3); }
-      else { value = Number(Number(d3.max(ites))*time_metics).toFixed(3); }
+    //   var value;
+    //   if (meas == "median") { value = Number(Number(d3.median(ites))*time_metics).toFixed(3); }
+    //   else if (meas == "mean") { value = Number(Number(d3.mean(ites))*time_metics).toFixed(3); }
+    //   else if (meas == "min") { value = Number(Number(d3.min(ites))*time_metics).toFixed(3); }
+    //   else { value = Number(Number(d3.max(ites))*time_metics).toFixed(3); }
 
-      times.push({"id": breakdown_times[d][nodeid].length, "time": value});
-    })
+    //   times.push({"id": breakdown_times[d][nodeid].length, "time": value});
+    // })
 
     xLabelText = "Process Counts";
   }

@@ -84,6 +84,11 @@ export function draw_line_figure(source, container, xs, ys, y, li, flag){
       pointDot.transition().duration(duration)
         .attr("transform", "translate(" + (xs(source[ts].id)+padding*2) + "," + (ys(source[ts].time)+padding/2) + ")");
     }
+    else {
+      var i = xs.domain().indexOf(comp_proc);
+      pointDot.transition().duration(duration)
+        .attr("transform", "translate(" + (xs(source[i].id)+padding*2) + "," + (ys(source[i].time)+padding/2) + ")");
+    }
   }
 
   var pointer_rect = container.append("rect")  

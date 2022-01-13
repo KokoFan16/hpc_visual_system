@@ -15,7 +15,6 @@ import { drawYMetrics } from './yMetrics.js';
 var startTime = performance.now();
 
 breakdown_times = {};
-dataloads = {};
 exe_statistics = {}; 
 tags = [];
 exe_avgData = {};
@@ -77,7 +76,6 @@ fetch("data/fileName.txt") // open file to get filename
     comp_proc = procs_num;
 
     d3.csv("data/"+file).then(function(flatData) {
-      dataloads[procs_num] = flatData;
       var temp = parseData(flatData); 
       breakdown_times[procs_num] = temp;
 
@@ -87,7 +85,8 @@ fetch("data/fileName.txt") // open file to get filename
       all_events = Object.keys(breakdown_times[procs_num]);
       cal_exeAvgData();
 
-      render(flatData);
+      intial(flatData);
+      render();
 
       root.children.forEach(function(d){ findtags(d, tags); })
       draw_legends(); // draw tag legends  
@@ -134,32 +133,13 @@ fetch("data/fileName.txt") // open file to get filename
         if ( meas != "mean" ) {
           ts = exe_statistics[procs_num][meas].id;
           exeInfo.text("Current execution: " + ts + "/" + ts_num);
-
-          console.log(meas, ts);
         }
         else {
           ts = null;
           exeInfo.text("Current execution: " + meas);
         }
-
-        treeData_update();
-        draw_tree(root); // draw tree 
-        draw_treemap(root); // draw zoomable treemap
-        draw_processes(ts, nodeid, '0');
-        draw_ts_or_ite(nodeid);
       }
-
-
-        // var pitems = Object.keys(breakdown_times);
-        // // console.log(pitems);
-
-        // pitems.forEach(function(d) {
-        //    console.log(breakdown_times[d]["main"]);
-        // })
-        // draw_ts_or_ite(nodeid, 1);
-        // console.log(breakdown_times);
-        // console.log(meas);
-      // }
+      render();
     }
 
     function individualView() {
@@ -192,7 +172,8 @@ fetch("data/fileName.txt") // open file to get filename
           var temp = parseData(d);
           var p = temp["main"].length;
           breakdown_times[p] = temp;
-          dataloads[p] = d;
+          
+          find_exe_stats("main");
         })
 
         draw_ts_or_ite(nodeid, 1);
@@ -226,7 +207,6 @@ fetch("data/fileName.txt") // open file to get filename
 
       if(!breakdown_times[procs_num]) {
         d3.csv("data/"+file).then(function(flatData) {
-          dataloads[procs_num] = flatData;
           var temp = parseData(flatData); 
           breakdown_times[procs_num] = temp;
 
@@ -234,11 +214,10 @@ fetch("data/fileName.txt") // open file to get filename
           ts = exe_statistics[procs_num][meas].id;
 
           cal_exeAvgData();
-
-          render(flatData);
+          render();
         });
       }
-      else { render(dataloads[procs_num]); }
+      else { render(); }
     }
 
     var readend = performance.now();
@@ -248,28 +227,8 @@ fetch("data/fileName.txt") // open file to get filename
 
 function responsive() {
 
-  // console.log(cleared);
-
-  var width = d3.select("div#one").node().getBoundingClientRect().width;
-  container_3_plot.attr('width', width).attr('height', divHeight);
-  // draw_processes(ts, nodeid, '0');
-
-  rect3.attr('width', width-padding/2);
-
-  var width2 = d3.select("div#two").node().getBoundingClientRect().width;
-  container_4_plot.attr('width', width2).attr('height', divHeight);
-
-  if (cleared == 0) { 
-    draw_ts_or_ite(nodeid); 
-    draw_processes(ts, nodeid, '0');
-  }
-  // else { draw_ts_or_ite(nodeid); }
-
-
-  rect4.attr('width', width2-padding/2);
-
   d3.select(".gutter").on("click", resize); //mouseup
-
+  
   function resize() {
     width = d3.select("div#one").node().getBoundingClientRect().width;
     container_3_plot.attr('width', width).attr('height', divHeight);
@@ -292,65 +251,80 @@ function responsive() {
   }
 }
 
-function render(data) {
+var treeData, width, width2;
+function intial(data) {
+
+  phase.text("Current event: " + nodeid);
+  procInfo.text("Current rank: " + proc + "/" + procs_num);
+
+  width = d3.select("div#one").node().getBoundingClientRect().width;
+  container_3_plot.attr('width', width).attr('height', divHeight);
+  rect3.attr('width', width-padding/2);
+
+  width2 = d3.select("div#two").node().getBoundingClientRect().width;
+  container_4_plot.attr('width', width2).attr('height', divHeight);
+
+  rect4.attr('width', width2-padding/2);
+
+  if (cleared == 0) { 
+    if (meas != "mean") { exeInfo.text("Current execution: " + ts + "/" + ts_num); }
+    else { exeInfo.text("Current execution: " + meas); }
+  } 
+  else { exeInfo.text("Compare: " + procs_num + " vs. " + comp_proc); }
+
+  // assign null correctly
+  data.forEach(function(d) {
+    if (d.parent == "null") { d.parent = null};
+    if (d.tag == "null") { d.tag = null}; 
+    d.times = null;
+  });
+
+  // convert the flat data into a hierarchy 
+  treeData = d3.stratify()
+    .id(function(d) { return d.id; })
+    .parentId(function(d) { return d.parent; })
+    (data);
+
+  // set node name based on its id
+  treeData.each(function(d) {
+    var callNames = d.id.split("-");
+    d.name = callNames[callNames.length-1];
+  });
+
+  root = d3.hierarchy(treeData, function(d) {
+    return d.children;
+  });
+
+  root.x2 = (container_height - 2*padding) / 2;
+  root.y2 = (container_width - padding) / 2;
+
+  // calculate whether the node has loop
+  root.eachAfter(function(d){
+      var sum = Number(d.data.data.is_loop),
+          children = d.children,
+          c = children && children.length;
+      while (--c >= 0) { sum += children[c].has_loop; }
+      d.has_loop = sum; })
+
+  responsive();
+}
+
+function render() {
     var renderStart = performance.now();
 
-    phase.text("Current event: " + nodeid);
-    procInfo.text("Current rank: " + proc + "/" + procs_num);
-
-    if (cleared == 0) { 
-      if (meas != "mean") { exeInfo.text("Current execution: " + ts + "/" + ts_num); }
-      else { exeInfo.text("Current execution: " + meas); }
-    } 
-    else { exeInfo.text("Compare: " + procs_num + " vs. " + comp_proc); }
-
-    d3.select("#selec_pro").attr("max", procs_num-1); // set input box based on this value
-    d3.select("#selec_ite").attr("max", ts_num-1); // set input box based on this value 
-
-    responsive();
-
-    // assign null correctly
-    data.forEach(function(d) {
-        if (d.parent == "null") { d.parent = null};
-        if (d.tag == "null") { d.tag = null}; 
-        d.times = null;
-      });
-
-    // convert the flat data into a hierarchy 
-    var treeData = d3.stratify()
-      .id(function(d) { return d.id; })
-      .parentId(function(d) { return d.parent; })
-      (data);
-
-    // set node name based on its id
-    treeData.each(function(d) {
-      var callNames = d.id.split("-");
-      d.name = callNames[callNames.length-1];
-    });
-
-    root = d3.hierarchy(treeData, function(d) {
-        return d.children;
-      });
-
-    root.x2 = (container_height - 2*padding) / 2;
-    root.y2 = (container_width - padding) / 2;
-
-    // calculate whether the node has loop
-    root.eachAfter(function(d){
-        var sum = Number(d.data.data.is_loop),
-            children = d.children,
-            c = children && children.length;
-        while (--c >= 0) { sum += children[c].has_loop; }
-        d.has_loop = sum; })
-
     // set time for each node (need to be updated based on current rank and ts)
-    treeData_update();
+    treeData_update();  
+    draw_tree(root);  // draw tree
+    draw_treemap(root); // draw zoomable treemap
+     
 
-    // draw tree
-    draw_tree(root);
-
-    // draw zoomable treemap
-    draw_treemap(root);
+    if (cleared == 0) {  
+      draw_ts_or_ite(nodeid);    
+      draw_processes(ts, nodeid, '0');
+    }
+    else {
+      draw_ts_or_ite(nodeid, 1);
+    }
 
     var renderEnd = performance.now();
     console.log(`Render took ${renderEnd - renderStart} milliseconds`);

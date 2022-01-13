@@ -11,7 +11,6 @@ var divHeight = 300;
 
 var show_loop = 0,
     root,
-    dataloads,
     breakdown_times,
     exe_statistics,
     exe_avgData,
