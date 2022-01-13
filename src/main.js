@@ -1,6 +1,6 @@
 import Split from './split.js'
-import { container_2_plot, colorbar_plot, container_3_plot, container_4_plot, loops_container, 
-  rect3, rect4, info, phase, procInfo, exeInfo, compInfo} from './container.js';
+import { container_3_plot, container_4_plot, rect3, rect4, 
+  info, phase, procInfo, exeInfo, compInfo} from './container.js';
 import { parseData, treeData_update, collapse, findtags, find_exe_stats, cal_exeAvgData } from './utils.js'; //, , findAllLoops, uncollapse, 
 import { drawLoopsButt } from './loops.js';
 import { draw_legends } from './tags.js';
@@ -8,7 +8,6 @@ import { draw_tree } from './tree.js';
 import { draw_treemap } from './treemap.js';
 import { draw_processes } from './processes.js';
 import { draw_ts_or_ite } from './tsIte.js';
-import { draw_scale } from './scale.js';
 import { draw_scale_stacked } from './scaleStack.js'
 import { drawYMetrics } from './yMetrics.js';
 
@@ -34,9 +33,6 @@ var opts = d3.select('#selecExe').selectAll("option")
 opts.text(function(d) { return d;})
      .attr("value", function(d) { return d.replace(); })
      .style('font-size', '1em')
-
-// d3.select('#selecExe').style("visibility", "hidden");
-// d3.select('#exespan').style("visibility", "hidden");
 
 var splitobj = Split(["#one","#two"], {
     elementStyle: function (dimension, size, gutterSize) { 
@@ -157,9 +153,7 @@ fetch("data/fileName.txt") // open file to get filename
     }
 
     function individualView() {
-      // container_2_plot.selectAll("*").remove();
       container_3_plot.select(".focus").remove();
-      // drawLoopsButt();
       draw_ts_or_ite(nodeid);
       draw_processes(ts, nodeid, '0');
       // render(dataloads[procs_num]);
@@ -182,9 +176,7 @@ fetch("data/fileName.txt") // open file to get filename
           
           find_exe_stats("main", p);
         })
-
         draw_ts_or_ite(nodeid, 1);
-        // draw_scale("main", 1);
         draw_scale_stacked(1);
       })
 
@@ -197,11 +189,7 @@ fetch("data/fileName.txt") // open file to get filename
       // root.children.forEach(collapse);
       // draw_tree(root);
 
-      // container_2_plot.selectAll("*").remove();
-      // colorbar_plot.selectAll("*").remove();
       container_3_plot.select(".container").remove();
-      // container_4_plot.selectAll("*").remove();
-      // loops_container.selectAll("*").remove();
     }
 
     
@@ -221,8 +209,7 @@ fetch("data/fileName.txt") // open file to get filename
           cal_exeAvgData();
           render();
         });
-      }
-      else { render(); }
+      } else { render(); }
     }
 
     var readend = performance.now();
@@ -233,7 +220,7 @@ fetch("data/fileName.txt") // open file to get filename
 function responsive() {
 
   d3.select(".gutter").on("click", resize); //mouseup
-  
+
   function resize() {
     width = d3.select("div#one").node().getBoundingClientRect().width;
     container_3_plot.attr('width', width).attr('height', divHeight);
@@ -251,8 +238,7 @@ function responsive() {
     }
     else {
       draw_ts_or_ite(nodeid, 1);
-      // draw_scale("main", 0);
-      // draw_scale_stacked(0);
+      draw_scale_stacked();
     }
   }
 }
@@ -318,7 +304,6 @@ function render() {
     draw_tree(root);  // draw tree
     draw_treemap(root); // draw zoomable treemap
      
-
     if (cleared == 0) {  
       draw_ts_or_ite(nodeid);    
       draw_processes(ts, nodeid, '0');
