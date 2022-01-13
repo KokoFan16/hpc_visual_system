@@ -76,14 +76,8 @@ fetch("data/fileName.txt") // open file to get filename
     comp_proc = procs_num;
 
     d3.csv("data/"+file).then(function(flatData) {
-      var temp = parseData(flatData); 
-      breakdown_times[procs_num] = temp;
-
-      find_exe_stats("main", procs_num);
+      init_computing(flatData);
       ts = exe_statistics[procs_num][meas].id;
-
-      all_events = Object.keys(breakdown_times[procs_num]);
-      cal_exeAvgData(procs_num);
 
       intial(flatData);
       render();
@@ -112,7 +106,6 @@ fetch("data/fileName.txt") // open file to get filename
         compInfo.attr("x", winWidth*2/3)
           .style("display", null)
           .text("Compare: " + procs_num + " vs. " + comp_proc);
-        procInfo.text("Max rank: " + proc + "/" + procs_num);
         cleared = 1;
       }
 
@@ -139,7 +132,14 @@ fetch("data/fileName.txt") // open file to get filename
       
       if (cleared == 1) {
         compInfo.text("Compare: " + procs_num + " vs. " + comp_proc);
-      }
+
+        if (procs_num == comp_proc) {           
+          if ( meas != "mean" ) {
+            proc = maxp_stats[procs_num][meas];
+            procInfo.text("Max rank: " + proc + "/" + procs_num);
+          }
+        }
+      } 
     }
 
     function changeExe() {
@@ -153,41 +153,45 @@ fetch("data/fileName.txt") // open file to get filename
       else { exeInfo.text("Current execution: " + meas); }
       
       render();
+
+      if (cleared == 1) {
+        if (procs_num == comp_proc) {           
+          if ( meas != "mean" ) {
+            proc = maxp_stats[procs_num][meas];
+            procInfo.text("Max rank: " + proc + "/" + procs_num);
+          }
+        }
+      }
     }
 
     function individualView() {
       container_3_plot.select(".focus").remove();
       draw_ts_or_ite(nodeid);
       draw_processes(ts, nodeid, '0');
-      // render(dataloads[procs_num]);
+      procInfo.text("Current rank: " + proc + "/" + procs_num);
     }
-
 
     function ensembleView() {
 
       var filtedFiles = openFile.filter(function(f) {
           fileSplit = f.split(/[._]+/);
           var nprocs = fileSplit[fileSplit.length-2];
-          find_maxp_stats(nprocs);
           return !breakdown_times[nprocs];
       });
 
       Promise.all(filtedFiles.map(f => d3.csv("data/"+f))).then(function(data) {
         data.forEach(function(d) { 
-          var temp = parseData(d);
-          var p = temp["main"].length;
-          breakdown_times[p] = temp;
-          
-          find_exe_stats("main", p);
-          cal_exeAvgData(p);
-        })
-        render(1);
+          init_computing(d);
+        });
 
         if (procs_num == comp_proc) {
-           console.log(maxp_stats)
-         }
-        // draw_ts_or_ite(nodeid, 1);
-        // draw_scale_stacked(1);
+          if ( meas != "mean" ) {
+            proc = maxp_stats[procs_num][meas];
+            procInfo.text("Max rank: " + proc + "/" + procs_num);
+          }
+          // console.log(maxp_stats[procs_num])
+        }
+        render(1);
       })
 
       // d3.select('#selecExe').style("visibility", "visible");
@@ -209,15 +213,8 @@ fetch("data/fileName.txt") // open file to get filename
       ts_num = Number(fileSplit[fileSplit.length-3]); // total number of timesteps
 
       if(!breakdown_times[procs_num]) {
-        d3.csv("data/"+file).then(function(flatData) {
-          var temp = parseData(flatData); 
-          breakdown_times[procs_num] = temp;
-
-          find_exe_stats("main", procs_num);
-          ts = exe_statistics[procs_num][meas].id;
-
-          cal_exeAvgData(procs_num);
-
+        d3.csv("data/"+file).then(function(flatData) {          
+          init_computing(flatData);
           ts = exe_statistics[procs_num][meas].id;
           exeInfo.text("Current execution: " + ts + "/" + ts_num);
           render();
@@ -233,6 +230,14 @@ fetch("data/fileName.txt") // open file to get filename
     console.log(`Read took ${readend - readstart} milliseconds`);
   });
 
+function init_computing(data) { 
+  var temp = parseData(data); 
+  var p = temp["main"].length;
+  breakdown_times[p] = temp;
+  find_exe_stats("main", p);
+  cal_exeAvgData(p);
+  find_maxp_stats(p);
+}
 
 function responsive() {
 

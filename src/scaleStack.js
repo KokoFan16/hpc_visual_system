@@ -23,13 +23,14 @@ export function draw_scale_stacked(inital=0) {
     var t = exe_statistics[pc][meas].id;
     var item = {};
     keys.forEach(function(e) {
-      var selec_column = [];
-      breakdown_times[pc][e].forEach(function(d) {
-        selec_column.push(d3.sum(d[t]));
-      });
-      // console.log(e, d3.max(selec_column))
-      item["nprocs"] = Number(pc);
-      item[e] = Number((d3.max(selec_column)*time_metics).toFixed(3));
+      // console.log(breakdown_times[pc][e][])
+      // var selec_column = [];
+      // breakdown_times[pc][e].forEach(function(d) {
+      //   selec_column.push(d3.sum(d[t]));
+      // });
+      // // console.log(e, d3.max(selec_column))
+      // item["nprocs"] = Number(pc);
+      // item[e] = Number((d3.max(selec_column)*time_metics).toFixed(3));
     });
     data.push(item);
   });

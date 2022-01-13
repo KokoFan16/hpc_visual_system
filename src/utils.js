@@ -122,16 +122,22 @@ export function find_exe_stats(e, p) {
     "mean": { "id": null, "time": Number(d3.mean(ites, d=>d.time).toFixed(3)) } };
 }
 
+var opts = ["min", "max", "median"];
 export function find_maxp_stats(p) {
-  var secolumn = breakdown_times[procs_num]["main"].map(d=>d3.sum(d[ts]));
-  var maxpv = d3.max(secolumn);
-  var maxp = secolumn.indexOf(maxpv);
-  maxp_stats[p] = maxp;
+  var temp = {};
+  opts.forEach(function(k) {
+    var t = exe_statistics[p][k].id;
+    var secolumn = breakdown_times[p]["main"].map(d=>d3.sum(d[t]));
+    var maxpv = d3.max(secolumn);
+    var maxp = secolumn.indexOf(maxpv);
+    temp[k] = maxp;
+  })
+  maxp_stats[p] = temp;
 }
 
 export function cal_exeAvgData(p) {
   var avgs = {};
-  all_events.forEach(function(e) {
+  Object.keys(breakdown_times[procs_num]).forEach(function(e) {
     var avgprocs = [];
     breakdown_times[p][e].forEach(function(d, i) {
       avgprocs.push( { "id": i,

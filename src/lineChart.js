@@ -1,6 +1,6 @@
 import { draw_tree } from './tree.js';
 import { find_max_value_per_ite, treeData_update, uncollapse, collapse} from './utils.js'; 
-import { exeInfo, compInfo } from './container.js';
+import { exeInfo, compInfo, procInfo } from './container.js';
 import { draw_treemap } from './treemap.js';
 import { draw_processes } from './processes.js';
 
@@ -149,6 +149,16 @@ export function draw_line_figure(source, container, xs, ys, y, li, flag){
       compInfo.text("Compare: " + procs_num + " vs. " + comp_proc);
 
       d = source[i];
+
+      if (procs_num == comp_proc) {           
+        if ( meas != "mean" ) {
+          proc = maxp_stats[procs_num][meas];
+          procInfo.text("Max rank: " + proc + "/" + procs_num);
+        }
+        treeData_update();
+        draw_tree(root); // draw tree 
+        draw_treemap(root); // draw zoomable treemap
+      }
     }
     else {
       ts = xs.invert(d3.mouse(this)[0]-padding*2);
