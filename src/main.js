@@ -19,6 +19,8 @@ exe_statistics = {};
 tags = [];
 exe_avgData = {};
 
+var treeData, width, width2;
+
 var fileSecTex = document.getElementById("filespan");
 fileSecTex.innerHTML = "Select File: ";
 
@@ -79,7 +81,7 @@ fetch("data/fileName.txt") // open file to get filename
       var temp = parseData(flatData); 
       breakdown_times[procs_num] = temp;
 
-      find_exe_stats("main");
+      find_exe_stats("main", procs_num);
       ts = exe_statistics[procs_num][meas].id;
 
       all_events = Object.keys(breakdown_times[procs_num]);
@@ -127,18 +129,15 @@ fetch("data/fileName.txt") // open file to get filename
     }
 
     function changeExe() {
-      if (cleared == 0) {
-        meas = d3.select("#selecExe").property("value").split(' ')[1];
 
-        if ( meas != "mean" ) {
-          ts = exe_statistics[procs_num][meas].id;
-          exeInfo.text("Current execution: " + ts + "/" + ts_num);
-        }
-        else {
-          ts = null;
-          exeInfo.text("Current execution: " + meas);
-        }
+      meas = d3.select("#selecExe").property("value").split(' ')[1];
+      ts = exe_statistics[procs_num][meas].id;
+
+      if ( meas != "mean" ) {
+        exeInfo.text("Current execution: " + ts + "/" + ts_num);
       }
+      else { exeInfo.text("Current execution: " + meas); }
+      
       render();
     }
 
@@ -173,11 +172,11 @@ fetch("data/fileName.txt") // open file to get filename
           var p = temp["main"].length;
           breakdown_times[p] = temp;
           
-          find_exe_stats("main");
+          find_exe_stats("main", p);
         })
 
         draw_ts_or_ite(nodeid, 1);
-        exeInfo.text("Compare: " + procs_num + " vs. " + comp_proc);
+        procInfo.text("Compare: " + procs_num + " vs. " + comp_proc);
 
         // draw_scale("main", 1);
         // draw_scale_stacked(1);
@@ -210,7 +209,7 @@ fetch("data/fileName.txt") // open file to get filename
           var temp = parseData(flatData); 
           breakdown_times[procs_num] = temp;
 
-          find_exe_stats("main");
+          find_exe_stats("main", procs_num);
           ts = exe_statistics[procs_num][meas].id;
 
           cal_exeAvgData();
@@ -251,7 +250,6 @@ function responsive() {
   }
 }
 
-var treeData, width, width2;
 function intial(data) {
 
   phase.text("Current event: " + nodeid);
@@ -270,7 +268,7 @@ function intial(data) {
     if (meas != "mean") { exeInfo.text("Current execution: " + ts + "/" + ts_num); }
     else { exeInfo.text("Current execution: " + meas); }
   } 
-  else { exeInfo.text("Compare: " + procs_num + " vs. " + comp_proc); }
+  else { procInfo.text("Compare: " + procs_num + " vs. " + comp_proc); }
 
   // assign null correctly
   data.forEach(function(d) {
