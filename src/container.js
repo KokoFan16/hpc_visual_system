@@ -15,15 +15,22 @@ export var info = d3.select('#divInfo').append('svg')
 
 export var phase = info.append('text')
     .attr("class", "info")
-    .attr("transform", "translate(" + winWidth*2/5 + "," + padding + ")");
+    .attr("x", winWidth*2/5)
+    .attr("y", padding);
 
 export var procInfo = info.append('text')
     .attr("class", "info")
-    .attr("transform", "translate(" + winWidth*1/5 + "," + padding + ")");
+    .attr("x", winWidth/5)
+    .attr("y", padding);
 
 export var exeInfo = info.append('text')
     .attr("class", "info")
-    .attr("transform", "translate(" + winWidth*3/5 + "," + padding + ")");
+    .attr("x", winWidth*3/5)
+    .attr("y", padding);
+
+export var compInfo = info.append('text')
+    .attr("class", "info")
+    .attr("y", padding);
 
 var div = d3.select("div#one").append("div").classed("svg-container", true);
 export var container_3_plot = div.append("svg")

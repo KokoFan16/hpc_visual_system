@@ -1,6 +1,6 @@
 import Split from './split.js'
 import { container_2_plot, colorbar_plot, container_3_plot, container_4_plot, loops_container, 
-  rect3, rect4, info, phase, procInfo, exeInfo} from './container.js';
+  rect3, rect4, info, phase, procInfo, exeInfo, compInfo} from './container.js';
 import { parseData, treeData_update, collapse, findtags, find_exe_stats, cal_exeAvgData } from './utils.js'; //, , findAllLoops, uncollapse, 
 import { drawLoopsButt } from './loops.js';
 import { draw_legends } from './tags.js';
@@ -99,16 +99,29 @@ fetch("data/fileName.txt") // open file to get filename
     d3.select("#selecExe").on("change", changeExe); 
 
     function click() {
+      var v1, v2, v3, v4;
       if (cleared == 1) {
         d3.select(".button").text("Individual View");
         individualView();
+        v1=1/5, v2=3/5, v3=2/5, v4=4/5;
+        compInfo.style("display", "none");
         cleared = 0;
       }
       else {
         d3.select(".button").text("Ensemble View");
         ensembleView();
+        v1=1/6, v2=1/3, v3=1/2, v4=5/6;
+        compInfo.attr("x", winWidth*2/3)
+          .style("display", null)
+          .text("Compare: " + procs_num + " vs. " + comp_proc);
         cleared = 1;
       }
+
+      procInfo.attr("x", winWidth*v1);
+      exeInfo.attr("x", winWidth*v2);
+      phase.attr("x", winWidth*v3);  
+      info.select(".yMetrics").attr("x", winWidth*v4);
+      info.select(".metricsText").attr("x", winWidth*v4);
     }
 
     function change() {
@@ -122,9 +135,11 @@ fetch("data/fileName.txt") // open file to get filename
         d3.select(".tagLegend").style("fill", "none");
       }
       
-      if (cleared == 0) { 
         file = d3.select("#selecFiles").property("value");
         load_data(file); 
+      
+      if (cleared == 1) {
+        compInfo.text("Compare: " + procs_num + " vs. " + comp_proc);
       }
     }
 
@@ -142,16 +157,9 @@ fetch("data/fileName.txt") // open file to get filename
     }
 
     function individualView() {
-
-      // d3.select('#selecExe').style("visibility", "hidden");
-      // d3.select('#exespan').style("visibility", "hidden");
-
-      // d3.select('#selecFiles').style("visibility", "visible");
-      // d3.select('#filespan').style("visibility", "visible");
-
       // container_2_plot.selectAll("*").remove();
       container_3_plot.selectAll("*").remove();
-      drawLoopsButt();
+      // drawLoopsButt();
       draw_ts_or_ite(nodeid);
       draw_processes(ts, nodeid, '0');
       // render(dataloads[procs_num]);
@@ -176,8 +184,6 @@ fetch("data/fileName.txt") // open file to get filename
         })
 
         draw_ts_or_ite(nodeid, 1);
-        procInfo.text("Compare: " + procs_num + " vs. " + comp_proc);
-
         // draw_scale("main", 1);
         // draw_scale_stacked(1);
       })
@@ -244,6 +250,7 @@ function responsive() {
       draw_ts_or_ite(nodeid);
     }
     else {
+      draw_ts_or_ite(nodeid, 1);
       // draw_scale("main", 0);
       // draw_scale_stacked(0);
     }
@@ -264,11 +271,7 @@ function intial(data) {
 
   rect4.attr('width', width2-padding/2);
 
-  if (cleared == 0) { 
-    if (meas != "mean") { exeInfo.text("Current execution: " + ts + "/" + ts_num); }
-    else { exeInfo.text("Current execution: " + meas); }
-  } 
-  else { procInfo.text("Compare: " + procs_num + " vs. " + comp_proc); }
+  exeInfo.text("Current execution: " + ts + "/" + ts_num);
 
   // assign null correctly
   data.forEach(function(d) {
