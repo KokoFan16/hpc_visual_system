@@ -81,7 +81,7 @@ fetch("data/fileName.txt") // open file to get filename
       ts = exe_statistics[procs_num][meas].id;
 
       all_events = Object.keys(breakdown_times[procs_num]);
-      cal_exeAvgData();
+      cal_exeAvgData(procs_num);
 
       intial(flatData);
       render();
@@ -175,6 +175,8 @@ fetch("data/fileName.txt") // open file to get filename
           breakdown_times[p] = temp;
           
           find_exe_stats("main", p);
+          cal_exeAvgData(p);
+
         })
         draw_ts_or_ite(nodeid, 1);
         draw_scale_stacked(1);
@@ -206,7 +208,7 @@ fetch("data/fileName.txt") // open file to get filename
           find_exe_stats("main", procs_num);
           ts = exe_statistics[procs_num][meas].id;
 
-          cal_exeAvgData();
+          cal_exeAvgData(procs_num);
           render();
         });
       } else { render(); }

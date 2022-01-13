@@ -122,11 +122,11 @@ export function find_exe_stats(e, p) {
     "mean": { "id": null, "time": Number(d3.mean(ites, d=>d.time).toFixed(3)) } };
 }
 
-export function cal_exeAvgData() {
+export function cal_exeAvgData(p) {
   var avgs = {};
   all_events.forEach(function(e) {
     var avgprocs = [];
-    breakdown_times[procs_num][e].forEach(function(d, i) {
+    breakdown_times[p][e].forEach(function(d, i) {
       avgprocs.push( { "id": i,
           "time": Number((d3.mean(d)*time_metics).toFixed(3)),
           "min": Number((d3.min(d)*time_metics).toFixed(3)),
@@ -135,5 +135,5 @@ export function cal_exeAvgData() {
     });
     avgs[e] = avgprocs;
   });
-  exe_avgData[procs_num] = avgs;  
+  exe_avgData[p] = avgs;  
 }
