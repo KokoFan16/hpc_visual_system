@@ -67,14 +67,18 @@ export function draw_processes(ts, nodeid, is_loop, is_tag=null) {
     });
   }
   else {
-    breakdown_times[procs_num][nodeid].forEach(function(d, i) { 
-      var t, min, max;
-      if (is_loop == 0) { t = d[ts]; min = d3.min(d); max = d3.max(d);  }
-      else { t = d3.sum(d[ts]); min = t; max = t; }
-      times.push({"id": i, "time": Number(parseFloat(t)*time_metics).toFixed(3), 
-        "min": Number(parseFloat(min)*time_metics).toFixed(3), 
-        "max": Number(parseFloat(max)*time_metics).toFixed(3) }); 
-    })
+    if (ts != null) {
+      breakdown_times[procs_num][nodeid].forEach(function(d, i) { 
+        var t, min, max;
+        if (is_loop == 0) { t = d[ts]; }
+        else { t = d3.sum(d[ts]); }
+        times.push({"id": i, "time": Number(parseFloat(t)*time_metics).toFixed(3), 
+          "min": exe_avgData[procs_num][nodeid][i].min, 
+          "max": exe_avgData[procs_num][nodeid][i].max 
+        }); 
+      })
+    }
+    else { times = exe_avgData[procs_num][nodeid]; }
   }
 
   render();

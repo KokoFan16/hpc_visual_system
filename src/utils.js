@@ -21,13 +21,14 @@ export function treeData_update() {
   // assign the name to each node 
   root.children.forEach(uncollapse);
   root.each(function(d) {
-    var t = breakdown_times[procs_num][d.data.id][proc][ts];
-    if (d.data.data.is_loop == "0"){
-      d.data.time = (parseFloat(t)*time_metics).toFixed(3); }
-    else {
-      var total_time = 0;
-      t.forEach(function(d){ total_time += parseFloat(d); })
-      d.data.time = (total_time*time_metics).toFixed(3); }
+    var t;
+    if (ts == null) {      
+      d.data.time = exe_avgData[procs_num][d.data.id][proc].time;
+    }
+    else { 
+      t = breakdown_times[procs_num][d.data.id][proc][ts]; 
+      d.data.time = (d3.sum(t)*time_metics).toFixed(3);
+    }
   });
   root.children.forEach(collapse);
 }
@@ -116,24 +117,23 @@ export function find_exe_stats(e) {
   find_max_value_per_ite(breakdown_times[procs_num][e], ites);
   ites.sort(function(a, b) {return a.time - b.time; });
 
-  // var temp = {};
-  // temp["min"] = ites[0];
-  // temp["max"] = ites[ites.length-1];
-  // temp["median"] = ites[Math.round(ites.length/2)];
-  // temp["mean"] =  Number(d3.mean(ites, d=>d.time).toFixed(3))
-
   exe_statistics[procs_num] = { "min": ites[0], "max": ites[ites.length-1], 
     "median": ites[Math.round(ites.length/2)], 
     "mean": Number(d3.mean(ites, d=>d.time).toFixed(3)) };
 }
 
 export function cal_exeAvgData() {
-  console.log(breakdown_times[procs_num])
-  // var ites = [];
-  // find_max_value_per_ite(breakdown_times[procs_num][e], ites);
-  // ites.sort(function(a, b) {return a.time - b.time; });
-  // exe_statistics["min"] = ites[0];
-  // exe_statistics["max"] = ites[ites.length-1];
-  // exe_statistics["median"] = ites[Math.round(ites.length/2)];
-  // exe_statistics["mean"] =  Number(d3.mean(ites, d=>d.time).toFixed(3))
+  var avgs = {};
+  all_events.forEach(function(e) {
+    var avgprocs = [];
+    breakdown_times[procs_num][e].forEach(function(d, i) {
+      avgprocs.push( { "id": i,
+          "time": Number((d3.mean(d)*time_metics).toFixed(3)),
+          "min": Number((d3.min(d)*time_metics).toFixed(3)),
+          "max": Number((d3.max(d)*time_metics).toFixed(3)) }
+      );
+    });
+    avgs[e] = avgprocs;
+  });
+  exe_avgData[procs_num] = avgs;  
 }

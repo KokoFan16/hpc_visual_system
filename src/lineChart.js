@@ -77,9 +77,13 @@ export function draw_line_figure(source, container, xs, ys, y, li, flag){
     showmean.attr("x", xpos).text(meanStr);
   }
 
-  if (flag == 1) {
-    pointDot.transition().duration(duration)
-      .attr("transform", "translate(" + (xs(source[ts].id)+padding*2) + "," + (ys(source[ts].time)+padding/2) + ")");
+  if (ts == null) { pointDot.style("display", "none"); }
+  else {
+    pointDot.style("display", null);
+    if (flag == 1) {
+      pointDot.transition().duration(duration)
+        .attr("transform", "translate(" + (xs(source[ts].id)+padding*2) + "," + (ys(source[ts].time)+padding/2) + ")");
+    }
   }
 
   var pointer_rect = container.append("rect")  
@@ -157,6 +161,7 @@ export function draw_line_figure(source, container, xs, ys, y, li, flag){
       d = source[ts];
     }
   
+    if (meas == "mean") { pointDot.style("display", null); }
     pointDot.transition().duration(duration)
       .attr("transform", "translate(" + (xs(d.id)+padding*2) + "," + (ys(d.time)+padding/2) + ")");
   }

@@ -1,7 +1,7 @@
 import Split from './split.js'
 import { container_2_plot, colorbar_plot, container_3_plot, container_4_plot, loops_container, 
   rect3, rect4, info, phase, procInfo, exeInfo} from './container.js';
-import { parseData, treeData_update, collapse, findtags, find_exe_stats } from './utils.js'; //, , findAllLoops, uncollapse, 
+import { parseData, treeData_update, collapse, findtags, find_exe_stats, cal_exeAvgData } from './utils.js'; //, , findAllLoops, uncollapse, 
 import { drawLoopsButt } from './loops.js';
 import { draw_legends } from './tags.js';
 import { draw_tree } from './tree.js';
@@ -84,6 +84,9 @@ fetch("data/fileName.txt") // open file to get filename
       find_exe_stats("main");
       ts = exe_statistics[procs_num][meas].id;
 
+      all_events = Object.keys(breakdown_times[procs_num]);
+      cal_exeAvgData();
+
       render(flatData);
 
       root.children.forEach(function(d){ findtags(d, tags); })
@@ -130,19 +133,22 @@ fetch("data/fileName.txt") // open file to get filename
 
         if ( meas != "mean" ) {
           ts = exe_statistics[procs_num][meas].id;
-
           exeInfo.text("Current execution: " + ts + "/" + ts_num);
-          treeData_update();
 
-          draw_tree(root); // draw tree 
-          draw_treemap(root); // draw zoomable treemap
-          draw_processes(ts, nodeid, '0');
-          draw_ts_or_ite(nodeid);
+          console.log(meas, ts);
         }
         else {
+          ts = null;
           exeInfo.text("Current execution: " + meas);
         }
+
+        treeData_update();
+        draw_tree(root); // draw tree 
+        draw_treemap(root); // draw zoomable treemap
+        draw_processes(ts, nodeid, '0');
+        draw_ts_or_ite(nodeid);
       }
+
 
         // var pitems = Object.keys(breakdown_times);
         // // console.log(pitems);
@@ -227,6 +233,8 @@ fetch("data/fileName.txt") // open file to get filename
           find_exe_stats("main");
           ts = exe_statistics[procs_num][meas].id;
 
+          cal_exeAvgData();
+
           render(flatData);
         });
       }
@@ -290,7 +298,10 @@ function render(data) {
     phase.text("Current event: " + nodeid);
     procInfo.text("Current rank: " + proc + "/" + procs_num);
 
-    if (cleared == 0) { exeInfo.text("Current execution: " + ts + "/" + ts_num); } 
+    if (cleared == 0) { 
+      if (meas != "mean") { exeInfo.text("Current execution: " + ts + "/" + ts_num); }
+      else { exeInfo.text("Current execution: " + meas); }
+    } 
     else { exeInfo.text("Compare: " + procs_num + " vs. " + comp_proc); }
 
     d3.select("#selec_pro").attr("max", procs_num-1); // set input box based on this value

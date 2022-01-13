@@ -53,13 +53,6 @@ export function draw_ts_or_ite(nodeid, scale=null) {
     if (show_loop == 0) {
       flag = 1;
       find_max_value_per_ite(breakdown_times[procs_num][nodeid], times);
-      // for (var c = 0; c < ts_num; c++) {
-      //   var column = [];
-      //   breakdown_times[procs_num][nodeid].forEach( function(d) { 
-      //     column.push(d3.sum(d[c])); 
-      //   }) 
-      //   times.push({"id": c, "time": (d3.max(column)*time_metics).toFixed(3)}); 
-      // }
       xLabelText = "Executions";
       // x_label.transition().duration(duration).attr("x", (curWidth)/2+padding).text("Executions");
     }
