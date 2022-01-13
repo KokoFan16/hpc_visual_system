@@ -18,9 +18,9 @@ export function draw_line_figure(source, container, xs, ys, y, li, flag){
   var mean = d3.mean(source, function(d){ return Number(d.time); });
   var median = d3.median(source, function(d){ return Number(d.time); });
 
-  var ymin = (is_abs == 1)? 0: min_time*0.95;
+  var ymin = (is_abs == 1)? 0: min_time;
   
-  ys.domain([ymin, max_time*1.05]).range([height, 0]);
+  ys.domain([ymin, max_time]).range([height, 0]).nice();
   y.transition().duration(duration).call(d3.axisLeft(ys)); 
 
   // draw line graph

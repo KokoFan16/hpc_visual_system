@@ -99,7 +99,8 @@ export function draw_processes(ts, nodeid, is_loop, is_tag=null) {
 
     var min = d3.min(times, d=> Number(d.min));
     var max = d3.max(times, d=> Number(d.max));
-    var ymin = (is_abs == 1)? 0: min*0.95;
+    // var ymin = (is_abs == 1)? 0: min*0.95;
+     var ymin = (is_abs == 1)? 0: min;
 
     var minMax = d3.extent(filter_data);
     var mean = d3.mean(filter_data);
@@ -121,9 +122,8 @@ export function draw_processes(ts, nodeid, is_loop, is_tag=null) {
     var meanStr = "Mean: " + mean.toFixed(3);
     meanValue.attr("x", xpos).text(meanStr);
 
-    x.domain([0, d3.max(curData, d=>d.id)]).range([0, width]);
-    // y.domain([ymin, minMax[1]*1.05]);
-    y.domain([ymin, max*1.05]);
+    x.domain([0, d3.max(curData, d=>d.id)]).range([0, width]).nice();
+    y.domain([ymin, max]).nice(); //max*1.05]
 
     x2.domain([0, procs_num]).range([0, width]);
     y2.domain(y.domain());
