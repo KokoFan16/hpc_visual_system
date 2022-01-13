@@ -189,7 +189,8 @@ export function clicktree(d) {
           draw_ts_or_ite(nodeid); // refresh figure of ts or ite 
       }
       else {
-        draw_scale(nodeid);
+        // draw_scale(nodeid);
+        draw_ts_or_ite(nodeid, 1);
         draw_scale_stacked();
       }
     }
@@ -199,7 +200,8 @@ export function clicktree(d) {
         draw_ts_or_ite(nodeid); 
       }
       else {
-        draw_scale(nodeid);
+        draw_ts_or_ite(nodeid, 1);
+        // draw_scale(nodeid);
       }
     }
 }

@@ -103,8 +103,6 @@ export function draw_line_figure(source, container, xs, ys, y, li, flag){
     .on("mousemove", mousemove)
     .on("click", click);
 
-     // .style("display", "none");
-
   var tip = container.append("g")
     .style("display", "none")
     .attr("transform", "translate(" + padding*2 + ", " + (padding/2) + ")");

@@ -1,17 +1,18 @@
 import { container_3_plot } from './container.js'; //container_stacked
-import { find_max_value_per_ite } from './utils.js';
 
 var var_div = d3.select('body').append('div')
-  .attr('class', 'tooltip2').style('opacity', 0);
+  .attr('class', 'tooltip').style('opacity', 0);
 
-var height = 240, width;
+var height = divHeight-padding*3, width, bar_width=60;
 var focus, xScale, yScale, xAxis, yAxis, line;
-export function draw_scale_stacked() {
+
+// draw_intial();
+export function draw_scale_stacked(inital=null) {
 
   var curWidth = container_3_plot.node().getBoundingClientRect().width;
   width = (curWidth-padding*5);
 
-  if (!focus) { draw_intial(); }
+  if (!focus || inital) { draw_intial(); }
 
   var keys = [];
   root.leaves().forEach(function(d) { keys.push(d.data.id); });
@@ -31,41 +32,11 @@ export function draw_scale_stacked() {
     });
     data.push(item);
   });
-
-  console.log(data);
-
-  // var columns = [];
-  // Object.keys(breakdown_times).forEach(function(d) {
-  //   var nprocs = breakdown_times[d]["main"].length;
-  //   columns.push(nprocs);
-
-  //   var item = {};
-  //   keys.forEach(function(key) {
-  //     var ites = [];
-  //     find_max_value_per_ite(breakdown_times[d][key], ites);
-  //     item["nprocs"] = nprocs;
-  //     // if (select == "Max") { item[key] = d3.max(ites)*time_metics; }
-
-  //     var value;
-  //     if (meas == "Median") { value = Number(Number(d3.median(ites))*time_metics).toFixed(3); }
-  //     else if (meas == "Mean") { value = Number(Number(d3.mean(ites))*time_metics).toFixed(3); }
-  //     else if (meas == "Min") { value = Number(Number(d3.min(ites))*time_metics).toFixed(3); }
-  //     else { value = Number(Number(d3.max(ites))*time_metics).toFixed(3); }
-
-  //     item[key] = value;
-
-  //   })
-  //   data.push(item);
-  // })
-
-  // console.log(data);
-
-  // // console.log(data);
   
   yScale.domain(pcs);
   yAxis.transition().duration(duration).call(d3.axisLeft(yScale));
 
-  xScale.rangeRound([0, width]).domain([0, d3.max(data, d => d3.sum(keys, k => +d[k]))]).nice();
+  xScale.rangeRound([0, width]).domain([0, d3.max(data, d => d3.sum(keys, k => +d[k]))]); //.nice()
   xAxis.transition().duration(duration).call(d3.axisBottom(xScale));
 
   var group = focus.selectAll(".layer")
@@ -81,60 +52,63 @@ export function draw_scale_stacked() {
 
   var barEnter = bars.enter().append("rect")
       .on('mouseover', function(d) { 
-        var_div.transition().duration(200)
-          .style('opacity', 0.9);
-        var_div
-          .html((d[1]-d[0]).toFixed(3))
+        var time = (d[1]-d[0]).toFixed(3);
+        var key = Object.keys(d.data).filter(key=> d.data[key] == time)
+        var_div.transition().duration(200).style('opacity', 0.9);
+        var_div.html(key + '<br/>' + "(" + time + ")")
           .style('left', d3.event.pageX + 'px')
           .style('top', d3.event.pageY - 28 + 'px'); 
       })
       .on('mouseout', function(d) {
-        var_div.transition().duration(500)
-          .style('opacity', 0); 
+        var_div.transition().duration(500).style('opacity', 0); 
       }); 
     
-
   var barUpdate = barEnter.merge(bars)
-    .attr("height", yScale.bandwidth())
+    .attr("height", () => (bar_width > yScale.bandwidth())? yScale.bandwidth(): bar_width)
     .transition().duration(duration)
-    .attr("y",  d => yScale(d.data.nprocs))
+    .attr("y",  function(d) {
+      var trans = (yScale.bandwidth() > bar_width)? ((yScale.bandwidth() - bar_width)/2): 0;
+      return yScale(d.data.nprocs) + trans;
+    })
     .attr("x", d => xScale(d[0]))
     .attr("width", d => xScale(d[1]) - xScale(d[0]))
+    .attr("stroke", "grey")
+    .attr("stroke-width", "1px");
 
   bars.exit().remove();
 
-  var legend = focus.selectAll(".legend")
-    .data(keys)
+  // var legend = focus.selectAll(".legend")
+  //   .data(keys)
 
-  var legendEnter = legend.enter().append("g")
-    .attr("class", "legend")
-    .attr("transform", function(d, i) { return "translate(" + (0) + "," + (i*20) + ")"; });
+  // var legendEnter = legend.enter().append("g")
+  //   .attr("class", "legend")
+  //   .attr("transform", function(d, i) { return "translate(" + (0) + "," + (i*20) + ")"; });
 
-  legendEnter.append("rect")
-    // .attr("x", width)
-    .attr("width", 15)
-    .attr("height", 15)
-    .style("fill", d => color(d))
-    .on('mouseover', function(d) { 
-      d3.select(this).style("stroke", "grey").style("stroke-width","2px");
-      var_div.transition().duration(200).style('opacity', 0.9);
-      var_div.html(d)
-        .style('left', d3.event.pageX + 'px')
-        .style('top', d3.event.pageY - 18 + 'px'); 
-    })
-    .on('mouseout', function(d) {
-      d3.select(this).style("stroke-width","0px");
-      var_div.transition().duration(duration).style('opacity', 0); 
-    }); 
+  // legendEnter.append("rect")
+  //   // .attr("x", width)
+  //   .attr("width", 15)
+  //   .attr("height", 15)
+  //   .style("fill", d => color(d))
+  //   .on('mouseover', function(d) { 
+  //     d3.select(this).style("stroke", "grey").style("stroke-width","2px");
+  //     var_div.transition().duration(200).style('opacity', 0.9);
+  //     var_div.html(d)
+  //       .style('left', d3.event.pageX + 'px')
+  //       .style('top', d3.event.pageY - 18 + 'px'); 
+  //   })
+  //   .on('mouseout', function(d) {
+  //     d3.select(this).style("stroke-width","0px");
+  //     var_div.transition().duration(duration).style('opacity', 0); 
+  //   }); 
 
-  var legendUpdate = legendEnter.merge(legend);
+  // var legendUpdate = legendEnter.merge(legend);
 
-  legendUpdate.select('rect')
-    .transition().duration(duration)
-    .attr("x", width)
-    .style("fill", d => color(d));
+  // legendUpdate.select('rect')
+  //   .transition().duration(duration)
+  //   .attr("x", width)
+  //   .style("fill", d => color(d));
 
-  legend.exit().remove();
+  // legend.exit().remove();
 
 }
 
@@ -149,7 +123,7 @@ function draw_intial() {
     .align(0.1);
 
   xScale = d3.scaleLinear()  
-    .rangeRound([0, width]); 
+    // .rangeRound([0, width]); 
 
   yAxis = focus.append("g")
     .attr("class", "axis")  
@@ -165,10 +139,10 @@ function draw_intial() {
   //   .attr("transform", "translate(" + curWidth/2 + ", " + (height+padding) + ")")
   //   .text("Processes Counts");
 
-  container_3_plot.append('text')
+  focus.append('text')
     .attr("class", "labels")
-    .attr("x", -height/2-padding)
-    .attr("y", padding*1.5)
+    .attr("x", -height/2)
+    .attr("y", -padding*2)
     .attr("transform", "rotate(-90)")
     .text("Process Counts");
 }

@@ -158,7 +158,7 @@ fetch("data/fileName.txt") // open file to get filename
 
     function individualView() {
       // container_2_plot.selectAll("*").remove();
-      container_3_plot.select(".container").remove();
+      container_3_plot.select(".focus").remove();
       // drawLoopsButt();
       draw_ts_or_ite(nodeid);
       draw_processes(ts, nodeid, '0');
@@ -185,7 +185,7 @@ fetch("data/fileName.txt") // open file to get filename
 
         draw_ts_or_ite(nodeid, 1);
         // draw_scale("main", 1);
-        draw_scale_stacked();
+        draw_scale_stacked(1);
       })
 
       // d3.select('#selecExe').style("visibility", "visible");
