@@ -87,11 +87,12 @@ export function draw_processes(ts, nodeid, is_loop, is_tag=null) {
     var brushLen = width;
     if (procs_num > threshold) {
       var div = Math.ceil(procs_num/threshold);
-      new_time = times.filter(t => t.id%div == 0);
+      // new_time = times.filter(t => t.id%div == 0);
       brushLen = brushLen/div;
+      new_time = times;
       curData = times.slice(0, threshold);
     }
-    else { curData = times; new_time = times;}
+    else { curData = times;  new_time = times; }
 
     // calculate the min and max value across all the processes and executions
     var filter_data = (times.map(d=> Number(d.time)));
@@ -125,7 +126,7 @@ export function draw_processes(ts, nodeid, is_loop, is_tag=null) {
     y.domain([ymin, max]).nice(); //max*1.05]
 
     x2.domain([0, procs_num]).range([0, width]);
-    y2.domain(y.domain());
+    y2.domain([0, max]);
 
     // xAxis.transition().duration(duration).call(d3.axisBottom(x));
     xAxis2.call(d3.axisBottom(x2));
