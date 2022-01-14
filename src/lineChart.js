@@ -183,43 +183,4 @@ export function draw_line_figure(source, container, xs, ys, y, li, flag){
     pointDot.transition().duration(duration)
       .attr("transform", "translate(" + (xs(d.id)+padding*2) + "," + (ys(d.time)+padding/2) + ")");
   }
-
-  // function click() {
-  //   var selected = d3.selectAll(".selected").data();
-
-  //   if (selected.length == 2) {
-  //     comp = 1;
-  //     var data = {};
-  //     selected.forEach(function(d) {
-  //       for (var [key, value] of Object.entries(breakdown_times[d.id])) {
-  //         var ites = [];
-  //         find_max_value_per_ite(value, ites);
-
-  //         var value;
-  //         if (meas == "Median") { value = Number(Number(d3.median(ites))*time_metics).toFixed(3); }
-  //         else if (meas == "Mean") { value = Number(Number(d3.mean(ites))*time_metics).toFixed(3); }
-  //         else if (meas == "Min") { value = Number(Number(d3.min(ites))*time_metics).toFixed(3); }
-  //         else { value = Number(Number(d3.max(ites))*time_metics).toFixed(3); }
-
-  //         if (data[key] == null) { data[key] = value; }
-  //         else { data[key] -= value; }
-  //       }
-  //     })
-
-  //     root.children.forEach(uncollapse); 
-  //     root.each(function(d) { d.data.time = Number(data[d.data.id].toFixed(3)); });
-
-  //     root.children.forEach(collapse); 
-  //     draw_tree(root, 1);
-  //   } 
-  //   else { 
-  //     comp = 0; 
-  //     // root.each(function(d) {
-  //       // console.log(breakdown_times);
-  //       // var t = breakdown_times[d.data.id][proc][ts];
-  //       // d.data.time = (Number(t)*time_metics).toFixed(3); 
-  //       // draw_tree(root);
-  //     // })
-  //   }
-  // }
 }

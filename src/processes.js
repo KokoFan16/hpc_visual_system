@@ -185,7 +185,6 @@ export function draw_processes(ts, nodeid, is_loop, is_tag=null) {
     var linkExit = links.exit().transition().duration(duration).remove();
 
     linex.attr("y2", height);
-
     liney.attr("x1", width).attr("x2", width);
 
     line_chart.append("rect")                                 
@@ -212,8 +211,9 @@ export function draw_processes(ts, nodeid, is_loop, is_tag=null) {
       var curp = proc - curData[0].id;
       var d = curData[curp];
 
-      line_chart.select(".pointer").style("display", null)
-        .attr("transform", "translate(" + x(d.id) + "," + y(d.time) + ")");
+      container.select(".pointer").style("display", null)
+        .transition().duration(duration)
+        .attr("transform", "translate(" + (x(d.id)+padding*2.5) + "," + y(d.time) + ")");
     }
 
     function mousemove() {                                
@@ -268,14 +268,13 @@ export function draw_processes(ts, nodeid, is_loop, is_tag=null) {
     xAxis.call(d3.axisBottom(x));
 
     if (curData[0].id > proc || curData[threshold-1].id < proc) {
-      line_chart.select(".pointer").style("display", "none");
+      container.select(".pointer").style("display", "none");
     }
     else {
       var curp = proc - curData[0].id;
       var d = curData[curp];
-      line_chart.select(".pointer").style("display", null)
-        .transition().duration(duration)
-        .attr("transform", "translate(" + x(d.id) + "," + y(d.time) + ")");
+      container.select(".pointer").style("display", null)
+        .attr("transform", "translate(" + (x(d.id)+padding*2.5) + "," + y(d.time) + ")");
     }
 
     mainView(curData);
@@ -335,10 +334,10 @@ function draw_statics() {
     .attr("transform", "translate(" + padding*2.5 + "," + 0 + ")")
     .attr("clip-path", "url(#clip)");
 
-  line_chart.append("circle").attr("class", "pointer");
-     // .style("display", "none");
+  container.append("circle").attr("class", "pointer");
 
-  tip = line_chart.append("g").style("display", "none");
+  tip = container.append("g").style("display", "none")
+    .attr("transform", "translate(" + padding*2.5 + "," + 0 + ")");
 
   xAxis = focus.append("g").call(d3.axisBottom(x))
           .attr("class", "axis axis--x")
