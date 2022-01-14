@@ -269,25 +269,6 @@ function responsive() {
   }
 }
 
-// function compare() {
-  // var data = [breakdown_times[comp_proc], breakdown_times[comp_proc]
-    // selected.forEach(function(d) {
-  //   for (var [key, value] of Object.entries(breakdown_times[d.id])) {
-  //     var ites = [];
-  //     find_max_value_per_ite(value, ites);
-
-  //     var value;
-  //     if (meas == "Median") { value = Number(Number(d3.median(ites))*time_metics).toFixed(3); }
-  //     else if (meas == "Mean") { value = Number(Number(d3.mean(ites))*time_metics).toFixed(3); }
-  //     else if (meas == "Min") { value = Number(Number(d3.min(ites))*time_metics).toFixed(3); }
-  //     else { value = Number(Number(d3.max(ites))*time_metics).toFixed(3); }
-
-  //     if (data[key] == null) { data[key] = value; }
-  //     else { data[key] -= value; }
-  //   }
-  // })
-// }
-
 function intial(data) {
 
   phase.text("Current event: " + nodeid);

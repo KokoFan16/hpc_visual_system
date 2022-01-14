@@ -4,7 +4,7 @@ import { treeData_update, uncollapse } from './utils.js';
 import { draw_tree } from './tree.js';
 import { draw_treemap } from './treemap.js';
 
-var threshold = 128, is_click = 0;
+var threshold = 128;
 var height = 180, height2 = 35;
 var container, x_label, minValue, maxValue, meanValue, medianValue, clip;
 var line_chart, focus, context, statistics, xAxis, yAxis, xAxis2, tip, brushCall, linex, liney;
@@ -32,8 +32,7 @@ var times=[], new_time, curData;
 
 export function draw_processes(ts, nodeid, is_loop, is_tag=null) {
 
-  // if (is_tag == null ) { phase.text("Current event: " + nodeid); }
-  // else { phase.text("Show sum of tag: " + is_tag); }
+  if (is_tag) { phase.text("Show sum of tag: " + is_tag); }
   
   if (cleared == 1) { draw_statics(); }
 
@@ -200,8 +199,6 @@ export function draw_processes(ts, nodeid, is_loop, is_tag=null) {
       .on("click", click);
 
     function click() {
-      is_click = 1;
-
       proc = Math.round(x.invert(d3.mouse(this)[0]));
       procInfo.text("Current rank: " + proc + "/" + procs_num);
 
@@ -270,36 +267,18 @@ export function draw_processes(ts, nodeid, is_loop, is_tag=null) {
     x.domain([d3.min(curData, d=>d.id), d3.max(curData, d=>d.id)]);
     xAxis.call(d3.axisBottom(x));
 
-    if (is_click == 1) {
-      if (curData[0].id > proc || curData[threshold-1].id < proc) {
-        line_chart.select(".pointer").style("display", "none");
-      }
-      else {
-        var curp = proc - curData[0].id;
-        var d = curData[curp];
-        line_chart.select(".pointer").style("display", null)
-          .transition().duration(duration)
-          .attr("transform", "translate(" + x(d.id) + "," + y(d.time) + ")");
-      }
+    if (curData[0].id > proc || curData[threshold-1].id < proc) {
+      line_chart.select(".pointer").style("display", "none");
+    }
+    else {
+      var curp = proc - curData[0].id;
+      var d = curData[curp];
+      line_chart.select(".pointer").style("display", null)
+        .transition().duration(duration)
+        .attr("transform", "translate(" + x(d.id) + "," + y(d.time) + ")");
     }
 
     mainView(curData);
-
-    // x.domain(s.map(x2.invert, x2));
-    // var value = (s[1]-s[0])/(x.range()[1]) * times.length;
-    // value = (value > times.length) ? times.length: value;
-
-    // if ( value < 512 && change == 0) {
-    //   line_chart.select(".line").datum(times).attr("d", line);
-    //   change = 1;
-    // }
-    // else if (value > 512 && change == 1) {
-    //   line_chart.select(".line").datum(new_time).attr("d", line);
-    //   change = 0;
-    // }
-    // else {
-    //   line_chart.select(".line").attr("d", line);
-    // }
 
     // focus.select(".axis--x").call(d3.axisBottom(x));
     // container_3_plot.select(".zoom").call(zoom.transform, d3.zoomIdentity
@@ -356,9 +335,8 @@ function draw_statics() {
     .attr("transform", "translate(" + padding*2.5 + "," + 0 + ")")
     .attr("clip-path", "url(#clip)");
 
-  line_chart.append("circle")
-     .attr("class", "pointer") 
-     .style("display", "none");
+  line_chart.append("circle").attr("class", "pointer");
+     // .style("display", "none");
 
   tip = line_chart.append("g").style("display", "none");
 
