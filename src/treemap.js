@@ -48,15 +48,17 @@ export function draw_treemap(source, selectedtag=null) {
     for (var k = 0; k < tags.length; k++) { color_values.push(color(k));} 
     legendlen = (svgWidth)/tags.length;
   }
+  else if (comp == 1) {
+    color_values = compColor;
+    legendlen = (svgWidth)/3;
+  }
   else {
    for (var k = 0; k < 20; k++) { color_values.push(myColor(unit_value*(k+1)));} 
    legendlen = (svgWidth)/20; 
   }
+  
+  var cell = container_2_plot.selectAll('g').data(mydata.leaves()); // draw rects
 
-  // draw rects
-  var cell = container_2_plot.selectAll('g').data(mydata.leaves());
-
-  // rect enter
   var cellEnter = cell.enter().append("g");
 
   cellEnter.append("rect")
@@ -83,9 +85,9 @@ export function draw_treemap(source, selectedtag=null) {
     .attr('stroke', '#5D6D7E')
     .attr("fill", function(d) { 
       if (comp == 1){ 
-        if (d.data.time < 0) { return "red"; }
-        else if (d.data.time > 0) { return "green"; }
-        else { return "white"; }
+        if (d.data.time < 0) { return compColor[1]; }
+        else if (d.data.time > 0) { return compColor[0]; }
+        else { return compColor[2]; }
       }
       if (show_tag == 1) { if (d.data.data.tag) { 
         return color(tags.indexOf(d.data.data.tag)); } }
@@ -143,8 +145,17 @@ export function draw_treemap(source, selectedtag=null) {
     var trans_dis = 0;
     var label;
     if (show_tag == 0) {
-      trans_dis = -legendlen/2 -(Math.floor(d.data.time/unit_value)*legendlen); 
-      label = colorbartext[Math.floor(d.data.time/unit_value)];
+      if (comp == 1){
+        var id = 2;
+        if (d.data.time > 0) { id = 0; label = "Decrease"; } 
+        else if (d.data.time < 0) { id = 1; label = "Increase"; }
+        else { label = "No change"; }
+        trans_dis = -legendlen/2 -(id*legendlen);
+      }
+      else {
+        trans_dis = -legendlen/2 -(Math.floor(d.data.time/unit_value)*legendlen); 
+        label = colorbartext[Math.floor(d.data.time/unit_value)];
+      }
     }
     else {
       trans_dis = -legendlen/2 -tags.indexOf(d.data.data.tag)*legendlen; 

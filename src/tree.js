@@ -65,9 +65,9 @@ export function draw_tree(source, selectedtag=null)
     .attr('r', 10)
     .style("fill", function(d) {
       if (comp == 1){ 
-        if (d.data.time < 0) { return "red"; }
-        else if (d.data.time > 0) { return "green"; }
-        else { return "white"; }
+        if (d.data.time < 0) { return compColor[1]; }
+        else if (d.data.time > 0) { return compColor[0]; }
+        else { return compColor[2]; }
       }
       if (show_tag == 1) { var index = tags.indexOf(d.data.data.tag); return color(index); }
       else { return d._children ? "lightsteelblue" : "#fff"; }
@@ -170,6 +170,8 @@ export function clicktree(d) {
 
     nodeid = d.data.id;
     is_loop = d.data.data.is_loop;
+
+    if (!show_tag) { phase.text("Current event: " + nodeid); }
 
     if (d.children || d._children) {
       if (d.children) {

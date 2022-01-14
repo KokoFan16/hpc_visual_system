@@ -128,8 +128,7 @@ fetch("data/fileName.txt") // open file to get filename
       }
       
       file = d3.select("#selecFiles").property("value");
-      load_data(file); 
-      
+        
       if (cleared == 1) {
         compInfo.text("Compare: " + procs_num + " vs. " + comp_proc);
 
@@ -140,6 +139,8 @@ fetch("data/fileName.txt") // open file to get filename
           }
         }
       } 
+
+      load_data(file); 
     }
 
     function changeExe() {
@@ -185,6 +186,7 @@ fetch("data/fileName.txt") // open file to get filename
         });
 
         if (procs_num == comp_proc) {
+          comp = 0;
           if ( meas != "mean" ) {
             proc = maxp_stats[procs_num][meas];
             procInfo.text("Max rank: " + proc + "/" + procs_num);
@@ -192,7 +194,6 @@ fetch("data/fileName.txt") // open file to get filename
         }
         else {
           comp = 1;
-
         }
         render(1);
       })

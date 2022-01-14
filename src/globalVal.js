@@ -33,5 +33,6 @@ var show_loop = 0,
     // selectedNodes = [],
     comp_proc = null;
 
-var color = d3.scaleOrdinal(d3.schemeAccent); 
+var color = d3.scaleOrdinal(d3.schemeAccent);
+var compColor = ["#7DCEA0", "#D98880", "#F7DC6F"];
 

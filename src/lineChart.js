@@ -150,15 +150,20 @@ export function draw_line_figure(source, container, xs, ys, y, li, flag){
 
       d = source[i];
 
-      if (procs_num == comp_proc) {           
+      if (procs_num == comp_proc) { 
+        comp = 0;          
         if ( meas != "mean" ) {
           proc = maxp_stats[procs_num][meas];
           procInfo.text("Max rank: " + proc + "/" + procs_num);
         }
-        treeData_update();
-        draw_tree(root); // draw tree 
-        draw_treemap(root); // draw zoomable treemap
       }
+      else {
+        comp = 1;
+      }
+      treeData_update();
+      draw_tree(root); // draw tree 
+      draw_treemap(root); // draw zoomable treemap
+
     }
     else {
       ts = xs.invert(d3.mouse(this)[0]-padding*2);
