@@ -20,16 +20,31 @@ export function parseData(data) {
 export function treeData_update() {
   // assign the name to each node 
   root.children.forEach(uncollapse);
-  root.each(function(d) {
-    var t;
-    if (ts == null) {      
-      d.data.time = exe_avgData[procs_num][d.data.id][proc].time;
-    }
-    else { 
-      t = breakdown_times[procs_num][d.data.id][proc][ts]; 
-      d.data.time = (d3.sum(t)*time_metics).toFixed(3);
-    }
-  });
+  if (comp == 1) {
+    var t1 = exe_statistics[procs_num][meas].id,
+        t2 = exe_statistics[comp_proc][meas].id,
+        p1 = maxp_stats[procs_num][meas],
+        p2 = maxp_stats[comp_proc][meas];
+
+    root.each(function(d) {
+      var d1 = d3.sum(breakdown_times[procs_num][d.data.id][p1][t1]);
+      var d2 = d3.sum(breakdown_times[comp_proc][d.data.id][p2][t2]);
+
+      var value = (procs_num < comp_proc)? (d1 - d2) : (d2 - d1);
+      d.data.time = (value*time_metics).toFixed(3);
+    });
+  }
+  else {
+    root.each(function(d) {
+      if (ts == null) {      
+        d.data.time = exe_avgData[procs_num][d.data.id][proc].time;
+      }
+      else { 
+        var t = breakdown_times[procs_num][d.data.id][proc][ts]; 
+        d.data.time = (d3.sum(t)*time_metics).toFixed(3);
+      }
+    });
+  }
   root.children.forEach(collapse);
 }
 

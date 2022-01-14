@@ -182,27 +182,17 @@ export function clicktree(d) {
       }
 
       draw_tree(d); // refresh tree 
+      if (cleared == 1) { draw_scale_stacked(); }
+    }
 
-      if (cleared == 0) {
-          draw_treemap(root); // refresh treemap 
-          draw_processes(ts, nodeid, is_loop); // refresh figure of processes 
-          draw_ts_or_ite(nodeid); // refresh figure of ts or ite 
-      }
-      else {
-        // draw_scale(nodeid);
-        draw_ts_or_ite(nodeid, 1);
-        draw_scale_stacked();
-      }
+    draw_treemap(root); // refresh treemap 
+
+    if (cleared == 0) {
+      draw_processes(ts, nodeid, is_loop); // refresh figure of processes 
+      draw_ts_or_ite(nodeid); // refresh figure of ts or ite 
     }
     else {
-      if (cleared == 0) {
-        draw_processes(ts, nodeid, is_loop); 
-        draw_ts_or_ite(nodeid); 
-      }
-      else {
-        draw_ts_or_ite(nodeid, 1);
-        // draw_scale(nodeid);
-      }
+      draw_ts_or_ite(nodeid, 1);
     }
 }
 

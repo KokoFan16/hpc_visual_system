@@ -26,6 +26,7 @@ export function draw_treemap(source, selectedtag=null) {
   // add value for each node
   var mydata = source.eachBefore(function(d) { 
       d.data.value = (d.children ? 0: d.data.time); 
+      if (comp == 1) { d.data.value = Math.abs(d.data.value) }
       if (show_tag == 1) {
         if ((!d.data.data.tag) || (selectedtag && (d.data.data.tag != selectedtag) )) { 
           d.data.value = 0; }
@@ -81,9 +82,15 @@ export function draw_treemap(source, selectedtag=null) {
     .attr("height", function(d) { if (d.value > 0) { return d.y1 - d.y0; } })
     .attr('stroke', '#5D6D7E')
     .attr("fill", function(d) { 
+      if (comp == 1){ 
+        if (d.data.time < 0) { return "red"; }
+        else if (d.data.time > 0) { return "green"; }
+        else { return "white"; }
+      }
       if (show_tag == 1) { if (d.data.data.tag) { 
         return color(tags.indexOf(d.data.data.tag)); } }
-      else { return myColor(d.data.time); } }) 
+      else { return myColor(d.data.time); } 
+    }) 
     .on('mouseover', mouseover)
     .on('mouseout', function(d) {
       d3.select(this).style("stroke-width","2px")
