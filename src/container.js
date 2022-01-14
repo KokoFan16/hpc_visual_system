@@ -28,10 +28,6 @@ export var exeInfo = info.append('text')
     .attr("x", winWidth*3/5)
     .attr("y", padding);
 
-export var compInfo = info.append('text')
-    .attr("class", "info")
-    .attr("y", padding);
-
 var div = d3.select("div#one").append("div").classed("svg-container", true);
 export var container_3_plot = div.append("svg")
    .classed("svg-content-responsive", true)

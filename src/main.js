@@ -1,6 +1,6 @@
 import Split from './split.js'
 import { container_3_plot, container_4_plot, rect3, rect4, 
-  info, phase, procInfo, exeInfo, compInfo} from './container.js';
+  info, phase, procInfo, exeInfo} from './container.js';
 import { parseData, treeData_update, collapse, findtags, find_exe_stats, 
   cal_exeAvgData, find_maxp_stats } from './utils.js'; //, , findAllLoops, uncollapse, 
 import { drawLoopsButt } from './loops.js';
@@ -95,25 +95,13 @@ fetch("data/fileName.txt") // open file to get filename
       if (cleared == 1) {
         d3.select(".button").text("Individual View");
         individualView();
-        v1=1/5, v2=3/5, v3=2/5, v4=4/5;
-        compInfo.style("display", "none");
         cleared = 0;
       }
       else {
         d3.select(".button").text("Ensemble View");
         ensembleView();
-        v1=1/6, v2=1/3, v3=1/2, v4=5/6;
-        compInfo.attr("x", winWidth*2/3)
-          .style("display", null)
-          .text("Compare: " + procs_num + " vs. " + comp_proc);
         cleared = 1;
       }
-
-      procInfo.attr("x", winWidth*v1);
-      exeInfo.attr("x", winWidth*v2);
-      phase.attr("x", winWidth*v3);  
-      info.select(".yMetrics").attr("x", winWidth*v4);
-      info.select(".metricsText").attr("x", winWidth*v4);
     }
 
     function change() {
@@ -130,13 +118,16 @@ fetch("data/fileName.txt") // open file to get filename
       file = d3.select("#selecFiles").property("value");
         
       if (cleared == 1) {
-        compInfo.text("Compare: " + procs_num + " vs. " + comp_proc);
-
-        if (procs_num == comp_proc) {           
+        if (procs_num == comp_proc) { 
+          comp = 1;
           if ( meas != "mean" ) {
             proc = maxp_stats[procs_num][meas];
             procInfo.text("Max rank: " + proc + "/" + procs_num);
           }
+        }
+        else { 
+          comp = 0; 
+          procInfo.text("Compare: " + procs_num + " vs. " + comp_proc);
         }
       } 
 
@@ -197,20 +188,9 @@ fetch("data/fileName.txt") // open file to get filename
         }
         render(1);
       })
-
-      // d3.select('#selecExe').style("visibility", "visible");
-      // d3.select('#exespan').style("visibility", "visible");
-
-      // d3.select('#selecFiles').style("visibility", "hidden");
-      // d3.select('#filespan').style("visibility", "hidden");
-
-      // root.children.forEach(collapse);
-      // draw_tree(root);
-
       container_3_plot.select(".container").remove();
     }
 
-    
     function load_data(file) {
       fileSplit = file.split(/[._]+/);
       procs_num = Number(fileSplit[fileSplit.length-2]); // total number of processes 
@@ -242,7 +222,7 @@ function init_computing(data) {
   if (!all_events) { 
     all_events = Object.keys(breakdown_times[procs_num]);
   }
-  
+
   find_exe_stats("main", p);
   cal_exeAvgData(p);
   find_maxp_stats(p);
