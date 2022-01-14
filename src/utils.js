@@ -152,7 +152,7 @@ export function find_maxp_stats(p) {
 
 export function cal_exeAvgData(p) {
   var avgs = {};
-  Object.keys(breakdown_times[procs_num]).forEach(function(e) {
+  all_events.forEach(function(e) {
     var avgprocs = [];
     breakdown_times[p][e].forEach(function(d, i) {
       avgprocs.push( { "id": i,

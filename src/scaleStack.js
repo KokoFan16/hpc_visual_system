@@ -6,7 +6,6 @@ var var_div = d3.select('body').append('div')
 var height = divHeight-padding*3, width, bar_width=60;
 var focus, xScale, yScale, xAxis, yAxis, line;
 
-// draw_intial();
 export function draw_scale_stacked(inital=0) {
 
   var curWidth = container_3_plot.node().getBoundingClientRect().width;
@@ -33,14 +32,14 @@ export function draw_scale_stacked(inital=0) {
   yScale.domain(pcs);
   yAxis.transition().duration(duration).call(d3.axisLeft(yScale));
 
-  xScale.rangeRound([0, width]).domain([0, d3.max(data, d => d3.sum(keys, k => +d[k]))]); //.nice()
+  xScale.rangeRound([0, width]).domain([0, d3.max(data, d => d3.sum(keys, k => +d[k]))]).nice();
   xAxis.transition().duration(duration).call(d3.axisBottom(xScale));
 
   var group = focus.selectAll(".layer")
     .data(d3.stack().keys(keys)(data), d => d.key);
 
   group.enter().append("g").classed("layer", true)
-    .attr("fill", d => color(d.key) );
+    .attr("fill", randomColor); //d => color(all_events.indexOf(d.key))
 
   group.exit().remove();
 
@@ -54,10 +53,13 @@ export function draw_scale_stacked(inital=0) {
         var_div.transition().duration(200).style('opacity', 0.9);
         var_div.html(key + '<br/>' + "(" + time + ")")
           .style('left', d3.event.pageX + 'px')
-          .style('top', d3.event.pageY - 28 + 'px'); 
+          .style('top', d3.event.pageY - 28 + 'px');
+
+        d3.select(this).style("stroke-width","3px"); 
       })
       .on('mouseout', function(d) {
-        var_div.transition().duration(500).style('opacity', 0); 
+        var_div.transition().duration(500).style('opacity', 0);
+        d3.select(this).style("stroke-width","1px"); 
       }); 
     
   var barUpdate = barEnter.merge(bars)
@@ -143,3 +145,39 @@ function draw_intial() {
     .attr("transform", "rotate(-90)")
     .text("Process Counts");
 }
+
+var randomColor = (function(){
+  var golden_ratio_conjugate = 0.618033988749895;
+  var h = Math.random();
+
+  var hslToRgb = function (h, s, l){
+      var r, g, b;
+
+      if(s == 0){
+          r = g = b = l; // achromatic
+      }else{
+          function hue2rgb(p, q, t){
+              if(t < 0) t += 1;
+              if(t > 1) t -= 1;
+              if(t < 1/6) return p + (q - p) * 6 * t;
+              if(t < 1/2) return q;
+              if(t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+              return p;
+          }
+
+          var q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+          var p = 2 * l - q;
+          r = hue2rgb(p, q, h + 1/3);
+          g = hue2rgb(p, q, h);
+          b = hue2rgb(p, q, h - 1/3);
+      }
+
+      return '#'+Math.round(r * 255).toString(16)+Math.round(g * 255).toString(16)+Math.round(b * 255).toString(16);
+  };  
+  return function(){
+    h += golden_ratio_conjugate;
+    h %= 1;
+    return hslToRgb(h, 0.5, 0.60);
+  };
+})();
+

@@ -238,6 +238,11 @@ function init_computing(data) {
   var temp = parseData(data); 
   var p = temp["main"].length;
   breakdown_times[p] = temp;
+  
+  if (!all_events) { 
+    all_events = Object.keys(breakdown_times[procs_num]);
+  }
+  
   find_exe_stats("main", p);
   cal_exeAvgData(p);
   find_maxp_stats(p);
