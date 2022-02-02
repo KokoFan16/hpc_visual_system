@@ -5,6 +5,7 @@ import { draw_tree } from './tree.js';
 import { draw_treemap } from './treemap.js';
 
 var threshold = 128;
+var threshold2 = 2048;
 var height = 180, height2 = 35;
 var container, x_label, minValue, maxValue, meanValue, medianValue, clip;
 var line_chart, focus, context, statistics, xAxis, yAxis, xAxis2, tip, brushCall, linex, liney;
@@ -87,9 +88,14 @@ export function draw_processes(ts, nodeid, is_loop, is_tag=null) {
     var brushLen = width;
     if (procs_num > threshold) {
       var div = Math.ceil(procs_num/threshold);
-      // new_time = times.filter(t => t.id%div == 0);
+      if (procs_num > threshold2) {
+        var div2 = Math.ceil(procs_num/threshold2);
+        new_time = times.filter(t => t.id%div2 == 0);
+      } 
+      else {
+        new_time = times;
+      }
       brushLen = brushLen/div;
-      new_time = times;
       curData = times.slice(0, threshold);
     }
     else { curData = times;  new_time = times; }

@@ -93,6 +93,7 @@ fetch("data/fileName.txt") // open file to get filename
     function click() {
       var v1, v2, v3, v4;
       if (cleared == 1) {
+        comp = 0;
         d3.select(".button").text("Individual View");
         individualView();
         cleared = 0;
@@ -119,14 +120,14 @@ fetch("data/fileName.txt") // open file to get filename
         
       if (cleared == 1) {
         if (procs_num == comp_proc) { 
-          comp = 1;
+          comp = 0;
           if ( meas != "mean" ) {
             proc = maxp_stats[procs_num][meas];
             procInfo.text("Max rank: " + proc + "/" + procs_num);
           }
         }
         else { 
-          comp = 0; 
+          comp = 1; 
           procInfo.text("Compare: " + procs_num + " vs. " + comp_proc);
         }
       } 
@@ -158,6 +159,8 @@ fetch("data/fileName.txt") // open file to get filename
 
     function individualView() {
       container_3_plot.select(".focus").remove();
+      draw_tree(root);
+      draw_treemap(root);
       draw_ts_or_ite(nodeid);
       draw_processes(ts, nodeid, '0');
       procInfo.text("Current rank: " + proc + "/" + procs_num);
@@ -185,6 +188,7 @@ fetch("data/fileName.txt") // open file to get filename
         }
         else {
           comp = 1;
+          procInfo.text("Compare: " + procs_num + " vs. " + comp_proc);
         }
         render(1);
       })

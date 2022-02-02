@@ -30,7 +30,8 @@ export function treeData_update() {
       var d1 = d3.sum(breakdown_times[procs_num][d.data.id][p1][t1]);
       var d2 = d3.sum(breakdown_times[comp_proc][d.data.id][p2][t2]);
 
-      var value = (procs_num < comp_proc)? (d1 - d2) : (d2 - d1);
+      // var value = (procs_num < comp_proc)? (d1 - d2) : (d2 - d1);
+      var value = (d1 - d2);
       d.data.time = (value*time_metics).toFixed(3);
     });
   }

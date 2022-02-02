@@ -46,8 +46,8 @@ private:
 
 
 public:
-	Events(std::string n, std::string t, long size=0, int loop=0, int ite=0)
-	{
+	Events(std::string n, std::string t=0, long size=0, int loop=0, int ite=0)
+	{		
 		name = n;
 		tags = t;
 		is_loop = loop;

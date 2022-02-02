@@ -28,11 +28,9 @@ export function draw_ts_or_ite(nodeid, scale=null) {
   if (scale){
     Object.keys(breakdown_times).forEach(function(pc) {
       var t = exe_statistics[pc][meas].id;
-      var selec_column = [];
-      breakdown_times[pc][nodeid].forEach(function(d) {
-        selec_column.push(d3.sum(d[t]));
-      });
-      times.push({"id": pc, "time": Number((d3.max(selec_column)*time_metics).toFixed(3)) });
+      var p = maxp_stats[pc][meas];
+      var value = d3.sum(breakdown_times[pc][nodeid][p][t]);
+      times.push({"id": pc, "time": Number((value*time_metics).toFixed(3)) });
     })
 
     xLabelText = "Process Counts";

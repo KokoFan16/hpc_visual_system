@@ -24,7 +24,7 @@ export function draw_treemap(source, selectedtag=null) {
     .paddingInner(4);
 
   // add value for each node
-  var mydata = source.eachBefore(function(d) { 
+  var mydata = source.eachBefore(function(d) {     
       d.data.value = (d.children ? 0: d.data.time); 
       if (comp == 1) { d.data.value = Math.abs(d.data.value) }
       if (show_tag == 1) {
@@ -32,7 +32,7 @@ export function draw_treemap(source, selectedtag=null) {
           d.data.value = 0; }
       }
     })
-    .sum(function(d) { return d.value ? d.value : 0 });
+    .sum(function(d) { return d.value ? Number(d.value) : 0 });
 
   init_treemap(mydata); // generate a treemap 
 
