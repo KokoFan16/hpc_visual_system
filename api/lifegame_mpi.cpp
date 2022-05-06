@@ -27,13 +27,10 @@
 
 #include "logging_api.h"
 
-static int rank;
-static int process_count;
-
 int ntimestep;
 int curTs;
 int nprocs;
-int curRank;
+int rank;
 std::string namespath; // call path of functions
 
 void randomInitBoard(int *b, int N, int M);
@@ -53,27 +50,28 @@ int main(int argc, char **argv)
     // MPI Initial
     if (MPI_Init(&argc, &argv) != MPI_SUCCESS)
         printf("ERROR: MPI_Init error\n");
-    if (MPI_Comm_size(MPI_COMM_WORLD, &process_count) != MPI_SUCCESS)
+    if (MPI_Comm_size(MPI_COMM_WORLD, &nprocs) != MPI_SUCCESS)
         printf("ERROR: MPI_Comm_size error\n");
     if (MPI_Comm_rank(MPI_COMM_WORLD, &rank) != MPI_SUCCESS)
         printf("ERROR: MPI_Comm_rank error\n");
 
 
-    for (int t = 0; t < 2; t++)
+    for (int t = 0; t < 1; t++)
     {
 
-    set_timestep(t, 2);
-    set_rank(rank, process_count);
+    set_timestep(t, 1);
+    set_rank(rank, nprocs);
     set_namespath("");
 
-	Events e("main", "null", 100);
+	Events e("main"); //"size:100"
+	// e.set_self_pair("size:100"); //;memcost:200
 
     int *board, *counts, *offset, *my_board, *my_next;
     int N, maxGeneration, my_count, my_N;
 
     // Get arguments
     {
-    	Events e("Pre", "null", 100);
+    	Events e("Pre");
 
 		N = atoi(argv[1]);
 		maxGeneration = atoi(argv[2]);
@@ -98,14 +96,14 @@ int main(int argc, char **argv)
 		// Calculate the counts and offset of data per process
 		{
 			Events e("calCounts", "COMP");
-			counts = (int*)malloc(sizeof(int)*process_count);
-			offset = (int*)malloc(sizeof(int)*process_count);
+			counts = (int*)malloc(sizeof(int)*nprocs);
+			offset = (int*)malloc(sizeof(int)*nprocs);
 
-			for (int i = 0; i < process_count; i++)
-				counts[i] = (N/process_count + ((i<N%process_count)?1:0))*(N+2);
+			for (int i = 0; i < nprocs; i++)
+				counts[i] = (N/nprocs + ((i<N%nprocs)?1:0))*(N+2);
 
 			offset[0] = 0;
-			for (int i = 1; i < process_count; i++)
+			for (int i = 1; i < nprocs; i++)
 				offset[i] = offset[i-1] + counts[i-1];
 
 			my_count = counts[rank];
@@ -131,13 +129,13 @@ int main(int argc, char **argv)
     double starttime = MPI_Wtime();
     
     {
-    	Events e("lifeChange", "null");
+    	Events e("lifeChange");
 
 		// Set prev and next process of a process
 		int prev = rank - 1;
 		int next = rank + 1;
-		if (rank == 0)  prev = process_count - 1;
-		if (rank == (process_count - 1))  next = 0;
+		if (rank == 0)  prev = nprocs - 1;
+		if (rank == (nprocs - 1))  next = 0;
 
 		MPI_Status stats[2];
 
@@ -147,10 +145,10 @@ int main(int argc, char **argv)
 			int change_flag = 0;
 
 			{
-				Events e("exchange", "COMM", 0, 2, k);
+				Events e("exchange", "COMM", 2, k);
 
-				// If the process_count is larger than 1, send first row and last row to prev and next process
-				if(process_count != 1)
+				// If the nprocs is larger than 1, send first row and last row to prev and next process
+				if(nprocs != 1)
 				{
 					// Sync each process
 					MPI_Barrier(MPI_COMM_WORLD);
@@ -171,7 +169,7 @@ int main(int argc, char **argv)
 
 				// Print current board
 				#ifdef DEBUG_PRINT
-				for(int r = 0; r < process_count; r++)
+				for(int r = 0; r < nprocs; r++)
 				{
 					if(rank == r)
 					{
@@ -185,7 +183,7 @@ int main(int argc, char **argv)
 
 
 			{
-				Events e("BoardChange", "COMP", 0, 2, k);
+				Events e("BoardChange", "COMP", 2, k);
 
 				for (int i = 1; i < my_N+1; i++)
 				{
@@ -199,7 +197,7 @@ int main(int argc, char **argv)
 
 						// Print alives per process
 						#ifdef DEBUG_PRINT
-						for(int r = 0; r < process_count; r++)
+						for(int r = 0; r < nprocs; r++)
 						{
 							if(rank == r)
 							{
@@ -232,7 +230,7 @@ int main(int argc, char **argv)
 			}
 
 			{
-				Events e("statusCheck", "COMP", 0, 2, k);
+				Events e("statusCheck", "COMP", 2, k);
 
 				// Copy ghost cell
 				copyGhostCell(my_next, my_N, N);
