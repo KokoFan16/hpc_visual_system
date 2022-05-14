@@ -32,6 +32,8 @@ draw_statics();
 var times=[], new_time, curData;
 
 export function draw_processes(ts, nodeid, is_loop, is_tag=null) {
+  
+  console.time('draw_processes');
 
   if (is_tag) { phase.text("Show sum of tag: " + is_tag); }
   
@@ -104,7 +106,8 @@ export function draw_processes(ts, nodeid, is_loop, is_tag=null) {
     var filter_data = (times.map(d=> Number(d.time)));
 
     var min = d3.min(times, d=> Number(d.min));
-    var max = d3.max(times, d=> Number(d.max));
+    // var max = d3.max(times, d=> Number(d.max));
+    var max = d3.max(times, d=> Number(d.time));
     // var ymin = (is_abs == 1)? 0: min*0.95;
      var ymin = (is_abs == 1)? 0: min;
 
@@ -129,7 +132,7 @@ export function draw_processes(ts, nodeid, is_loop, is_tag=null) {
     meanValue.attr("x", xpos).text(meanStr);
 
     x.domain([0, d3.max(curData, d=>d.id)]).range([0, width]).nice();
-    y.domain([ymin, max]).nice(); //max*1.05]
+    y.domain([ymin, max*1.05]).nice(); //max*1.05]
 
     x2.domain([0, procs_num]).range([0, width]);
     y2.domain([0, max]);
@@ -163,9 +166,12 @@ export function draw_processes(ts, nodeid, is_loop, is_tag=null) {
     //   .attr("height", height)
     //   .attr("transform", "translate(" + padding + "," + padding + ")")
     //   .call(zoom);
+
+    console.timeEnd('draw_processes');
   }
 
   function mainView(data) {
+    console.time('draw_processes-mainView');
 
     var area = line_chart.selectAll('.area')
       .data([data], function(d){ return d.id; });
@@ -178,6 +184,7 @@ export function draw_processes(ts, nodeid, is_loop, is_tag=null) {
       .y0(function(d) { return y(d.max); })
       .y1(function(d) { return y(d.min); })
     )
+    .attr("display", "none")
     area.exit().transition().duration(duration).remove();
 
     var links = line_chart.selectAll('.line')
@@ -214,6 +221,8 @@ export function draw_processes(ts, nodeid, is_loop, is_tag=null) {
 
       draw_tree(root); // draw tree 
       draw_treemap(root); // draw zoomable treemap
+
+      if (show_loop == 1) { draw_ts_or_ite(nodeid); }
 
       var curp = proc - curData[0].id;
       var d = curData[curp];
@@ -259,9 +268,11 @@ export function draw_processes(ts, nodeid, is_loop, is_tag=null) {
           })
          .text("P"+d.id);
     } 
+    console.timeEnd('draw_processes-mainView');
   }
   
   function brushed() {
+    console.time('draw_processes-brushed');
     if (d3.event.sourceEvent && d3.event.sourceEvent.type === "zoom") return; // ignore brush-by-zoom
     
     d3.selectAll('.brush>.handle').remove();
@@ -274,7 +285,9 @@ export function draw_processes(ts, nodeid, is_loop, is_tag=null) {
     x.domain([d3.min(curData, d=>d.id), d3.max(curData, d=>d.id)]);
     xAxis.call(d3.axisBottom(x));
 
-    if (curData[0].id > proc || curData[threshold-1].id < proc) {
+    var last = (procs_num > threshold)? threshold-1 : procs_num-1;
+
+    if (curData[0].id > proc || curData[last].id < proc) {
       container.select(".pointer").style("display", "none");
     }
     else {
@@ -285,6 +298,8 @@ export function draw_processes(ts, nodeid, is_loop, is_tag=null) {
     }
 
     mainView(curData);
+
+    console.timeEnd('draw_processes-brushed');
 
     // focus.select(".axis--x").call(d3.axisBottom(x));
     // container_3_plot.select(".zoom").call(zoom.transform, d3.zoomIdentity
@@ -304,6 +319,8 @@ export function draw_processes(ts, nodeid, is_loop, is_tag=null) {
 
 function draw_statics() {
 
+  console.time('draw_processes-statics');
+
   container = container_3_plot.append("g")
     .attr("class", "container")
     .attr("transform", "translate(" + 0 + "," + padding/2 + ")");
@@ -312,6 +329,12 @@ function draw_statics() {
     .attr("class", "labels")
     .attr("transform", "translate(0," + (divHeight-padding) + ")")
     .text("Ranks");
+
+  container.append('text')
+    .attr("class", "label")
+    .attr("x", padding)
+    .attr("y", divHeight - padding)
+    .text("Time(ms)");
 
   statistics = container.append("g")
     .attr("transform", "translate(" + padding*3 + "," + padding/2 + ")");
@@ -361,5 +384,7 @@ function draw_statics() {
   tip.append("text").attr("class", "tiptext y4");
   linex = tip.append("line").attr("class", "horline x").attr("y1", 0);
   liney = tip.append("line").attr("class", "horline y");
+
+  console.timeEnd('draw_processes-statics');
 }
 

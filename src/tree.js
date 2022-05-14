@@ -17,6 +17,7 @@ var var_div = d3.select('body').append('div')
 
 export function draw_tree(source, selectedtag=null)
 {
+  console.time('draw_tree');
   // draw the links between the nodes
   var tree = treemap(root);
   nodes = tree.descendants();
@@ -27,7 +28,7 @@ export function draw_tree(source, selectedtag=null)
 
   // set fixed path length when current max depth is less than 3
   if (max_depth < 3)
-      nodes.forEach(function(d){ d.y = d.depth * 180; });
+      nodes.forEach(function(d){ d.y = d.depth * 300; });
 
   // draw nodes
   var node = container_1_plot.selectAll("g.node")
@@ -154,6 +155,8 @@ export function draw_tree(source, selectedtag=null)
     if (selectedtag) { opacity = (d.data.data.tag == selectedtag)? 0.6: 0.1;  }
     return opacity;
   }
+
+  console.timeEnd('draw_tree');
 }
 
 function diagonal(s, d) {

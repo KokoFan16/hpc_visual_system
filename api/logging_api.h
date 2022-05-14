@@ -17,8 +17,8 @@
 #include <iterator>
 #include <map>
 #include <fstream>
-#include <experimental/filesystem>
-namespace fs = std::filesystem;
+#include <sys/stat.h>
+#include <errno.h>
 
 extern int ntimestep;
 extern int curTs;
@@ -132,9 +132,13 @@ inline static CSVWrite& endrow(CSVWrite& file) {
 /// write csv file out
 static void write_output(std::string filename, int flag=0) {
 
-	if (!fs::is_directory(filename) || !fs::exists(filename)) { // Check if this folder exists
-	    fs::create_directory(filename); // create folder
+	if (rank == 0) {
+		int ret = mkdir(filename.c_str(), S_IRWXU | S_IRWXG | S_IRWXO);
+		if (ret != 0 && errno != EEXIST) {
+			fprintf(stderr, "Error: failed to mkdir %s\n", filename.c_str());
+		}
 	}
+	MPI_Barrier(MPI_COMM_WORLD);
 
 	// file name for each process
 	std::string file = filename + "_" + std::to_string(ntimestep) + "_" + std::to_string(nprocs) + "_" + std::to_string(rank) + ".csv"; 

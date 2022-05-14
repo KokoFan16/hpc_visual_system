@@ -144,6 +144,13 @@ function draw_intial() {
     .attr("y", -padding*2)
     .attr("transform", "rotate(-90)")
     .text("Process Counts");
+
+  focus.append('text')
+    .attr("class", "label")
+    .attr("x", width/2)
+    .attr("y", divHeight - padding*1.5)
+    // .attr("transform", "rotate(-90)")
+    .text("Time(ms)");
 }
 
 var randomColor = (function(){

@@ -9,23 +9,22 @@ import { draw_ts_or_ite } from './tsIte.js';
 var width = 960, height = 500, legend_group; 
 export function draw_legends() {
 
-  container_1_plot.append("rect")
-    .attr('class', 'mybutton tagLegend')
-    .attr("width", 100)
-    .attr("height", 30)
-    .on('click', showTags);
+  // container_1_plot.append("rect")
+  //   .attr('class', 'mybutton tagLegend')
+  //   .attr("width", 100)
+  //   .attr("height", 30)
+  //   .on('click', showTags);
 
   // legend 
   legend_group = container_1_plot.append("g")
-    .attr("transform", "translate(5, " + padding*2 + ")")
+    .attr("transform", "translate(5, " + 0 + ")")
     .style("display", "none");
 
-  container_1_plot.append("text")
-    .attr("x", 50)
-    .attr("y", 20)
-    .attr("class", "mybuttext tagButt")
-    .style("font-size", "16px")
-    .text("Show Tags")
+  // container_1_plot.append("text")
+  //   .attr("x", 50)
+  //   .attr("y", 20)
+  //   .attr("class", "mybuttext tagButt")
+  //   .style("font-size", "16px")
 
   tags.forEach(function(item, index) {
     
@@ -79,10 +78,10 @@ export function draw_legends() {
 }
 
 
-function showTags() {
+export function showTags() {
   if (cleared == 0 && show_loop == 0) {
     if (show_tag == 0) {
-      d3.select('.tagButt').text("Back");
+      d3.select('.tag').text("Back");
       legend_group.style("display", null);
       
       root.children.forEach(uncollapse); 
@@ -90,7 +89,7 @@ function showTags() {
     }
     else {
       legend_group.style("display", "none");
-      d3.select('.tagButt').text("Show Tags");
+      d3.select('.tag').text("Show Tags");
 
       root.children.forEach(collapse); 
       draw_processes(ts, "main", is_loop); 

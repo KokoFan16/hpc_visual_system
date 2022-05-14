@@ -56,10 +56,10 @@ int main(int argc, char **argv)
         printf("ERROR: MPI_Comm_rank error\n");
 
 
-    for (int t = 0; t < 1; t++)
+    for (int t = 0; t < 2; t++)
     {
 
-    set_timestep(t, 1);
+    set_timestep(t, 2);
     set_rank(rank, nprocs);
     set_namespath("");
 
@@ -294,7 +294,7 @@ int main(int argc, char **argv)
 
     }
 
-    write_output("lifeGame_loop100");
+    write_output("lifeGame_loop100", 2);
 
     MPI_Finalize();
     return 0;

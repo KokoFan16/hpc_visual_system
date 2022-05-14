@@ -1,1 +1,1 @@
-lifeGame_8_loop_100.csv+lifeGame_16_loop_100.csv
+sim_vis_2048_1_1_2048.csv

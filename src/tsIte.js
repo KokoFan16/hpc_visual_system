@@ -17,6 +17,8 @@ draw_statics();
 
 export function draw_ts_or_ite(nodeid, scale=null) {
   
+  console.time('draw_ts_or_ite');
+
   var curWidth = container_4_plot.node().getBoundingClientRect().width;
   var width = (curWidth-padding*3);
 
@@ -32,24 +34,23 @@ export function draw_ts_or_ite(nodeid, scale=null) {
       var value = d3.sum(breakdown_times[pc][nodeid][p][t]);
       times.push({"id": pc, "time": Number((value*time_metics).toFixed(3)) });
     })
-
-    xLabelText = "Process Counts";
+    xLabelText = "Process Count";
   }
   else {
     if (show_loop == 0) {
       flag = 1;
       find_max_value_per_ite(breakdown_times[procs_num][nodeid], times);
-      xLabelText = "Executions";
+      xLabelText = "Execution iteration";
+    }
+    else {
+      flag = 2;
+      var t = exe_statistics[procs_num][meas].id;
+      breakdown_times[procs_num][nodeid][proc][t].forEach(function(t, i) {
+        times.push({"id": i, "time": Number((t*time_metics).toFixed(3)) });
+      })
+      xLabelText = "Loop iteration";
     }
   }
-  // else {
-  //   flag = 3;
-  //   // get time data for all the ierations
-  //   breakdown_times[procs_num][nodeid][proc][ts].forEach( function(d, i) {
-  //     times.push({"id": i, "time": (Number(d)*time_metics).toFixed(3)}) 
-  //   });
-  //   x_label.transition().duration(duration).attr("x", (curWidth)/2).text("Total number of iterations");
-  // }
 
   x_label.transition().duration(duration).attr("x", (curWidth)/2+padding).text(xLabelText);
 
@@ -57,6 +58,8 @@ export function draw_ts_or_ite(nodeid, scale=null) {
   xAxis.transition().duration(duration).call(d3.axisBottom(xScale));
 
   draw_line_figure(times, container_4_plot, xScale, yScale, yAxis, line, flag);
+
+  console.timeEnd('draw_ts_or_ite');
 }
 
 function draw_statics() {
@@ -78,10 +81,10 @@ function draw_statics() {
     .attr("text-anchor", "middle")
     .attr("y", divHeight - padding/2);
 
-  // container_4_plot.append('text')
-  //   .attr("class", "labels")
-  //   .attr("x", -container_height/4)
-  //   .attr("y", padding/2)
-  //   .attr("transform", "rotate(-90)")
-  //   .text("Time Taken (ms)");
+  container_4_plot.append('text')
+    .attr("class", "label")
+    .attr("x", 0)
+    .attr("y", divHeight - padding/2)
+    // .attr("transform", "rotate(-90)")
+    .text("Time(ms)");
 }

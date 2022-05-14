@@ -8,9 +8,12 @@ import { draw_processes } from './processes.js';
 var dp_width = 80;
 var showmin, showmax, showmean, showmedian, statistics, pointDot;
 export function draw_line_figure(source, container, xs, ys, y, li, flag){
-
+  
+  console.time('draw_line_figure');
+  
   var width = container.node().getBoundingClientRect().width;
-  var height = (flag == 2)? (container_height-padding): (divHeight - padding*2.7);
+  // var height = (flag == 2)? (container_height-padding): (divHeight - padding*2.7);
+  var height = divHeight - padding*2.7;
 
   // update y axis
   var min_time = d3.min(source, function(d){ return Number(d.time); });
@@ -77,18 +80,19 @@ export function draw_line_figure(source, container, xs, ys, y, li, flag){
     showmean.attr("x", xpos).text(meanStr);
   }
 
-  if (ts == null) { pointDot.style("display", "none"); }
+  if (ts == null || flag == 2) {  } //pointDot.style("display", "none");
   else {
     pointDot.style("display", null);
-    if (flag == 1) {
-      pointDot.transition().duration(duration)
-        .attr("transform", "translate(" + (xs(source[ts].id)+padding*2) + "," + (ys(source[ts].time)+padding/2) + ")");
-    }
-    else {
+    var xtrans, ytrans;
+    if (flag == 0) {
       var i = xs.domain().indexOf(comp_proc);
-      pointDot.transition().duration(duration)
-        .attr("transform", "translate(" + (xs(source[i].id)+padding*2) + "," + (ys(source[i].time)+padding/2) + ")");
+      xtrans = source[i].id; ytrans = source[i].time;
     }
+    else if (flag == 1){ xtrans = source[ts].id; ytrans = source[ts].time; }
+    else { xtrans = source[0].id; ytrans = source[0].time; }
+
+    pointDot.transition().duration(duration)
+      .attr("transform", "translate(" + (xs(xtrans)+padding*2) + "," + (ys(xtrans)+padding/2) + ")");
   }
 
   var pointer_rect = container.append("rect")  
@@ -157,30 +161,31 @@ export function draw_line_figure(source, container, xs, ys, y, li, flag){
           procInfo.text("Max rank: " + proc + "/" + procs_num);
         }
       }
-      else {
-        comp = 1;
-      }
+      else { comp = 1; }
       treeData_update();
       draw_tree(root); // draw tree 
       draw_treemap(root); // draw zoomable treemap
 
+      pointDot.transition().duration(duration)
+        .attr("transform", "translate(" + (xs(d.id)+padding*2) + "," + (ys(d.time)+padding/2) + ")");
     }
-    else {
-      ts = xs.invert(d3.mouse(this)[0]-padding*2);
-      exeInfo.text("Current execution: " + ts + "/" + ts_num);
-      treeData_update();
+    else if (flag == 1){
 
-      if (show_tag == 1) { root.children.forEach(uncollapse); }
+        ts = xs.invert(d3.mouse(this)[0]-padding*2);
+        exeInfo.text("Current execution: " + ts + "/" + ts_num);
+        treeData_update();
 
-      draw_tree(root); // draw tree 
-      draw_treemap(root); // draw zoomable treemap
-      draw_processes(ts, nodeid, '0');
+        draw_tree(root); // draw tree 
+        draw_treemap(root); // draw zoomable treemap
+        draw_processes(ts, nodeid, '0');
 
-      d = source[ts];
+        d = source[ts];
+
+      pointDot.transition().duration(duration)
+        .attr("transform", "translate(" + (xs(d.id)+padding*2) + "," + (ys(d.time)+padding/2) + ")");
     }
   
-    if (meas == "mean") { pointDot.style("display", null); }
-    pointDot.transition().duration(duration)
-      .attr("transform", "translate(" + (xs(d.id)+padding*2) + "," + (ys(d.time)+padding/2) + ")");
+    if (meas == "mean" ) { pointDot.style("display", null); }
   }
+  console.timeEnd('draw_line_figure');
 }

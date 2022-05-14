@@ -2,9 +2,9 @@ import Split from './split.js'
 import { container_3_plot, container_4_plot, rect3, rect4, 
   info, phase, procInfo, exeInfo} from './container.js';
 import { parseData, treeData_update, collapse, findtags, find_exe_stats, 
-  cal_exeAvgData, find_maxp_stats } from './utils.js'; //, , findAllLoops, uncollapse, 
-import { drawLoopsButt } from './loops.js';
-import { draw_legends } from './tags.js';
+  cal_exeAvgData, find_maxp_stats, findAllLoops } from './utils.js'; //, , findAllLoops, uncollapse, 
+import { showloops } from './loops.js';
+import { draw_legends, showTags } from './tags.js';
 import { draw_tree } from './tree.js';
 import { draw_treemap } from './treemap.js';
 import { draw_processes } from './processes.js';
@@ -55,7 +55,8 @@ var ddOptions;
 fetch("data/fileName.txt") // open file to get filename
   .then(res => res.text())
   .then(function(data) { 
-    var readstart = performance.now();
+    // var readstart = performance.now();
+
     var openFile = data.split("+"); 
     ddOptions = openFile.slice();
     var options = d3.select('#selecFiles').selectAll("option")
@@ -66,7 +67,7 @@ fetch("data/fileName.txt") // open file to get filename
            .attr("value", function(d) { return d.replace(); })
            .style('font-size', '1em')
 
-    drawLoopsButt(); // draw showLoops button
+    // drawLoopsButt(); // draw showLoops button
     
     var file = d3.select("#selecFiles").property("value");
 
@@ -75,18 +76,21 @@ fetch("data/fileName.txt") // open file to get filename
     ts_num = Number(fileSplit[fileSplit.length-3]); // total number of timesteps
     comp_proc = procs_num;
 
+    console.time('readData');
     d3.csv("data/"+file).then(function(flatData) {
+      console.timeEnd('readData');
       init_computing(flatData);
       ts = exe_statistics[procs_num][meas].id;
 
       intial(flatData);
+
       render();
 
       root.children.forEach(function(d){ findtags(d, tags); })
       draw_legends(); // draw tag legends  
     });
 
-    d3.select(".button").on("click", click);
+    d3.select(".view").on("click", click);
     d3.select("#selecFiles").on("change", change);
     d3.select("#selecExe").on("change", changeExe); 
 
@@ -94,12 +98,12 @@ fetch("data/fileName.txt") // open file to get filename
       var v1, v2, v3, v4;
       if (cleared == 1) {
         comp = 0;
-        d3.select(".button").text("Individual View");
+        d3.select(".view").text("Individual View");
         individualView();
         cleared = 0;
       }
       else {
-        d3.select(".button").text("Ensemble View");
+        d3.select(".view").text("Ensemble View");
         ensembleView();
         cleared = 1;
       }
@@ -130,9 +134,9 @@ fetch("data/fileName.txt") // open file to get filename
           comp = 1; 
           procInfo.text("Compare: " + procs_num + " vs. " + comp_proc);
         }
-      } 
+      }
 
-      load_data(file); 
+      load_data(file);
     }
 
     function changeExe() {
@@ -193,15 +197,22 @@ fetch("data/fileName.txt") // open file to get filename
         render(1);
       })
       container_3_plot.select(".container").remove();
+
+      d3.select(".loop").attr("display", "none")
+      d3.select(".tag").on("click", showTags);
     }
 
     function load_data(file) {
+      console.time('load_data'); 
       fileSplit = file.split(/[._]+/);
       procs_num = Number(fileSplit[fileSplit.length-2]); // total number of processes 
       ts_num = Number(fileSplit[fileSplit.length-3]); // total number of timesteps
 
+      console.time('read');
       if(!breakdown_times[procs_num]) {
-        d3.csv("data/"+file).then(function(flatData) {          
+        d3.csv("data/"+file).then(function(flatData) {  
+          console.timeEnd('read'); 
+
           init_computing(flatData);
           ts = exe_statistics[procs_num][meas].id;
           exeInfo.text("Current execution: " + ts + "/" + ts_num);
@@ -212,10 +223,11 @@ fetch("data/fileName.txt") // open file to get filename
         exeInfo.text("Current execution: " + ts + "/" + ts_num);
         render(); 
       }
+      console.timeEnd('load_data');
     }
 
-    var readend = performance.now();
-    console.log(`Read took ${readend - readstart} milliseconds`);
+    // var readend = performance.now();
+    // console.log(`Read took ${readend - readstart} milliseconds`);
   });
 
 function init_computing(data) { 
@@ -233,6 +245,8 @@ function init_computing(data) {
 }
 
 function responsive() {
+  
+  console.time('responsive'); 
 
   d3.select(".gutter").on("click", resize); //mouseup
 
@@ -256,9 +270,12 @@ function responsive() {
       draw_scale_stacked();
     }
   }
+  console.timeEnd('responsive'); 
 }
 
 function intial(data) {
+
+  console.time('intial'); 
 
   phase.text("Current event: " + nodeid);
   procInfo.text("Current rank: " + proc + "/" + procs_num);
@@ -309,10 +326,12 @@ function intial(data) {
       d.has_loop = sum; })
 
   responsive();
+
+  console.timeEnd('intial'); 
 }
 
 function render(g=0) {
-    var renderStart = performance.now();
+    // var renderStart = performance.now();
 
     // set time for each node (need to be updated based on current rank and ts)
     treeData_update();  
@@ -328,9 +347,14 @@ function render(g=0) {
       draw_scale_stacked(g);
     }
 
-    var renderEnd = performance.now();
-    console.log(`Render took ${renderEnd - renderStart} milliseconds`);
+    // var renderEnd = performance.now();
+    // console.log(`Render took ${renderEnd - renderStart} milliseconds`);
 }
+
+// draw_legends();
+
+d3.select(".loop").on("click", showloops);
+d3.select(".tag").on("click", showTags);
 
 var endTime = performance.now();
 console.log(`Program took ${endTime - startTime} milliseconds`);

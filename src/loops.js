@@ -3,7 +3,7 @@ import { collapse, findAllLoops } from './utils.js'; //, , , uncollapse
 import { draw_tree } from './tree.js';
 import { draw_treemap } from './treemap.js';
 import { draw_processes } from './processes.js';
-// import { draw_ts_or_ite } from './tsIte.js';
+import { draw_ts_or_ite } from './tsIte.js';
 
 export function drawLoopsButt() {
   loops_container.append("rect")
@@ -18,23 +18,23 @@ export function drawLoopsButt() {
     .text("Show Loops");
 }
 
-function showloops() {
+export function showloops() {
   if (show_tag == 0) {
     if (show_loop == 0) { 
       show_loop = 1; 
 
-      d3.select('.loopButtText').text("Back");
+      d3.select('.loop').text("Back");
 
       root.children.forEach(findAllLoops); // show the nodes who have loop nodes
     }
     else { 
       show_loop = 0;
-      d3.select('.loopButtText').text("Show Loops");
+      d3.select('.loop').text("Show Loops");
 
       root.children.forEach(collapse);
 
       draw_processes(ts, "main", is_loop); 
-      // draw_ts_or_ite("main");
+      draw_ts_or_ite("main");
      }
      draw_tree(root);
      draw_treemap(root);
