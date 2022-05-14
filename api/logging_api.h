@@ -17,8 +17,8 @@
 #include <iterator>
 #include <map>
 #include <fstream>
-#include <experimental/filesystem>
-namespace fs = std::filesystem;
+#include <sys/stat.h>
+#include <errno.h>
 
 extern int ntimestep;
 extern int curTs;
@@ -232,9 +232,13 @@ static int gather_info(int aggcount) {
 /// write csv file out
 static void write_output(std::string filename, int aggcount) {
 
-	if (!fs::is_directory(filename) || !fs::exists(filename)) { // Check if this folder exists
-	    fs::create_directory(filename); // create folder
-	}
+    if (rank == 0) {
+            int ret = mkdir(filename.c_str(), S_IRWXU | S_IRWXG | S_IRWXO);
+            if (ret != 0 && errno != EEXIST) {
+                    fprintf(stderr, "Error: failed to mkdir %s\n", filename.c_str());
+            }
+    }
+    MPI_Barrier(MPI_COMM_WORLD);
 
 	int split_rank = gather_info(aggcount); // gather info from all the processes
 
