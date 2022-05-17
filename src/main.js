@@ -76,6 +76,7 @@ fetch("data/fileName.txt") // open file to get filename
     comp_proc = procs_num;
 
     d3.csv("data/"+file).then(function(flatData) {
+      // console.log(flatData);
       init_computing(flatData);
       ts = exe_statistics[procs_num][meas].id;
 

@@ -133,8 +133,10 @@ export function find_exe_stats(e, p) {
   find_max_value_per_ite(breakdown_times[p][e], ites);
   ites.sort(function(a, b) {return a.time - b.time; });
 
-  exe_statistics[p] = { "min": ites[0], "max": ites[ites.length-1], 
-    "median": ites[Math.round(ites.length/2)], 
+  exe_statistics[p] = { 
+    "min": { "id": 0, "time": ites[0] },
+    "max": { "id": ites.length-1, "time": ites[ites.length-1] },
+    "median": {"id": Math.floor(ites.length/2), "time": ites[Math.round(ites.length/2)] },
     "mean": { "id": null, "time": Number(d3.mean(ites, d=>d.time).toFixed(3)) } };
 }
 
