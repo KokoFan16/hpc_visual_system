@@ -17,6 +17,7 @@ var var_div = d3.select('body').append('div')
 
 export function draw_tree(source, selectedtag=null)
 {
+  console.time("render::draw_tree");
   // draw the links between the nodes
   var tree = treemap(root);
   nodes = tree.descendants();
@@ -154,6 +155,8 @@ export function draw_tree(source, selectedtag=null)
     if (selectedtag) { opacity = (d.data.data.tag == selectedtag)? 0.6: 0.1;  }
     return opacity;
   }
+
+  console.timeEnd("render::draw_tree");
 }
 
 function diagonal(s, d) {

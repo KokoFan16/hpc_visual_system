@@ -1,19 +1,30 @@
+function isNumeric(str) {
+  if (typeof str != "string") return false // we only process strings!  
+  return !isNaN(str) && !isNaN(parseFloat(str))
+}
+
 export function parseData(data) {
+    console.time("init::parseData");
     var times = [];
-    data.forEach(function(d) {   
-      var list = [];
+    data.forEach(function(d) {  
       var filter_time = d.times.split("|"); // split times based on rank
-      filter_time.forEach(function(d) {
-        var ttimes = d.split("-"); // split times based on ts
-        if (d.is_loop == "0") { list.push(ttimes.map(x=>Number(x))); } // not loop
-        else {  // is loop
-          var loops = [];
-          ttimes.forEach(function(d){ loops.push(d.split("+")); }); // split times based on loop iterations
-          list.push(loops); 
-        }
-      })
-      times[d.id] = list; // id: times
+      if (ts_num == 1) { times[d.id] = filter_time.map(x=>[Number(x)]); }
+      else {
+        var list = [];
+        filter_time.forEach(function(t) {
+          var ttimes = t.split("-"); // split times based on ts
+          if (d.is_loop == "0") { list.push(ttimes.map(x=>Number(x))); } // not loop
+          else {  // is loop
+            var loops = [];
+            ttimes.forEach(function(d){ loops.push(d.split("+")); }); // split times based on loop iterations
+            list.push(loops); 
+          }
+        })
+        times[d.id] = list; // id: times
+      }
     }); 
+    // console.log(times);
+    console.timeEnd("init::parseData");
     return times;
 }
 
@@ -41,8 +52,15 @@ export function treeData_update() {
         d.data.time = exe_avgData[procs_num][d.data.id][proc].time;
       }
       else { 
-        var t = breakdown_times[procs_num][d.data.id][proc][ts]; 
-        d.data.time = (d3.sum(t)*time_metics).toFixed(3);
+        var t;
+        if (ts_num == 1) {
+          t = breakdown_times[procs_num][d.data.id][proc];
+          d.data.time = (t*time_metics).toFixed(3);
+        }
+        else {
+          t = breakdown_times[procs_num][d.data.id][proc][ts]; 
+          d.data.time = (d3.sum(t)*time_metics).toFixed(3);
+        }
       }
     });
   }
@@ -122,13 +140,15 @@ export function find_max_value_per_ite(data, ites) {
   for (var t = 0; t < data[0].length; t++) {
     var column = [];
     for (var p = 0; p < data.length; p++) {
-      column.push(d3.sum(data[p][t]));
+      if (data[0].length == 1) { column.push(data[p][t]); }
+      else { column.push(d3.sum(data[p][t])); }      
     }
     ites.push( {"id": t, "time": Number((d3.max(column)*time_metics).toFixed(3)) });
   }
 }
 
 export function find_exe_stats(e, p) {
+  console.time("find_exe_stats");
   var ites = [];
   find_max_value_per_ite(breakdown_times[p][e], ites);
   ites.sort(function(a, b) {return a.time - b.time; });
@@ -138,33 +158,52 @@ export function find_exe_stats(e, p) {
     "max": { "id": ites.length-1, "time": ites[ites.length-1] },
     "median": {"id": Math.floor(ites.length/2), "time": ites[Math.round(ites.length/2)] },
     "mean": { "id": null, "time": Number(d3.mean(ites, d=>d.time).toFixed(3)) } };
+    console.timeEnd("find_exe_stats");
 }
 
 var opts = ["min", "max", "median"];
 export function find_maxp_stats(p) {
+  console.time("find_maxp_stats");
   var temp = {};
   opts.forEach(function(k) {
-    var t = exe_statistics[p][k].id;
-    var secolumn = breakdown_times[p]["main"].map(d=>d3.sum(d[t]));
+    var t, secolumn; 
+    if (ts_num == 1) { t = 0; secolumn = breakdown_times[p]["main"]; }
+    else {
+      t = exe_statistics[p][k].id;
+      secolumn = breakdown_times[p]["main"].map(d=>d3.sum(d[t]));
+    }
     var maxpv = d3.max(secolumn);
     var maxp = secolumn.indexOf(maxpv);
     temp[k] = maxp;
   })
   maxp_stats[p] = temp;
+  console.timeEnd("find_maxp_stats");
 }
 
-export function cal_exeAvgData(p) {
-  var avgs = {};
-  all_events.forEach(function(e) {
-    var avgprocs = [];
-    breakdown_times[p][e].forEach(function(d, i) {
-      avgprocs.push( { "id": i,
-          "time": Number((d3.mean(d)*time_metics).toFixed(3)),
-          "min": Number((d3.min(d)*time_metics).toFixed(3)),
-          "max": Number((d3.max(d)*time_metics).toFixed(3)) }
-      );
-    });
-    avgs[e] = avgprocs;
+export function cal_exeAvgData(e, p) {
+  console.time("cal_exeAvgData");
+  exe_avgData[p] = {};
+  var avgprocs = [];
+  breakdown_times[p][e].forEach(function(d, i) {
+      avgprocs.push({ "id": i,
+      "time": Number((d3.mean(d)*time_metics).toFixed(3)),
+      "min": Number((d3.min(d)*time_metics).toFixed(3)),
+      "max": Number((d3.max(d)*time_metics).toFixed(3)) });
   });
-  exe_avgData[p] = avgs;  
+  exe_avgData[p][e] = avgprocs;
+  // var avgs = {};
+  // all_events.forEach(function(e) {
+  //   var avgprocs = [];
+  //   breakdown_times[p][e].forEach(function(d, i) {
+  //     avgprocs.push( { "id": i,
+  //         "time": Number((d3.mean(d)*time_metics).toFixed(3)),
+  //         "min": Number((d3.min(d)*time_metics).toFixed(3)),
+  //         "max": Number((d3.max(d)*time_metics).toFixed(3)) }
+  //     );
+  //   });
+  //   avgs[e] = avgprocs;
+  // });
+  // exe_avgData[p] = avgs;
+  console.log(exe_avgData);
+  console.timeEnd("cal_exeAvgData");  
 }

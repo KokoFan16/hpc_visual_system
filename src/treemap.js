@@ -16,7 +16,7 @@ var var_div = d3.select('body').append('div')
   .style('opacity', 0);
 
 export function draw_treemap(source, selectedtag=null) {
-
+  console.time("render::draw_treemap");
   // initial treemap
   var init_treemap = d3.treemap().tile(d3.treemapResquarify)
     .size([(svgWidth), (container_height*1.5-3*padding)])
@@ -173,6 +173,7 @@ export function draw_treemap(source, selectedtag=null) {
       .style('left', left + 'px')
       .style('top', d3.event.pageY - 10 + 'px'); 
   }
+  console.timeEnd("render::draw_treemap");
 }
 
 function colorbarStatic() {

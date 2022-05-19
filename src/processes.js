@@ -32,7 +32,7 @@ draw_statics();
 var times=[], new_time, curData;
 
 export function draw_processes(ts, nodeid, is_loop, is_tag=null) {
-
+  console.time("render::draw_processes");
   if (is_tag) { phase.text("Show sum of tag: " + is_tag); }
   
   if (cleared == 1) { draw_statics(); }
@@ -73,8 +73,8 @@ export function draw_processes(ts, nodeid, is_loop, is_tag=null) {
         if (is_loop == 0) { t = d[ts]; }
         else { t = d3.sum(d[ts]); }
         times.push({"id": i, "time": Number(parseFloat(t)*time_metics).toFixed(3), 
-          "min": exe_avgData[procs_num][nodeid][i].min, 
-          "max": exe_avgData[procs_num][nodeid][i].max 
+          "min": Number(parseFloat(t)*time_metics).toFixed(3), // exe_avgData[procs_num][nodeid][i].min, 
+          "max": Number(parseFloat(t)*time_metics).toFixed(3) // exe_avgData[procs_num][nodeid][i].max 
         }); 
       })
     }
@@ -300,6 +300,8 @@ export function draw_processes(ts, nodeid, is_loop, is_tag=null) {
   //   focus.select(".axis--x").call(d3.axisBottom(x));
   //   // context.select(".brush").call(brush.move, x.range().map(t.invertX, t));
   // }
+
+  console.timeEnd("render::draw_processes");
 }
 
 function draw_statics() {

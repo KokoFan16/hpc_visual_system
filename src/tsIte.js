@@ -16,6 +16,7 @@ var line = d3.line()
 draw_statics();
 
 export function draw_ts_or_ite(nodeid, scale=null) {
+  console.time("render::draw_ts_or_ite");
   
   var curWidth = container_4_plot.node().getBoundingClientRect().width;
   var width = (curWidth-padding*3);
@@ -57,6 +58,7 @@ export function draw_ts_or_ite(nodeid, scale=null) {
   xAxis.transition().duration(duration).call(d3.axisBottom(xScale));
 
   draw_line_figure(times, container_4_plot, xScale, yScale, yAxis, line, flag);
+  console.timeEnd("render::draw_ts_or_ite");
 }
 
 function draw_statics() {

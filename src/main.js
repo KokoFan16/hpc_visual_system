@@ -75,16 +75,18 @@ fetch("data/fileName.txt") // open file to get filename
     ts_num = Number(fileSplit[fileSplit.length-3]); // total number of timesteps
     comp_proc = procs_num;
 
+    console.time("load_data");
     d3.csv("data/"+file).then(function(flatData) {
+      console.timeEnd("load_data");
       // console.log(flatData);
       init_computing(flatData);
-      ts = exe_statistics[procs_num][meas].id;
+      ts = (ts_num == 1)? 0: exe_statistics[procs_num][meas].id;
 
       intial(flatData);
       render();
 
-      root.children.forEach(function(d){ findtags(d, tags); })
-      draw_legends(); // draw tag legends  
+      // root.children.forEach(function(d){ findtags(d, tags); })
+      // draw_legends(); // draw tag legends  
     });
 
     d3.select(".button").on("click", click);
@@ -159,41 +161,41 @@ fetch("data/fileName.txt") // open file to get filename
     }
 
     function individualView() {
-      container_3_plot.select(".focus").remove();
-      draw_tree(root);
-      draw_treemap(root);
-      draw_ts_or_ite(nodeid);
-      draw_processes(ts, nodeid, '0');
-      procInfo.text("Current rank: " + proc + "/" + procs_num);
+      // container_3_plot.select(".focus").remove();
+      // draw_tree(root);
+      // draw_treemap(root);
+      // draw_ts_or_ite(nodeid);
+      // draw_processes(ts, nodeid, '0');
+      // procInfo.text("Current rank: " + proc + "/" + procs_num);
     }
 
     function ensembleView() {
 
-      var filtedFiles = openFile.filter(function(f) {
-          fileSplit = f.split(/[._]+/);
-          var nprocs = fileSplit[fileSplit.length-2];
-          return !breakdown_times[nprocs];
-      });
+      // var filtedFiles = openFile.filter(function(f) {
+      //     fileSplit = f.split(/[._]+/);
+      //     var nprocs = fileSplit[fileSplit.length-2];
+      //     return !breakdown_times[nprocs];
+      // });
 
-      Promise.all(filtedFiles.map(f => d3.csv("data/"+f))).then(function(data) {
-        data.forEach(function(d) { 
-          init_computing(d);
-        });
+      // Promise.all(filtedFiles.map(f => d3.csv("data/"+f))).then(function(data) {
+      //   data.forEach(function(d) { 
+      //     init_computing(d);
+      //   });
 
-        if (procs_num == comp_proc) {
-          comp = 0;
-          if ( meas != "mean" ) {
-            proc = maxp_stats[procs_num][meas];
-            procInfo.text("Max rank: " + proc + "/" + procs_num);
-          }
-        }
-        else {
-          comp = 1;
-          procInfo.text("Compare: " + procs_num + " vs. " + comp_proc);
-        }
-        render(1);
-      })
-      container_3_plot.select(".container").remove();
+      //   if (procs_num == comp_proc) {
+      //     comp = 0;
+      //     if ( meas != "mean" ) {
+      //       proc = maxp_stats[procs_num][meas];
+      //       procInfo.text("Max rank: " + proc + "/" + procs_num);
+      //     }
+      //   }
+      //   else {
+      //     comp = 1;
+      //     procInfo.text("Compare: " + procs_num + " vs. " + comp_proc);
+      //   }
+      //   render(1);
+      // })
+      // container_3_plot.select(".container").remove();
     }
 
     function load_data(file) {
@@ -220,17 +222,25 @@ fetch("data/fileName.txt") // open file to get filename
   });
 
 function init_computing(data) { 
+  console.time("init");
+  
   var temp = parseData(data); 
+
   var p = temp["main"].length;
   breakdown_times[p] = temp;
   
-  if (!all_events) { 
-    all_events = Object.keys(breakdown_times[procs_num]);
+  // if (!all_events) { 
+  //   all_events = Object.keys(breakdown_times[procs_num]);
+  // }
+
+  if (ts_num > 1) {
+    find_exe_stats("main", p);
+    cal_exeAvgData("main", p);
   }
 
-  find_exe_stats("main", p);
-  cal_exeAvgData(p);
   find_maxp_stats(p);
+
+  console.timeEnd("init");
 }
 
 function responsive() {
@@ -260,7 +270,7 @@ function responsive() {
 }
 
 function intial(data) {
-
+  console.time("initTree");
   phase.text("Current event: " + nodeid);
   procInfo.text("Current rank: " + proc + "/" + procs_num);
 
@@ -310,10 +320,11 @@ function intial(data) {
       d.has_loop = sum; })
 
   responsive();
+  console.timeEnd("initTree");
 }
 
 function render(g=0) {
-    var renderStart = performance.now();
+    console.time("render");
 
     // set time for each node (need to be updated based on current rank and ts)
     treeData_update();  
@@ -329,8 +340,7 @@ function render(g=0) {
       draw_scale_stacked(g);
     }
 
-    var renderEnd = performance.now();
-    console.log(`Render took ${renderEnd - renderStart} milliseconds`);
+  console.timeEnd("render");
 }
 
 var endTime = performance.now();
