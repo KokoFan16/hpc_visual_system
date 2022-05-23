@@ -5,6 +5,7 @@
 #include <unistd.h>
 #include <ctime>
 #include <stdlib.h>
+#include <string.h>
 
 int rank;
 int nprocs;
