@@ -131,7 +131,7 @@ void agg_gather(std::string str) {
     MPI_Allreduce(&total, &max_time, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
 
     if (total == max_time)
-        std::cout << "aggregation(" << nprocs << ", " << messageLen << "): " << total << ", " << split << ", " << gather << std::endl; 
+        std::cout << "aggregation(" << nprocs << ", " << messageLen << ", " << aggcount << "): " << total << ", " << split << ", " << gather << std::endl; 
 
     free(buffer);
 }
