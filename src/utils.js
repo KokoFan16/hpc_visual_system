@@ -59,8 +59,11 @@ export function treeData_update() {
         }
         else {
           t = breakdown_times[procs_num][d.data.id][proc][ts]; 
-          d.data.time = (d3.sum(t)*time_metics).toFixed(3);
+          // console.log(d.data.id, t);
+          d.data.time = Array.isArray(t)? d3.sum(t): t; 
+          d.data.time = (d.data.time*time_metics).toFixed(3);
         }
+        // console.log(d.data.id, d.data.time);
       }
     });
   }
@@ -140,8 +143,9 @@ export function find_max_value_per_ite(data, ites) {
   for (var t = 0; t < data[0].length; t++) {
     var column = [];
     for (var p = 0; p < data.length; p++) {
-      if (data[0].length == 1) { column.push(data[p][t]); }
-      else { column.push(d3.sum(data[p][t])); }      
+      column.push(data[p][t]);
+      // if (data[0].length == 1) { column.push(data[p][t]); }
+      // else { column.push(d3.sum(data[p][t])); }      
     }
     ites.push( {"id": t, "time": Number((d3.max(column)*time_metics).toFixed(3)) });
   }
@@ -204,6 +208,6 @@ export function cal_exeAvgData(e, p) {
   //   avgs[e] = avgprocs;
   // });
   // exe_avgData[p] = avgs;
-  console.log(exe_avgData);
+  // console.log(exe_avgData);
   console.timeEnd("cal_exeAvgData");  
 }

@@ -43,6 +43,7 @@ export function draw_ts_or_ite(nodeid, scale=null) {
       xLabelText = "Executions";
     }
   }
+  // console.log(times);
   // else {
   //   flag = 3;
   //   // get time data for all the ierations
