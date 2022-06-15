@@ -3,22 +3,41 @@
 Viveka Profilier is a lightweight -- a header only library, that enables
 profiling of parallel large-scale MPI applications. 
 
-## Usage
+## Usage (API)
 
-1. Include the header
+1. Include the header.
 ```cpp
 #include "logging_api.h"
 ```
 
-2. Set parameters
+2. Set the profiler settings.
+
+- `set_rank` sets the total number of processes and the corresponding rank.
 ```cpp
-TBW
+set_rank(int r, int n);
+```
+
+- `set_timestep`
+```cpp
+set_timestep(int t, int n);
+```
+
+- `set_namespath`
+```cpp
+set_namespath(std::string name);
 ```
 
 3. Instrument the code using `Events` API.
+`Event` is ... There are 4 different ways to instrument an `Event` in the code.
+
 ```cpp
-TBW
+Events(std::string n): name(n)
+Events(std::string n, std::string t): name(n), tags(t)
+Events(std::string n, int loop, int ite): name(n), is_loop(loop), loop_ite(ite)
+Events(std::string n, std::string t, int loop, int ite): name(n), tags(t), is_loop(loop), loop_ite(ite)
 ```
+
+For a sample program, please refer the example folder.
 
 
 ## Format
@@ -47,7 +66,8 @@ mpirun -n 4 ./lifegame_mpi <N> <max_generation>
 
 ## Data Format
 
-Example data
+We dump the collected runtimes in a csv-formatted file as show below. In this
+example, the run times collected across the 4 processes is separated by `|`.
 ```
 id,tag,is_loop,times
 main,,0,2.743293|2.742943|2.743141|2.743302
