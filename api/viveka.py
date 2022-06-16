@@ -1,9 +1,8 @@
 #  Because pybind11 cannot generate default parameters well, this code is to set
 #  them
 
-class Viveka:
-    """An extension version of the change point detection using adaptive
-    forgetting factor with PCA for multivariate streaming data.
+class Profiler:
+    """
     Parameters
     ----------
     
@@ -17,7 +16,7 @@ class Viveka:
     def __init__(self):
         super().__init__()
 
-    def start(self):
+    def set_rank(self, rank, n_procs):
         """Start profiling
         Parameters
         ----------
@@ -27,7 +26,7 @@ class Viveka:
         self: object
             Returns the instance itself.
         """
-        return super().start()
+        return super().set_rank(rank, n_procs)
 
     def stop(self):
         """Stop profiling
