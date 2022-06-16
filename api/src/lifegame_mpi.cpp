@@ -25,13 +25,8 @@
 #include <iostream>
 #include <string>
 
-#include "logging_api.h"
-
-int ntimestep;
-int curTs;
-int nprocs;
-int rank;
-std::string namespath; // call path of functions
+#include "profiler.hpp"
+#include "events.hpp"
 
 void randomInitBoard(int *b, int N, int M);
 void printBoard(int *b, int N, int M);
@@ -41,7 +36,13 @@ void printMyBoard(int *b, int N, int M);
 // Main entry
 int main(int argc, char **argv)
 {
-    // Check the number of arguments
+	int ntimestep;
+	int curTs;
+	int nprocs;
+	int rank;
+	std::string namespath; // call path of functions
+	
+	// Check the number of arguments
     if (argc != 3) {
         printf("Usage: %s <N> <max generations>\n", argv[0]);
         exit(-1);
